@@ -1,0 +1,326 @@
+.inventory-page {
+    padding: 30px;
+    background: #f5f7fb;
+    min-height: 100vh;
+}
+
+
+/* =========================
+   HEADER
+========================= */
+
+.inventory-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.inventory-header h1 {
+    margin: 0;
+    color: #17233c;
+    font-size: 30px;
+}
+
+.inventory-header p {
+    margin-top: 7px;
+    color: #718096;
+}
+
+
+.inventory-count {
+    background: white;
+    padding: 18px 28px;
+    border-radius: 14px;
+    text-align: center;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+
+.inventory-count strong {
+    display: block;
+    font-size: 28px;
+    color: #315bea;
+}
+
+.inventory-count span {
+    color: #718096;
+    font-size: 14px;
+}
+
+
+/* =========================
+   STATISTICS
+========================= */
+
+.inventory-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+    margin-bottom: 25px;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 14px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+}
+
+.stat-card > span {
+    font-size: 28px;
+}
+
+.stat-card strong {
+    display: block;
+    font-size: 22px;
+    color: #17233c;
+}
+
+.stat-card p {
+    margin: 4px 0 0;
+    color: #718096;
+    font-size: 13px;
+}
+
+
+/* =========================
+   CARD
+========================= */
+
+.inventory-card {
+    background: white;
+    border-radius: 14px;
+    padding: 24px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+}
+
+.card-title {
+    margin-bottom: 20px;
+}
+
+.card-title h2 {
+    margin: 0;
+    color: #17233c;
+}
+
+.card-title p {
+    color: #718096;
+    margin-top: 5px;
+}
+
+
+/* =========================
+   FORM
+========================= */
+
+.inventory-form {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    font-weight: 600;
+    margin-bottom: 7px;
+    color: #334155;
+}
+
+.form-group input {
+    padding: 12px;
+    border: 1px solid #d5dbe5;
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+}
+
+.form-group input:focus {
+    border-color: #315bea;
+}
+
+
+.form-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 10px;
+    margin-top: 5px;
+}
+
+
+/* =========================
+   BUTTONS
+========================= */
+
+.btn-primary {
+    background: #315bea;
+    color: white;
+    border: none;
+    padding: 12px 22px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.btn-primary:hover {
+    opacity: 0.9;
+}
+
+.btn-secondary {
+    background: #e5e7eb;
+    color: #374151;
+    border: none;
+    padding: 12px 22px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+
+/* =========================
+   TABLE
+========================= */
+
+.table-container {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+thead {
+    background: #f7f9fc;
+}
+
+th {
+    text-align: left;
+    padding: 14px;
+    color: #64748b;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+td {
+    padding: 15px 14px;
+    border-top: 1px solid #edf0f5;
+    color: #475569;
+    white-space: nowrap;
+}
+
+
+/* =========================
+   STOCK STATUS
+========================= */
+
+.stock-badge {
+    padding: 6px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.stock-badge.available {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.stock-badge.low {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+
+/* =========================
+   ACTION BUTTONS
+========================= */
+
+.action-buttons {
+    display: flex;
+    gap: 7px;
+}
+
+.edit-btn {
+    background: #e0e7ff;
+    color: #3730a3;
+    border: none;
+    padding: 7px 11px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.delete-btn {
+    background: #fee2e2;
+    color: #dc2626;
+    border: none;
+    padding: 7px 11px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+
+/* =========================
+   EMPTY STATE
+========================= */
+
+.empty-state {
+    text-align: center;
+    padding: 50px;
+    color: #718096;
+}
+
+.empty-icon {
+    font-size: 45px;
+    margin-bottom: 10px;
+}
+
+.loading {
+    padding: 40px;
+    text-align: center;
+    color: #718096;
+}
+
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 1000px) {
+
+    .inventory-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .inventory-form {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+
+@media (max-width: 600px) {
+
+    .inventory-page {
+        padding: 15px;
+    }
+
+    .inventory-header {
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .inventory-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .inventory-form {
+        grid-template-columns: 1fr;
+    }
+}

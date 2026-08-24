@@ -1,0 +1,146 @@
+package com.fsm.dto;
+
+import com.fsm.entity.Priority;
+import com.fsm.entity.WorkOrder;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+public class WorkOrderRequest {
+
+    private Long serviceRequestId;
+
+    private Long technicianId;
+
+    @NotNull(message = "Customer is required")
+    private Long customerId;
+
+    @NotNull(message = "Site is required")
+    private Long siteId;
+
+    @NotBlank(message = "Order number is required")
+    @Size(max = 255, message = "Order number must not exceed 255 characters")
+    private String orderNumber;
+
+    @NotBlank(message = "Title is required")
+    @Size(max = 255, message = "Title must not exceed 255 characters")
+    private String title;
+
+    @NotNull(message = "Priority is required")
+    private Priority priority;
+
+    @Size(max = 5000, message = "Description is too long")
+    private String description;
+
+    private WorkOrder.Status status;
+
+    private LocalDateTime scheduledDate;
+
+    private LocalDateTime completedDate;
+
+    @DecimalMin(value = "0.0", message = "Total cost cannot be negative")
+    private BigDecimal totalCost;
+
+    public WorkOrderRequest() {
+    }
+
+    public Long getServiceRequestId() {
+        return serviceRequestId;
+    }
+
+    public void setServiceRequestId(Long serviceRequestId) {
+        this.serviceRequestId = serviceRequestId;
+    }
+
+    public Long getTechnicianId() {
+        return technicianId;
+    }
+
+    public void setTechnicianId(Long technicianId) {
+        this.technicianId = technicianId;
+    }
+
+    public Long getCustomerId() {
+        return customerId;
+    }
+
+    public void setCustomerId(Long customerId) {
+        this.customerId = customerId;
+    }
+
+    public Long getSiteId() {
+        return siteId;
+    }
+
+    public void setSiteId(Long siteId) {
+        this.siteId = siteId;
+    }
+
+    public String getOrderNumber() {
+        return orderNumber;
+    }
+
+    public void setOrderNumber(String orderNumber) {
+        this.orderNumber = orderNumber;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public Priority getPriority() {
+        return priority;
+    }
+
+    public void setPriority(Priority priority) {
+        this.priority = priority;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public WorkOrder.Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(WorkOrder.Status status) {
+        this.status = status;
+    }
+
+    public LocalDateTime getScheduledDate() {
+        return scheduledDate;
+    }
+
+    public void setScheduledDate(LocalDateTime scheduledDate) {
+        this.scheduledDate = scheduledDate;
+    }
+
+    public LocalDateTime getCompletedDate() {
+        return completedDate;
+    }
+
+    public void setCompletedDate(LocalDateTime completedDate) {
+        this.completedDate = completedDate;
+    }
+
+    public BigDecimal getTotalCost() {
+        return totalCost;
+    }
+
+    public void setTotalCost(BigDecimal totalCost) {
+        this.totalCost = totalCost;
+    }
+}

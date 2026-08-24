@@ -1,0 +1,237 @@
+.work-order-page {
+    padding: 30px;
+}
+
+.work-order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.work-order-header h1 {
+    margin: 0;
+    font-size: 30px;
+}
+
+.work-order-header p {
+    margin-top: 8px;
+    color: #6b7280;
+}
+
+.work-order-count {
+    background: #eef2ff;
+    padding: 12px 18px;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+.work-order-card,
+.work-order-list-section {
+    background: white;
+    border-radius: 14px;
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.card-title {
+    margin-bottom: 25px;
+}
+
+.card-title h2,
+.list-header h2 {
+    margin: 0;
+}
+
+.card-title p,
+.list-header p {
+    color: #6b7280;
+    margin-top: 6px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.form-group label {
+    margin-bottom: 7px;
+    font-weight: 600;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    padding: 11px 13px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    border-color: #6366f1;
+}
+
+.form-group textarea {
+    resize: vertical;
+}
+
+.form-actions {
+    margin-top: 25px;
+}
+
+.add-work-order-btn {
+    border: none;
+    background: #4f46e5;
+    color: white;
+    padding: 12px 22px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.add-work-order-btn:hover {
+    background: #4338ca;
+}
+
+.add-work-order-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.list-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.work-order-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.work-order-item {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.work-order-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 18px;
+}
+
+.order-number {
+    font-size: 12px;
+    font-weight: 700;
+    color: #6366f1;
+}
+
+.work-order-top h3 {
+    margin: 6px 0 0;
+}
+
+.status-badge,
+.priority-badge {
+    display: inline-block;
+    padding: 5px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.status-pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-assigned {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.status-progress {
+    background: #e0e7ff;
+    color: #3730a3;
+}
+
+.status-completed {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-cancelled {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.priority-low {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.priority-medium {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.priority-high {
+    background: #fed7aa;
+    color: #9a3412;
+}
+
+.priority-urgent {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.work-order-details p {
+    margin: 9px 0;
+    color: #4b5563;
+}
+
+.description {
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+}
+
+.loading,
+.empty-state {
+    text-align: center;
+    padding: 40px;
+    color: #6b7280;
+}
+
+@media (max-width: 800px) {
+
+    .form-grid,
+    .work-order-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .work-order-header {
+        align-items: flex-start;
+        gap: 15px;
+        flex-direction: column;
+    }
+}

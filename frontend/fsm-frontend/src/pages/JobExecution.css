@@ -1,0 +1,543 @@
+/* =========================================
+   JOB EXECUTION PAGE
+========================================= */
+
+.job-execution-page {
+    min-height: 100vh;
+    padding: 30px;
+    background: #f5f7fb;
+    box-sizing: border-box;
+}
+
+
+/* =========================================
+   HEADER
+========================================= */
+
+.job-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+
+.job-header h1 {
+    margin: 0;
+    font-size: 30px;
+    color: #1f2937;
+}
+
+
+.job-header p {
+    margin: 7px 0 0;
+    color: #6b7280;
+    font-size: 15px;
+}
+
+
+.job-count {
+    background: white;
+    padding: 14px 22px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+}
+
+
+.job-count span {
+    display: block;
+    font-size: 25px;
+    font-weight: 700;
+    color: #2563eb;
+}
+
+
+.job-count small {
+    color: #6b7280;
+}
+
+
+/* =========================================
+   ALERTS
+========================================= */
+
+.job-alert {
+    padding: 13px 17px;
+    border-radius: 9px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+
+.job-alert.error {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+
+.job-alert.success {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+
+/* =========================================
+   CARD
+========================================= */
+
+.execution-card {
+    background: white;
+    border-radius: 15px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.06);
+    margin-bottom: 25px;
+    overflow: hidden;
+}
+
+
+.execution-card-header {
+    padding: 22px;
+    border-bottom: 1px solid #edf0f4;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+
+.execution-card-header h2 {
+    margin: 0;
+    font-size: 19px;
+    color: #1f2937;
+}
+
+
+.execution-card-header p {
+    margin: 5px 0 0;
+    color: #6b7280;
+    font-size: 13px;
+}
+
+
+/* =========================================
+   SCHEDULED JOB GRID
+========================================= */
+
+.scheduled-job-grid {
+    padding: 22px;
+    display: grid;
+    grid-template-columns: repeat(
+        auto-fill,
+        minmax(270px, 1fr)
+    );
+    gap: 18px;
+}
+
+
+.scheduled-job-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 18px;
+    transition: 0.2s;
+}
+
+
+.scheduled-job-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 18px rgba(0, 0, 0, 0.08);
+}
+
+
+.job-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 13px;
+}
+
+
+.job-order-number {
+    font-size: 12px;
+    font-weight: 700;
+    color: #2563eb;
+}
+
+
+.scheduled-job-card h3 {
+    margin: 0 0 15px;
+    color: #1f2937;
+    font-size: 16px;
+}
+
+
+/* =========================================
+   JOB DETAILS
+========================================= */
+
+.job-detail {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 9px;
+    color: #6b7280;
+    font-size: 13px;
+}
+
+
+/* =========================================
+   STATUS
+========================================= */
+
+.execution-status {
+    padding: 5px 8px;
+    border-radius: 20px;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: capitalize;
+}
+
+
+.execution-status.not_started {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+
+.execution-status.in_progress {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+
+.execution-status.completed {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+
+.execution-status.cancelled {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+
+/* =========================================
+   JOB BUTTONS
+========================================= */
+
+.start-job-btn,
+.continue-job-btn,
+.view-job-btn {
+    width: 100%;
+    margin-top: 12px;
+    padding: 11px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+
+.start-job-btn {
+    background: #2563eb;
+    color: white;
+}
+
+
+.start-job-btn:hover {
+    background: #1d4ed8;
+}
+
+
+.continue-job-btn {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+
+.view-job-btn {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+
+/* =========================================
+   LARGE STATUS
+========================================= */
+
+.large-status {
+    padding: 7px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: capitalize;
+}
+
+
+.large-status.not_started {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+
+.large-status.in_progress {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+
+.large-status.completed {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+
+.large-status.cancelled {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+
+/* =========================================
+   EXECUTION INFO
+========================================= */
+
+.execution-info-grid {
+    padding: 22px;
+    display: grid;
+    grid-template-columns:
+        repeat(4, 1fr);
+    gap: 20px;
+    border-bottom: 1px solid #edf0f4;
+}
+
+
+.execution-info-grid label {
+    display: block;
+    color: #9ca3af;
+    font-size: 11px;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+}
+
+
+.execution-info-grid strong {
+    color: #374151;
+    font-size: 13px;
+}
+
+
+/* =========================================
+   FORM
+========================================= */
+
+.execution-form {
+    padding: 22px;
+}
+
+
+.execution-form-group {
+    margin-bottom: 20px;
+}
+
+
+.execution-form-group label {
+    display: block;
+    margin-bottom: 7px;
+    color: #374151;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+
+.execution-form-group textarea {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #d1d5db;
+    border-radius: 9px;
+    padding: 12px;
+    resize: vertical;
+    font-family: inherit;
+    font-size: 13px;
+    outline: none;
+}
+
+
+.execution-form-group textarea:focus {
+    border-color: #2563eb;
+    box-shadow:
+        0 0 0 3px
+        rgba(37, 99, 235, 0.1);
+}
+
+
+.execution-form-group textarea:disabled {
+    background: #f8fafc;
+    cursor: not-allowed;
+}
+
+
+/* =========================================
+   ACTIONS
+========================================= */
+
+.execution-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+
+.execution-actions button {
+    border: none;
+    border-radius: 8px;
+    padding: 11px 17px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+
+.save-job-btn {
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
+
+.complete-job-btn {
+    background: #16a34a;
+    color: white;
+}
+
+
+.cancel-job-btn {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+
+.execution-actions button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+
+/* =========================================
+   COMPLETED
+========================================= */
+
+.completed-info {
+    margin-top: 15px;
+    padding: 12px;
+    background: #f0fdf4;
+    color: #15803d;
+    border-radius: 8px;
+    font-size: 13px;
+}
+
+
+/* =========================================
+   EMPTY
+========================================= */
+
+.empty-jobs {
+    padding: 60px 30px;
+    text-align: center;
+}
+
+
+.empty-job-icon {
+    font-size: 45px;
+    margin-bottom: 12px;
+}
+
+
+.empty-jobs h3 {
+    margin: 0 0 7px;
+    color: #374151;
+}
+
+
+.empty-jobs p {
+    color: #9ca3af;
+    margin: 0;
+}
+
+
+/* =========================================
+   LOADING
+========================================= */
+
+.job-loading {
+    min-height: 70vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: #6b7280;
+}
+
+
+.job-spinner {
+    width: 35px;
+    height: 35px;
+    border: 4px solid #e5e7eb;
+    border-top-color: #2563eb;
+    border-radius: 50%;
+    animation: job-spin 0.8s linear infinite;
+    margin-bottom: 12px;
+}
+
+
+@keyframes job-spin {
+
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+
+}
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 900px) {
+
+    .execution-info-grid {
+        grid-template-columns:
+            repeat(2, 1fr);
+    }
+
+}
+
+
+@media (max-width: 600px) {
+
+    .job-execution-page {
+        padding: 15px;
+    }
+
+
+    .job-header h1 {
+        font-size: 23px;
+    }
+
+
+    .execution-info-grid {
+        grid-template-columns: 1fr;
+    }
+
+
+    .execution-card-header {
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+}
