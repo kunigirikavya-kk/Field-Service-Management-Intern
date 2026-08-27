@@ -11,18 +11,16 @@ import org.springframework.context.annotation.Configuration;
 
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
-
-import com.nimbusds.jose.jwk.JWK;
-import com.nimbusds.jose.jwk.KeyUse;
-import com.nimbusds.jose.jwk.OctetSequenceKey;
-import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
-import com.nimbusds.jose.jwk.JWKSet;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 
 @Configuration
 public class JwtConfig {
+
+    // =====================================================
+    // JWT SECRET KEY
+    // =====================================================
 
     @Bean
     public SecretKey jwtSecretKey(
@@ -35,22 +33,10 @@ public class JwtConfig {
         );
     }
 
-    @Bean
-    public JwtEncoder jwtEncoder(
-            SecretKey jwtSecretKey
-    ) {
 
-        JWK jwk = new OctetSequenceKey.Builder(jwtSecretKey)
-                .keyUse(KeyUse.SIGNATURE)
-                .algorithm(com.nimbusds.jose.JWSAlgorithm.HS256)
-                .build();
-
-        return new NimbusJwtEncoder(
-                new ImmutableJWKSet<>(
-                        new JWKSet(jwk)
-                )
-        );
-    }
+    // =====================================================
+    // JWT DECODER
+    // =====================================================
 
     @Bean
     public JwtDecoder jwtDecoder(
@@ -61,5 +47,38 @@ public class JwtConfig {
                 .withSecretKey(jwtSecretKey)
                 .macAlgorithm(MacAlgorithm.HS256)
                 .build();
+    }
+
+
+    // =====================================================
+    // JWT ROLE → SPRING SECURITY AUTHORITY
+    // =====================================================
+
+    @Bean
+    public JwtAuthenticationConverter jwtAuthenticationConverter() {
+
+        JwtGrantedAuthoritiesConverter grantedAuthoritiesConverter =
+                new JwtGrantedAuthoritiesConverter();
+
+        // Read the role from our custom JWT claim
+        grantedAuthoritiesConverter.setAuthoritiesClaimName("role");
+
+        // Convert:
+        // DISPATCHER → ROLE_DISPATCHER
+        // TECHNICIAN → ROLE_TECHNICIAN
+        // MANAGER    → ROLE_MANAGER
+        // CUSTOMER   → ROLE_CUSTOMER
+        grantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
+
+
+        JwtAuthenticationConverter converter =
+                new JwtAuthenticationConverter();
+
+        converter.setJwtGrantedAuthoritiesConverter(
+                grantedAuthoritiesConverter
+        );
+
+
+        return converter;
     }
 }

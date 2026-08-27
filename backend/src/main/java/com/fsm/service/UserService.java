@@ -3,6 +3,7 @@ package com.fsm.service;
 import com.fsm.dto.LoginRequest;
 import com.fsm.dto.LoginResponse;
 import com.fsm.dto.RegisterRequest;
+import com.fsm.entity.Role;
 import com.fsm.entity.User;
 import com.fsm.repository.UserRepository;
 
@@ -133,8 +134,7 @@ public class UserService {
         // USERNAME
         // =================================================
         //
-        // The database requires username.
-        // We use email as username.
+        // The existing project uses email as username.
         //
 
         String username = email;
@@ -194,22 +194,23 @@ public class UserService {
         // ROLE
         // =================================================
         //
-        // IMPORTANT:
+        // IMPORTANT SECURITY RULE:
         //
-        // Public registration always creates a CUSTOMER.
+        // Public registration ALWAYS creates a CUSTOMER.
         //
-        // We intentionally DO NOT use:
+        // We do NOT accept a role from the registration
+        // request.
         //
-        // request.getRole()
+        // A public user must never be able to register as:
         //
-        // because a user could manually send:
+        // DISPATCHER
+        // TECHNICIAN
+        // MANAGER
         //
-        // "role": "ADMIN"
-        //
-        // to the backend.
+        // This protects the role system.
         //
 
-        user.setRole("CUSTOMER");
+        user.setRole(Role.CUSTOMER);
 
 
         // =================================================
@@ -311,11 +312,11 @@ public class UserService {
         // GENERATE JWT TOKEN
         // =================================================
 
-       String token =
-        jwtService.generateToken(
-                user.getUsername(),
-                user.getRole()
-        );
+        String token =
+                jwtService.generateToken(
+                        user.getUsername(),
+                        user.getRole().name()
+                );
 
 
         // =================================================
@@ -336,7 +337,7 @@ public class UserService {
 
                 user.getPhone(),
 
-                user.getRole()
+                user.getRole().name()
         );
     }
 }

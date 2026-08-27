@@ -4,6 +4,7 @@ import {
     getInvoices,
     getWorkOrders,
     createInvoice,
+    updateInvoice,
     markInvoiceAsPaid,
     cancelInvoice,
     deleteInvoice
@@ -23,6 +24,9 @@ function Billing() {
 
     const [loading, setLoading] = useState(true);
     const [creating, setCreating] = useState(false);
+
+    // Invoice details modal
+    const [selectedInvoice, setSelectedInvoice] = useState(null);
 
     const [form, setForm] = useState({
         workOrderId: "",
@@ -175,14 +179,6 @@ function Billing() {
 
             setCreating(true);
 
-            /*
-             * Convert HTML date:
-             * 2026-08-19
-             *
-             * into:
-             * 2026-08-19T23:59:59
-             */
-
             let dueDate = null;
 
             if (form.dueDate) {
@@ -282,6 +278,26 @@ function Billing() {
 
 
     // ================================
+    // VIEW INVOICE
+    // ================================
+
+    function handleViewInvoice(invoice) {
+
+        setSelectedInvoice(invoice);
+    }
+
+
+    // ================================
+    // CLOSE INVOICE DETAILS
+    // ================================
+
+    function closeInvoiceDetails() {
+
+        setSelectedInvoice(null);
+    }
+
+
+    // ================================
     // MARK AS PAID
     // ================================
 
@@ -305,6 +321,27 @@ function Billing() {
             );
 
             await loadBillingData();
+
+            // Update currently opened invoice
+            if (
+                selectedInvoice &&
+                selectedInvoice.id === id
+            ) {
+
+                const updatedInvoice =
+                    invoices.find(
+                        invoice =>
+                            invoice.id === id
+                    );
+
+                if (updatedInvoice) {
+
+                    setSelectedInvoice({
+                        ...updatedInvoice,
+                        status: "PAID"
+                    });
+                }
+            }
 
         } catch (error) {
 
@@ -347,6 +384,27 @@ function Billing() {
 
             await loadBillingData();
 
+            // Update currently opened invoice
+            if (
+                selectedInvoice &&
+                selectedInvoice.id === id
+            ) {
+
+                const updatedInvoice =
+                    invoices.find(
+                        invoice =>
+                            invoice.id === id
+                    );
+
+                if (updatedInvoice) {
+
+                    setSelectedInvoice({
+                        ...updatedInvoice,
+                        status: "CANCELLED"
+                    });
+                }
+            }
+
         } catch (error) {
 
             console.error(
@@ -386,6 +444,14 @@ function Billing() {
                 "Invoice deleted successfully!"
             );
 
+            if (
+                selectedInvoice &&
+                selectedInvoice.id === id
+            ) {
+
+                setSelectedInvoice(null);
+            }
+
             await loadBillingData();
 
         } catch (error) {
@@ -417,12 +483,52 @@ function Billing() {
         const parsedDate =
             new Date(date);
 
-        if (Number.isNaN(parsedDate.getTime())) {
+        if (
+            Number.isNaN(
+                parsedDate.getTime()
+            )
+        ) {
+
             return "-";
         }
 
         return parsedDate.toLocaleDateString(
             "en-GB"
+        );
+    }
+
+
+    // ================================
+    // FORMAT DATE + TIME
+    // ================================
+
+    function formatDateTime(date) {
+
+        if (!date) {
+            return "-";
+        }
+
+        const parsedDate =
+            new Date(date);
+
+        if (
+            Number.isNaN(
+                parsedDate.getTime()
+            )
+        ) {
+
+            return "-";
+        }
+
+        return parsedDate.toLocaleString(
+            "en-GB",
+            {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit"
+            }
         );
     }
 
@@ -443,6 +549,32 @@ function Billing() {
         ).format(
             Number(amount) || 0
         );
+    }
+
+
+    // ================================
+    // STATUS CLASS
+    // ================================
+
+    function getStatusClass(status) {
+
+        switch (status) {
+
+            case "PAID":
+                return "status-paid";
+
+            case "UNPAID":
+                return "status-unpaid";
+
+            case "OVERDUE":
+                return "status-overdue";
+
+            case "CANCELLED":
+                return "status-cancelled";
+
+            default:
+                return "";
+        }
     }
 
 
@@ -475,35 +607,13 @@ function Billing() {
             .reduce(
                 (total, invoice) =>
                     total +
-                    (Number(invoice.totalAmount) || 0),
+                    (
+                        Number(
+                            invoice.totalAmount
+                        ) || 0
+                    ),
                 0
             );
-
-
-    // ================================
-    // STATUS CLASS
-    // ================================
-
-    function getStatusClass(status) {
-
-        switch (status) {
-
-            case "PAID":
-                return "status-paid";
-
-            case "UNPAID":
-                return "status-unpaid";
-
-            case "OVERDUE":
-                return "status-overdue";
-
-            case "CANCELLED":
-                return "status-cancelled";
-
-            default:
-                return "";
-        }
-    }
 
 
     // ================================
@@ -849,9 +959,7 @@ function Billing() {
                     </div>
 
 
-                    {/* =================================
-                        BUTTONS
-                    ================================== */}
+                    {/* BUTTONS */}
 
                     <div className="invoice-form-actions">
 
@@ -1052,41 +1160,64 @@ function Billing() {
 
                                                 <div className="invoice-actions">
 
+                                                    {/* VIEW */}
+
+                                                    <button
+                                                        type="button"
+                                                        className="view-invoice-btn"
+                                                        onClick={() =>
+                                                            handleViewInvoice(
+                                                                invoice
+                                                            )
+                                                        }
+                                                    >
+                                                        View
+                                                    </button>
+
+
+                                                    {/* MARK PAID */}
+
                                                     {invoice.status !==
                                                         "PAID" &&
                                                         invoice.status !==
                                                             "CANCELLED" && (
 
-                                                            <>
-
-                                                                <button
-                                                                    type="button"
-                                                                    className="mark-paid-btn"
-                                                                    onClick={() =>
-                                                                        handleMarkPaid(
-                                                                            invoice.id
-                                                                        )
-                                                                    }
-                                                                >
-                                                                    Mark Paid
-                                                                </button>
-
-
-                                                                <button
-                                                                    type="button"
-                                                                    className="cancel-invoice-btn"
-                                                                    onClick={() =>
-                                                                        handleCancel(
-                                                                            invoice.id
-                                                                        )
-                                                                    }
-                                                                >
-                                                                    Cancel
-                                                                </button>
-
-                                                            </>
+                                                            <button
+                                                                type="button"
+                                                                className="mark-paid-btn"
+                                                                onClick={() =>
+                                                                    handleMarkPaid(
+                                                                        invoice.id
+                                                                    )
+                                                                }
+                                                            >
+                                                                Mark Paid
+                                                            </button>
                                                         )}
 
+
+                                                    {/* CANCEL */}
+
+                                                    {invoice.status !==
+                                                        "PAID" &&
+                                                        invoice.status !==
+                                                            "CANCELLED" && (
+
+                                                            <button
+                                                                type="button"
+                                                                className="cancel-invoice-btn"
+                                                                onClick={() =>
+                                                                    handleCancel(
+                                                                        invoice.id
+                                                                    )
+                                                                }
+                                                            >
+                                                                Cancel
+                                                            </button>
+                                                        )}
+
+
+                                                    {/* DELETE */}
 
                                                     <button
                                                         type="button"
@@ -1118,6 +1249,322 @@ function Billing() {
                 )}
 
             </div>
+
+
+            {/* =====================================
+                INVOICE DETAILS MODAL
+            ====================================== */}
+
+            {selectedInvoice && (
+
+                <div
+                    className="invoice-modal-overlay"
+                    onClick={closeInvoiceDetails}
+                >
+
+                    <div
+                        className="invoice-modal"
+                        onClick={e =>
+                            e.stopPropagation()
+                        }
+                    >
+
+                        {/* MODAL HEADER */}
+
+                        <div className="invoice-modal-header">
+
+                            <div>
+
+                                <div className="invoice-brand">
+                                    FIELDSYNC
+                                </div>
+
+                                <h2>
+                                    Invoice Details
+                                </h2>
+
+                                <p>
+                                    {selectedInvoice.invoiceNumber}
+                                </p>
+
+                            </div>
+
+
+                            <button
+                                type="button"
+                                className="invoice-close-btn"
+                                onClick={
+                                    closeInvoiceDetails
+                                }
+                            >
+                                ×
+                            </button>
+
+                        </div>
+
+
+                        {/* INVOICE INFORMATION */}
+
+                        <div className="invoice-details-section">
+
+                            <div className="invoice-detail-grid">
+
+                                <div className="invoice-detail-item">
+
+                                    <span>
+                                        Invoice Number
+                                    </span>
+
+                                    <strong>
+                                        {
+                                            selectedInvoice.invoiceNumber
+                                        }
+                                    </strong>
+
+                                </div>
+
+
+                                <div className="invoice-detail-item">
+
+                                    <span>
+                                        Status
+                                    </span>
+
+                                    <strong>
+
+                                        <span
+                                            className={`invoice-status ${getStatusClass(
+                                                selectedInvoice.status
+                                            )}`}
+                                        >
+                                            {
+                                                selectedInvoice.status
+                                            }
+                                        </span>
+
+                                    </strong>
+
+                                </div>
+
+
+                                <div className="invoice-detail-item">
+
+                                    <span>
+                                        Invoice Date
+                                    </span>
+
+                                    <strong>
+                                        {formatDateTime(
+                                            selectedInvoice.invoiceDate
+                                        )}
+                                    </strong>
+
+                                </div>
+
+
+                                <div className="invoice-detail-item">
+
+                                    <span>
+                                        Due Date
+                                    </span>
+
+                                    <strong>
+                                        {formatDate(
+                                            selectedInvoice.dueDate
+                                        )}
+                                    </strong>
+
+                                </div>
+
+
+                                <div className="invoice-detail-item">
+
+                                    <span>
+                                        Customer ID
+                                    </span>
+
+                                    <strong>
+                                        {
+                                            selectedInvoice.customerId
+                                        }
+                                    </strong>
+
+                                </div>
+
+
+                                <div className="invoice-detail-item">
+
+                                    <span>
+                                        Work Order
+                                    </span>
+
+                                    <strong>
+                                        WO-
+                                        {String(
+                                            selectedInvoice.workOrderId
+                                        ).padStart(
+                                            4,
+                                            "0"
+                                        )}
+                                    </strong>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        {/* BILLING BREAKDOWN */}
+
+                        <div className="invoice-breakdown">
+
+                            <h3>
+                                Billing Summary
+                            </h3>
+
+
+                            <div className="invoice-breakdown-row">
+
+                                <span>
+                                    Service Amount
+                                </span>
+
+                                <strong>
+                                    {formatMoney(
+                                        selectedInvoice.serviceAmount
+                                    )}
+                                </strong>
+
+                            </div>
+
+
+                            <div className="invoice-breakdown-row">
+
+                                <span>
+                                    Tax Amount
+                                </span>
+
+                                <strong>
+                                    {formatMoney(
+                                        selectedInvoice.taxAmount
+                                    )}
+                                </strong>
+
+                            </div>
+
+
+                            <div className="invoice-breakdown-total">
+
+                                <span>
+                                    Total Amount
+                                </span>
+
+                                <strong>
+                                    {formatMoney(
+                                        selectedInvoice.totalAmount
+                                    )}
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+
+                        {/* PAYMENT INFORMATION */}
+
+                        {selectedInvoice.paymentDate && (
+
+                            <div className="payment-info">
+
+                                <span>
+                                    Payment Date
+                                </span>
+
+                                <strong>
+                                    {formatDateTime(
+                                        selectedInvoice.paymentDate
+                                    )}
+                                </strong>
+
+                            </div>
+                        )}
+
+
+                        {/* NOTES */}
+
+                        {selectedInvoice.notes && (
+
+                            <div className="invoice-notes">
+
+                                <h3>
+                                    Notes
+                                </h3>
+
+                                <p>
+                                    {selectedInvoice.notes}
+                                </p>
+
+                            </div>
+                        )}
+
+
+                        {/* MODAL ACTIONS */}
+
+                        <div className="invoice-modal-actions">
+
+                            {selectedInvoice.status !==
+                                "PAID" &&
+                                selectedInvoice.status !==
+                                    "CANCELLED" && (
+
+                                    <>
+
+                                        <button
+                                            type="button"
+                                            className="modal-paid-btn"
+                                            onClick={() =>
+                                                handleMarkPaid(
+                                                    selectedInvoice.id
+                                                )
+                                            }
+                                        >
+                                            Mark Paid
+                                        </button>
+
+
+                                        <button
+                                            type="button"
+                                            className="modal-cancel-btn"
+                                            onClick={() =>
+                                                handleCancel(
+                                                    selectedInvoice.id
+                                                )
+                                            }
+                                        >
+                                            Cancel Invoice
+                                        </button>
+
+                                    </>
+                                )}
+
+
+                            <button
+                                type="button"
+                                className="modal-close-btn"
+                                onClick={
+                                    closeInvoiceDetails
+                                }
+                            >
+                                Close
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            )}
 
         </div>
     );

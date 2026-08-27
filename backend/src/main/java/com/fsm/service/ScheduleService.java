@@ -1,7 +1,10 @@
 package com.fsm.service;
 
 import com.fsm.entity.Schedule;
+import com.fsm.entity.WorkOrder;
 import com.fsm.repository.ScheduleRepository;
+import com.fsm.repository.WorkOrderRepository;
+
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -12,84 +15,268 @@ import java.util.Optional;
 public class ScheduleService {
 
     private final ScheduleRepository scheduleRepository;
+    private final WorkOrderRepository workOrderRepository;
 
-    public ScheduleService(ScheduleRepository scheduleRepository) {
+
+    public ScheduleService(
+            ScheduleRepository scheduleRepository,
+            WorkOrderRepository workOrderRepository) {
+
         this.scheduleRepository = scheduleRepository;
+        this.workOrderRepository = workOrderRepository;
     }
 
 
-    // Get all schedules
+    // ==============================
+    // GET ALL SCHEDULES
+    // ==============================
+
     public List<Schedule> getAllSchedules() {
+
         return scheduleRepository.findAll();
     }
 
 
-    // Get schedule by ID
+    // ==============================
+    // GET SCHEDULE BY ID
+    // ==============================
+
     public Optional<Schedule> getScheduleById(Long id) {
+
         return scheduleRepository.findById(id);
     }
 
 
-    // Create schedule
+    // ==============================
+    // CREATE SCHEDULE
+    // ==============================
+
     public Schedule createSchedule(Schedule schedule) {
 
-        if (schedule.getStatus() == null) {
-            schedule.setStatus(Schedule.Status.SCHEDULED);
+        // Validate Work Order
+        if (schedule.getWorkOrderId() == null) {
+
+            throw new RuntimeException(
+                    "Work Order is required"
+            );
         }
 
-        return scheduleRepository.save(schedule);
+
+        if (!workOrderRepository.existsById(
+                schedule.getWorkOrderId())) {
+
+            throw new RuntimeException(
+                    "Work Order not found with id: "
+                    + schedule.getWorkOrderId()
+            );
+        }
+
+
+        // Validate Technician
+        if (schedule.getTechnicianId() == null) {
+
+            throw new RuntimeException(
+                    "Technician is required"
+            );
+        }
+
+
+        // Validate date
+        if (schedule.getScheduledDate() == null) {
+
+            throw new RuntimeException(
+                    "Scheduled date is required"
+            );
+        }
+
+
+        // Validate time
+        if (schedule.getStartTime() == null ||
+                schedule.getEndTime() == null) {
+
+            throw new RuntimeException(
+                    "Start time and end time are required"
+            );
+        }
+
+
+        // End time must be after start time
+        if (!schedule.getStartTime()
+                .isBefore(schedule.getEndTime())) {
+
+            throw new RuntimeException(
+                    "End time must be after start time"
+            );
+        }
+
+
+        // Default status
+        if (schedule.getStatus() == null) {
+
+            schedule.setStatus(
+                    Schedule.Status.SCHEDULED
+            );
+        }
+
+
+        // Save schedule
+        Schedule savedSchedule =
+                scheduleRepository.save(schedule);
+
+
+        // ==============================
+        // UPDATE WORK ORDER
+        // ==============================
+
+        WorkOrder workOrder =
+                workOrderRepository
+                        .findById(
+                                schedule.getWorkOrderId()
+                        )
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Work Order not found"
+                                )
+                        );
+
+
+        // Assign technician to work order
+        workOrder.setTechnicianId(
+                schedule.getTechnicianId()
+        );
+
+
+        // Change status to ASSIGNED
+        if (workOrder.getStatus() ==
+                WorkOrder.Status.PENDING) {
+
+            workOrder.setStatus(
+                    WorkOrder.Status.ASSIGNED
+            );
+        }
+
+
+        workOrderRepository.save(workOrder);
+
+
+        return savedSchedule;
     }
 
 
-    // Update schedule
-    public Schedule updateSchedule(Long id, Schedule updatedSchedule) {
+    // ==============================
+    // UPDATE SCHEDULE
+    // ==============================
 
-        Schedule existingSchedule = scheduleRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Schedule not found with id: " + id));
+    public Schedule updateSchedule(
+            Long id,
+            Schedule updatedSchedule) {
 
-        existingSchedule.setWorkOrderId(updatedSchedule.getWorkOrderId());
-        existingSchedule.setTechnicianId(updatedSchedule.getTechnicianId());
-        existingSchedule.setScheduledDate(updatedSchedule.getScheduledDate());
-        existingSchedule.setStartTime(updatedSchedule.getStartTime());
-        existingSchedule.setEndTime(updatedSchedule.getEndTime());
-        existingSchedule.setStatus(updatedSchedule.getStatus());
-        existingSchedule.setNotes(updatedSchedule.getNotes());
+        Schedule existingSchedule =
+                scheduleRepository.findById(id)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Schedule not found with id: "
+                                        + id
+                                )
+                        );
 
-        return scheduleRepository.save(existingSchedule);
+
+        existingSchedule.setWorkOrderId(
+                updatedSchedule.getWorkOrderId()
+        );
+
+        existingSchedule.setTechnicianId(
+                updatedSchedule.getTechnicianId()
+        );
+
+        existingSchedule.setScheduledDate(
+                updatedSchedule.getScheduledDate()
+        );
+
+        existingSchedule.setStartTime(
+                updatedSchedule.getStartTime()
+        );
+
+        existingSchedule.setEndTime(
+                updatedSchedule.getEndTime()
+        );
+
+        existingSchedule.setStatus(
+                updatedSchedule.getStatus()
+        );
+
+        existingSchedule.setNotes(
+                updatedSchedule.getNotes()
+        );
+
+
+        return scheduleRepository.save(
+                existingSchedule
+        );
     }
 
 
-    // Delete schedule
+    // ==============================
+    // DELETE SCHEDULE
+    // ==============================
+
     public void deleteSchedule(Long id) {
 
         if (!scheduleRepository.existsById(id)) {
-            throw new RuntimeException("Schedule not found with id: " + id);
+
+            throw new RuntimeException(
+                    "Schedule not found with id: " + id
+            );
         }
 
         scheduleRepository.deleteById(id);
     }
 
 
-    // Get schedules by technician
-    public List<Schedule> getSchedulesByTechnician(Long technicianId) {
-        return scheduleRepository.findByTechnicianId(technicianId);
+    // ==============================
+    // BY TECHNICIAN
+    // ==============================
+
+    public List<Schedule> getSchedulesByTechnician(
+            Long technicianId) {
+
+        return scheduleRepository
+                .findByTechnicianId(technicianId);
     }
 
 
-    // Get schedules by work order
-    public List<Schedule> getSchedulesByWorkOrder(Long workOrderId) {
-        return scheduleRepository.findByWorkOrderId(workOrderId);
+    // ==============================
+    // BY WORK ORDER
+    // ==============================
+
+    public List<Schedule> getSchedulesByWorkOrder(
+            Long workOrderId) {
+
+        return scheduleRepository
+                .findByWorkOrderId(workOrderId);
     }
 
 
-    // Get schedules by date
-    public List<Schedule> getSchedulesByDate(LocalDate date) {
-        return scheduleRepository.findByScheduledDate(date);
+    // ==============================
+    // BY DATE
+    // ==============================
+
+    public List<Schedule> getSchedulesByDate(
+            LocalDate date) {
+
+        return scheduleRepository
+                .findByScheduledDate(date);
     }
 
 
-    // Get schedules by status
-    public List<Schedule> getSchedulesByStatus(Schedule.Status status) {
-        return scheduleRepository.findByStatus(status);
+    // ==============================
+    // BY STATUS
+    // ==============================
+
+    public List<Schedule> getSchedulesByStatus(
+            Schedule.Status status) {
+
+        return scheduleRepository
+                .findByStatus(status);
     }
 }

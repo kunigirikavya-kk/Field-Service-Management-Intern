@@ -17,40 +17,91 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "username", nullable = false, unique = true)
+    @Column(
+        name = "username",
+        nullable = false,
+        unique = true
+    )
     private String username;
 
-    @Column(name = "full_name", nullable = false)
+    @Column(
+        name = "full_name",
+        nullable = false
+    )
     private String fullName;
 
-    @Column(nullable = false, unique = true)
+    @Column(
+        nullable = false,
+        unique = true
+    )
     private String email;
 
-    @Column(nullable = false)
+    @Column(
+        nullable = false
+    )
     private String phone;
 
-    @Column(nullable = false)
+    @Column(
+        nullable = false
+    )
     private String password;
 
-    @Column(nullable = false)
-    private String role;
+    /*
+     * Role is stored as text in the database so that
+     * the existing database remains compatible.
+     *
+     * Allowed roles are:
+     * DISPATCHER
+     * TECHNICIAN
+     * MANAGER
+     * CUSTOMER
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(
+        nullable = false
+    )
+    private Role role;
 
-    @Column(name = "created_at", nullable = false)
+    @Column(
+        name = "created_at",
+        nullable = false
+    )
     private LocalDateTime createdAt;
 
+
+    // =========================================
+    // CONSTRUCTOR
+    // =========================================
 
     public User() {
     }
 
 
+    // =========================================
+    // CREATED DATE
+    // =========================================
+
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
+
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+
     }
 
 
+    // =========================================
+    // GETTERS & SETTERS
+    // =========================================
+
     public Long getId() {
         return id;
+    }
+
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
 
@@ -104,12 +155,12 @@ public class User {
     }
 
 
-    public String getRole() {
+    public Role getRole() {
         return role;
     }
 
 
-    public void setRole(String role) {
+    public void setRole(Role role) {
         this.role = role;
     }
 
@@ -122,4 +173,5 @@ public class User {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
+
 }

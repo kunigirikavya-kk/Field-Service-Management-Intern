@@ -93,6 +93,24 @@ export function createSite(customerId, site) {
     );
 }
 
+// --------------------
+// SERVICE REQUESTS
+// --------------------
+
+export function createServiceRequest(serviceRequest) {
+    return request("/service-requests", {
+        method: "POST",
+        body: JSON.stringify(serviceRequest)
+    });
+}
+
+export function getServiceRequests() {
+    return request("/service-requests");
+}
+
+export function getServiceRequest(id) {
+    return request(`/service-requests/${id}`);
+}
 
 // --------------------
 // WORK ORDERS
@@ -103,9 +121,17 @@ export function getWorkOrders() {
     return request("/work-orders");
 }
 
+
+
 export function getWorkOrder(id) {
 
     return request(`/work-orders/${id}`);
+}
+
+export function getWorkOrdersByTechnician(technicianId) {
+    return request(
+        `/work-orders/technician/${technicianId}`
+    );
 }
 
 export function createWorkOrder(workOrder) {

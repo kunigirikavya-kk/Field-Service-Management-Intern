@@ -2,54 +2,170 @@ import { NavLink } from "react-router-dom";
 
 function Sidebar() {
 
+    // =====================================================
+    // GET LOGGED-IN USER
+    // =====================================================
+
+    const storedUser =
+        localStorage.getItem("fieldsyncUser");
+
+    let currentUser = null;
+
+    try {
+
+        currentUser =
+            storedUser
+                ? JSON.parse(storedUser)
+                : null;
+
+    } catch (error) {
+
+        console.error(
+            "Unable to read FieldSync user:",
+            error
+        );
+
+        currentUser = null;
+    }
+
+
+    // =====================================================
+    // GET USER ROLE
+    // =====================================================
+
+    const userRole =
+        currentUser?.role
+            ? currentUser.role.toUpperCase()
+            : "CUSTOMER";
+
+
+    // =====================================================
+    // ALL MENU ITEMS
+    // =====================================================
+
     const menuItems = [
+
         {
             name: "Dashboard",
             path: "/dashboard",
-            icon: "▦"
+            icon: "▦",
+            roles: [
+                "CUSTOMER",
+                "DISPATCHER",
+                "TECHNICIAN",
+                "MANAGER"
+            ]
         },
+
         {
             name: "Customers",
             path: "/customers",
-            icon: "👥"
+            icon: "👥",
+            roles: [
+                "DISPATCHER",
+                "MANAGER"
+            ]
         },
+
         {
             name: "Technicians",
             path: "/technicians",
-            icon: "🔧"
+            icon: "🔧",
+            roles: [
+                "DISPATCHER",
+                "MANAGER"
+            ]
         },
+
+        {
+            name: "Service Requests",
+            path: "/service-requests/new",
+            icon: "📝",
+            roles: [
+                "CUSTOMER",
+                "DISPATCHER",
+                "MANAGER"
+            ]
+        },
+
         {
             name: "Work Orders",
             path: "/work-orders",
-            icon: "📋"
+            icon: "📋",
+            roles: [
+                "CUSTOMER",
+                "DISPATCHER",
+                "TECHNICIAN",
+                "MANAGER"
+            ]
         },
+
         {
             name: "Schedule",
             path: "/schedule",
-            icon: "📅"
+            icon: "📅",
+            roles: [
+                "DISPATCHER",
+                "TECHNICIAN",
+                "MANAGER"
+            ]
         },
+
         {
             name: "Job Execution",
             path: "/job-execution",
-            icon: "⚙️"
+            icon: "⚙️",
+            roles: [
+                "DISPATCHER",
+                "TECHNICIAN",
+                "MANAGER"
+            ]
         },
+
         {
             name: "Inventory",
             path: "/inventory",
-            icon: "📦"
+            icon: "📦",
+            roles: [
+                "TECHNICIAN",
+                "MANAGER"
+            ]
         },
+
         {
             name: "Billing",
             path: "/billing",
-            icon: "💳"
+            icon: "💳",
+            roles: [
+                "MANAGER"
+            ]
         },
+
         {
             name: "Reports",
             path: "/reports",
-            icon: "📊"
+            icon: "📊",
+            roles: [
+                "MANAGER"
+            ]
         }
     ];
 
+
+    // =====================================================
+    // FILTER MENU BY ROLE
+    // =====================================================
+
+    const visibleMenuItems =
+        menuItems.filter(
+            (item) =>
+                item.roles.includes(userRole)
+        );
+
+
+    // =====================================================
+    // SUPPORT
+    // =====================================================
 
     const handleSupport = () => {
 
@@ -61,12 +177,18 @@ function Sidebar() {
     };
 
 
+    // =====================================================
+    // SIDEBAR
+    // =====================================================
+
     return (
 
         <aside className="sidebar">
 
 
-            {/* LOGO */}
+            {/* =================================================
+                LOGO
+            ================================================= */}
 
             <div className="logo">
 
@@ -89,18 +211,22 @@ function Sidebar() {
             </div>
 
 
-            {/* MENU TITLE */}
+            {/* =================================================
+                MENU TITLE
+            ================================================= */}
 
             <div className="menu-title">
                 MAIN MENU
             </div>
 
 
-            {/* NAVIGATION */}
+            {/* =================================================
+                NAVIGATION
+            ================================================= */}
 
             <nav>
 
-                {menuItems.map((item) => (
+                {visibleMenuItems.map((item) => (
 
                     <NavLink
                         key={item.path}
@@ -127,7 +253,9 @@ function Sidebar() {
             </nav>
 
 
-            {/* SUPPORT */}
+            {/* =================================================
+                SUPPORT
+            ================================================= */}
 
             <div className="sidebar-bottom">
 

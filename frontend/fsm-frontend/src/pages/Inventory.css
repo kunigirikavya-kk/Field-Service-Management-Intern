@@ -257,6 +257,25 @@ td {
     cursor: pointer;
 }
 
+.edit-btn:hover {
+    opacity: 0.85;
+}
+
+
+.stock-btn {
+    background: #dcfce7;
+    color: #15803d;
+    border: none;
+    padding: 7px 11px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.stock-btn:hover {
+    opacity: 0.85;
+}
+
+
 .delete-btn {
     background: #fee2e2;
     color: #dc2626;
@@ -264,6 +283,10 @@ td {
     padding: 7px 11px;
     border-radius: 6px;
     cursor: pointer;
+}
+
+.delete-btn:hover {
+    opacity: 0.85;
 }
 
 
@@ -322,5 +345,9 @@ td {
 
     .inventory-form {
         grid-template-columns: 1fr;
+    }
+
+    .action-buttons {
+        flex-wrap: wrap;
     }
 }

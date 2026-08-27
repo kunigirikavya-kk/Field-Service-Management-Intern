@@ -2,6 +2,7 @@ package com.fsm.controller;
 
 import com.fsm.entity.Schedule;
 import com.fsm.service.ScheduleService;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,7 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/schedules")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "http://localhost:5174")
 public class ScheduleController {
 
     private final ScheduleService scheduleService;
@@ -21,16 +22,26 @@ public class ScheduleController {
     }
 
 
-    // GET all schedules
+    // ==============================
+    // GET ALL SCHEDULES
+    // ==============================
+
     @GetMapping
     public ResponseEntity<List<Schedule>> getAllSchedules() {
-        return ResponseEntity.ok(scheduleService.getAllSchedules());
+
+        return ResponseEntity.ok(
+                scheduleService.getAllSchedules()
+        );
     }
 
 
-    // GET schedule by ID
+    // ==============================
+    // GET SCHEDULE BY ID
+    // ==============================
+
     @GetMapping("/{id}")
-    public ResponseEntity<Schedule> getScheduleById(@PathVariable Long id) {
+    public ResponseEntity<Schedule> getScheduleById(
+            @PathVariable Long id) {
 
         return scheduleService.getScheduleById(id)
                 .map(ResponseEntity::ok)
@@ -38,7 +49,10 @@ public class ScheduleController {
     }
 
 
-    // CREATE schedule
+    // ==============================
+    // CREATE SCHEDULE
+    // ==============================
+
     @PostMapping
     public ResponseEntity<Schedule> createSchedule(
             @RequestBody Schedule schedule) {
@@ -52,19 +66,28 @@ public class ScheduleController {
     }
 
 
-    // UPDATE schedule
+    // ==============================
+    // UPDATE SCHEDULE
+    // ==============================
+
     @PutMapping("/{id}")
     public ResponseEntity<Schedule> updateSchedule(
             @PathVariable Long id,
             @RequestBody Schedule schedule) {
 
         return ResponseEntity.ok(
-                scheduleService.updateSchedule(id, schedule)
+                scheduleService.updateSchedule(
+                        id,
+                        schedule
+                )
         );
     }
 
 
-    // DELETE schedule
+    // ==============================
+    // DELETE SCHEDULE
+    // ==============================
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteSchedule(
             @PathVariable Long id) {
@@ -75,48 +98,69 @@ public class ScheduleController {
     }
 
 
-    // GET schedules by technician
+    // ==============================
+    // BY TECHNICIAN
+    // ==============================
+
     @GetMapping("/technician/{technicianId}")
     public ResponseEntity<List<Schedule>> getByTechnician(
             @PathVariable Long technicianId) {
 
         return ResponseEntity.ok(
-                scheduleService.getSchedulesByTechnician(technicianId)
+                scheduleService.getSchedulesByTechnician(
+                        technicianId
+                )
         );
     }
 
 
-    // GET schedules by work order
+    // ==============================
+    // BY WORK ORDER
+    // ==============================
+
     @GetMapping("/work-order/{workOrderId}")
     public ResponseEntity<List<Schedule>> getByWorkOrder(
             @PathVariable Long workOrderId) {
 
         return ResponseEntity.ok(
-                scheduleService.getSchedulesByWorkOrder(workOrderId)
+                scheduleService.getSchedulesByWorkOrder(
+                        workOrderId
+                )
         );
     }
 
 
-    // GET schedules by date
+    // ==============================
+    // BY DATE
+    // ==============================
+
     @GetMapping("/date/{date}")
     public ResponseEntity<List<Schedule>> getByDate(
             @PathVariable String date) {
 
-        LocalDate scheduledDate = LocalDate.parse(date);
+        LocalDate scheduledDate =
+                LocalDate.parse(date);
 
         return ResponseEntity.ok(
-                scheduleService.getSchedulesByDate(scheduledDate)
+                scheduleService.getSchedulesByDate(
+                        scheduledDate
+                )
         );
     }
 
 
-    // GET schedules by status
+    // ==============================
+    // BY STATUS
+    // ==============================
+
     @GetMapping("/status/{status}")
     public ResponseEntity<List<Schedule>> getByStatus(
             @PathVariable Schedule.Status status) {
 
         return ResponseEntity.ok(
-                scheduleService.getSchedulesByStatus(status)
+                scheduleService.getSchedulesByStatus(
+                        status
+                )
         );
     }
 }

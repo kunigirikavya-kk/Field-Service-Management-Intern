@@ -1,501 +1,945 @@
-/* =========================================
-   JOB EXECUTION PAGE
-========================================= */
+/* =========================================================
+   FIELDSYNC - JOB EXECUTION
+   Complete isolated styling
+========================================================= */
 
-.job-execution-page {
+.je-page {
+    width: 100%;
     min-height: 100vh;
-    padding: 30px;
-    background: #f5f7fb;
+    padding: 32px;
     box-sizing: border-box;
+
+    background:
+        linear-gradient(
+            180deg,
+            #f7f8fc 0%,
+            #f3f5fa 100%
+        );
+
+    color: #17233c;
 }
 
 
-/* =========================================
+/* =========================================================
    HEADER
-========================================= */
+========================================================= */
 
-.job-header {
+.je-header {
     display: flex;
+    align-items: flex-end;
     justify-content: space-between;
-    align-items: center;
-    margin-bottom: 25px;
+
+    gap: 25px;
+
+    margin-bottom: 30px;
 }
 
+.je-eyebrow {
+    display: inline-block;
 
-.job-header h1 {
+    margin-bottom: 9px;
+
+    color: #5548e8;
+
+    font-size: 11px;
+    font-weight: 800;
+
+    letter-spacing: 1.7px;
+}
+
+.je-header h1 {
     margin: 0;
+
+    color: #17233c;
+
     font-size: 30px;
-    color: #1f2937;
+    line-height: 1.2;
+
+    font-weight: 800;
+
+    letter-spacing: -0.5px;
+}
+
+.je-header p {
+    margin: 9px 0 0;
+
+    color: #7c879b;
+
+    font-size: 14px;
+    line-height: 1.5;
 }
 
 
-.job-header p {
-    margin: 7px 0 0;
-    color: #6b7280;
+/* =========================================================
+   ACTIVE JOB COUNT
+========================================================= */
+
+.je-count-box {
+    min-width: 110px;
+
+    padding: 15px 20px;
+
+    box-sizing: border-box;
+
+    background: #ffffff;
+
+    border: 1px solid #e4e8f0;
+
+    border-radius: 14px;
+
+    text-align: center;
+
+    box-shadow:
+        0 5px 18px rgba(27, 39, 72, 0.06);
+}
+
+.je-count-number {
+    display: block;
+
+    margin-bottom: 2px;
+
+    color: #5548e8;
+
+    font-size: 25px;
+    line-height: 1;
+
+    font-weight: 800;
+}
+
+.je-count-label {
+    color: #8b95a7;
+
+    font-size: 10px;
+    font-weight: 800;
+
+    letter-spacing: 0.7px;
+}
+
+
+/* =========================================================
+   ERROR
+========================================================= */
+
+.je-error {
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    margin-bottom: 22px;
+    padding: 13px 16px;
+
+    background: #fff5f5;
+
+    border: 1px solid #fecaca;
+    border-radius: 10px;
+
+    color: #b91c1c;
+
+    font-size: 13px;
+}
+
+.je-error-icon {
     font-size: 15px;
 }
 
+.je-error button {
+    margin-left: auto;
 
-.job-count {
-    background: white;
-    padding: 14px 22px;
-    border-radius: 12px;
-    text-align: center;
-    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
-}
+    padding: 7px 14px;
 
-
-.job-count span {
-    display: block;
-    font-size: 25px;
-    font-weight: 700;
-    color: #2563eb;
-}
-
-
-.job-count small {
-    color: #6b7280;
-}
-
-
-/* =========================================
-   ALERTS
-========================================= */
-
-.job-alert {
-    padding: 13px 17px;
-    border-radius: 9px;
-    margin-bottom: 20px;
-    font-size: 14px;
-    font-weight: 500;
-}
-
-
-.job-alert.error {
-    background: #fee2e2;
-    color: #b91c1c;
-}
-
-
-.job-alert.success {
-    background: #dcfce7;
-    color: #15803d;
-}
-
-
-/* =========================================
-   CARD
-========================================= */
-
-.execution-card {
-    background: white;
-    border-radius: 15px;
-    border: 1px solid #e5e7eb;
-    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.06);
-    margin-bottom: 25px;
-    overflow: hidden;
-}
-
-
-.execution-card-header {
-    padding: 22px;
-    border-bottom: 1px solid #edf0f4;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-
-.execution-card-header h2 {
-    margin: 0;
-    font-size: 19px;
-    color: #1f2937;
-}
-
-
-.execution-card-header p {
-    margin: 5px 0 0;
-    color: #6b7280;
-    font-size: 13px;
-}
-
-
-/* =========================================
-   SCHEDULED JOB GRID
-========================================= */
-
-.scheduled-job-grid {
-    padding: 22px;
-    display: grid;
-    grid-template-columns: repeat(
-        auto-fill,
-        minmax(270px, 1fr)
-    );
-    gap: 18px;
-}
-
-
-.scheduled-job-card {
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 18px;
-    transition: 0.2s;
-}
-
-
-.scheduled-job-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 18px rgba(0, 0, 0, 0.08);
-}
-
-
-.job-card-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 13px;
-}
-
-
-.job-order-number {
-    font-size: 12px;
-    font-weight: 700;
-    color: #2563eb;
-}
-
-
-.scheduled-job-card h3 {
-    margin: 0 0 15px;
-    color: #1f2937;
-    font-size: 16px;
-}
-
-
-/* =========================================
-   JOB DETAILS
-========================================= */
-
-.job-detail {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    margin-bottom: 9px;
-    color: #6b7280;
-    font-size: 13px;
-}
-
-
-/* =========================================
-   STATUS
-========================================= */
-
-.execution-status {
-    padding: 5px 8px;
-    border-radius: 20px;
-    font-size: 9px;
-    font-weight: 700;
-    text-transform: capitalize;
-}
-
-
-.execution-status.not_started {
-    background: #f1f5f9;
-    color: #64748b;
-}
-
-
-.execution-status.in_progress {
-    background: #fef3c7;
-    color: #b45309;
-}
-
-
-.execution-status.completed {
-    background: #dcfce7;
-    color: #15803d;
-}
-
-
-.execution-status.cancelled {
-    background: #fee2e2;
-    color: #b91c1c;
-}
-
-
-/* =========================================
-   JOB BUTTONS
-========================================= */
-
-.start-job-btn,
-.continue-job-btn,
-.view-job-btn {
-    width: 100%;
-    margin-top: 12px;
-    padding: 11px;
     border: none;
-    border-radius: 8px;
+    border-radius: 7px;
+
+    background: #b91c1c;
+
+    color: #ffffff;
+
+    font-size: 11px;
+    font-weight: 800;
+
     cursor: pointer;
-    font-weight: 600;
-    font-size: 13px;
+
+    transition: 0.2s ease;
+}
+
+.je-error button:hover {
+    background: #991b1b;
 }
 
 
-.start-job-btn {
-    background: #2563eb;
-    color: white;
+/* =========================================================
+   SECTION
+========================================================= */
+
+.je-section {
+    width: 100%;
+
+    margin-bottom: 26px;
+
+    overflow: hidden;
+
+    background: #ffffff;
+
+    border: 1px solid #e3e7ef;
+
+    border-radius: 17px;
+
+    box-shadow:
+        0 6px 24px rgba(27, 39, 72, 0.055);
 }
 
 
-.start-job-btn:hover {
-    background: #1d4ed8;
-}
+/* =========================================================
+   SECTION HEADER
+========================================================= */
 
+.je-section-header {
+    padding: 23px 25px 21px;
 
-.continue-job-btn {
-    background: #fef3c7;
-    color: #92400e;
-}
-
-
-.view-job-btn {
-    background: #dcfce7;
-    color: #15803d;
-}
-
-
-/* =========================================
-   LARGE STATUS
-========================================= */
-
-.large-status {
-    padding: 7px 12px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: capitalize;
-}
-
-
-.large-status.not_started {
-    background: #f1f5f9;
-    color: #64748b;
-}
-
-
-.large-status.in_progress {
-    background: #fef3c7;
-    color: #b45309;
-}
-
-
-.large-status.completed {
-    background: #dcfce7;
-    color: #15803d;
-}
-
-
-.large-status.cancelled {
-    background: #fee2e2;
-    color: #b91c1c;
-}
-
-
-/* =========================================
-   EXECUTION INFO
-========================================= */
-
-.execution-info-grid {
-    padding: 22px;
-    display: grid;
-    grid-template-columns:
-        repeat(4, 1fr);
-    gap: 20px;
     border-bottom: 1px solid #edf0f4;
+
+    background:
+        linear-gradient(
+            180deg,
+            #ffffff 0%,
+            #fdfdff 100%
+        );
+}
+
+.je-section-label {
+    display: block;
+
+    margin-bottom: 6px;
+
+    color: #5548e8;
+
+    font-size: 10px;
+    font-weight: 800;
+
+    letter-spacing: 1.4px;
+}
+
+.je-section-header h2 {
+    margin: 0;
+
+    color: #17233c;
+
+    font-size: 19px;
+    line-height: 1.3;
+
+    font-weight: 800;
+}
+
+.je-section-header p {
+    margin: 7px 0 0;
+
+    color: #8792a5;
+
+    font-size: 13px;
+    line-height: 1.5;
 }
 
 
-.execution-info-grid label {
-    display: block;
-    color: #9ca3af;
+/* =========================================================
+   SCHEDULE LIST
+========================================================= */
+
+.je-schedule-list {
+    display: flex;
+    flex-direction: column;
+
+    gap: 12px;
+
+    padding: 20px;
+}
+
+
+/* =========================================================
+   SCHEDULE CARD
+========================================================= */
+
+.je-schedule-card {
+    display: flex;
+    align-items: center;
+
+    min-height: 96px;
+
+    padding: 17px 18px;
+
+    box-sizing: border-box;
+
+    background: #ffffff;
+
+    border: 1px solid #e5e9f0;
+
+    border-radius: 13px;
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        border-color 0.2s ease,
+        background 0.2s ease;
+}
+
+.je-schedule-card:hover {
+    transform: translateY(-2px);
+
+    border-color: #cbc7fa;
+
+    background: #fdfdff;
+
+    box-shadow:
+        0 8px 22px rgba(68, 59, 160, 0.08);
+}
+
+
+/* =========================================================
+   SCHEDULE ICON
+========================================================= */
+
+.je-schedule-icon {
+    width: 52px;
+    height: 52px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-right: 17px;
+
+    border-radius: 13px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #f1efff,
+            #e9e7ff
+        );
+
+    color: #5548e8;
+
+    font-size: 22px;
+
+    box-shadow:
+        inset 0 0 0 1px rgba(85, 72, 232, 0.06);
+}
+
+
+/* =========================================================
+   SCHEDULE CONTENT
+========================================================= */
+
+.je-schedule-content {
+    flex: 1;
+
+    min-width: 0;
+}
+
+.je-work-order {
+    margin-bottom: 5px;
+
+    color: #5548e8;
+
+    font-size: 10px;
+    font-weight: 800;
+
+    letter-spacing: 0.7px;
+}
+
+.je-schedule-title {
+    overflow: hidden;
+
+    margin: 0 0 7px;
+
+    color: #1e293b;
+
+    font-size: 15px;
+    font-weight: 750;
+
+    line-height: 1.35;
+
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.je-schedule-meta {
+    display: flex;
+    align-items: center;
+
+    gap: 16px;
+
+    flex-wrap: wrap;
+
+    color: #7b8799;
+
     font-size: 11px;
-    margin-bottom: 6px;
+}
+
+.je-schedule-meta span {
+    display: inline-flex;
+    align-items: center;
+
+    gap: 5px;
+
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   PRIORITY
+========================================================= */
+
+.je-priority {
+    flex-shrink: 0;
+
+    margin: 0 18px;
+
+    padding: 6px 10px;
+
+    border-radius: 20px;
+
+    font-size: 9px;
+    font-weight: 800;
+
+    letter-spacing: 0.5px;
+
     text-transform: uppercase;
 }
 
-
-.execution-info-grid strong {
-    color: #374151;
-    font-size: 13px;
+.je-priority.low {
+    background: #f1f5f9;
+    color: #64748b;
 }
 
-
-/* =========================================
-   FORM
-========================================= */
-
-.execution-form {
-    padding: 22px;
-}
-
-
-.execution-form-group {
-    margin-bottom: 20px;
-}
-
-
-.execution-form-group label {
-    display: block;
-    margin-bottom: 7px;
-    color: #374151;
-    font-size: 13px;
-    font-weight: 600;
-}
-
-
-.execution-form-group textarea {
-    width: 100%;
-    box-sizing: border-box;
-    border: 1px solid #d1d5db;
-    border-radius: 9px;
-    padding: 12px;
-    resize: vertical;
-    font-family: inherit;
-    font-size: 13px;
-    outline: none;
-}
-
-
-.execution-form-group textarea:focus {
-    border-color: #2563eb;
-    box-shadow:
-        0 0 0 3px
-        rgba(37, 99, 235, 0.1);
-}
-
-
-.execution-form-group textarea:disabled {
-    background: #f8fafc;
-    cursor: not-allowed;
-}
-
-
-/* =========================================
-   ACTIONS
-========================================= */
-
-.execution-actions {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-
-.execution-actions button {
-    border: none;
-    border-radius: 8px;
-    padding: 11px 17px;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 600;
-}
-
-
-.save-job-btn {
+.je-priority.medium {
     background: #eff6ff;
-    color: #1d4ed8;
+    color: #2563eb;
+}
+
+.je-priority.high {
+    background: #fff7ed;
+    color: #c2410c;
+}
+
+.je-priority.urgent {
+    background: #fef2f2;
+    color: #dc2626;
 }
 
 
-.complete-job-btn {
-    background: #16a34a;
-    color: white;
+/* =========================================================
+   START BUTTON
+========================================================= */
+
+.je-start-btn {
+    flex-shrink: 0;
+
+    min-width: 105px;
+
+    padding: 10px 16px;
+
+    border: none;
+    border-radius: 9px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #6255ed,
+            #5043dc
+        );
+
+    color: #ffffff;
+
+    font-size: 11px;
+    font-weight: 800;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 4px 10px rgba(85, 72, 232, 0.18);
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        opacity 0.2s ease;
+}
+
+.je-start-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 7px 15px rgba(85, 72, 232, 0.25);
+}
+
+.je-start-btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.je-start-btn:disabled {
+    opacity: 0.45;
+
+    cursor: not-allowed;
+
+    box-shadow: none;
 }
 
 
-.cancel-job-btn {
-    background: #fee2e2;
+/* =========================================================
+   EXECUTION LIST
+========================================================= */
+
+.je-execution-list {
+    display: flex;
+    flex-direction: column;
+
+    gap: 14px;
+
+    padding: 20px;
+}
+
+
+/* =========================================================
+   EXECUTION CARD
+========================================================= */
+
+.je-execution-card {
+    padding: 20px;
+
+    box-sizing: border-box;
+
+    background: #ffffff;
+
+    border: 1px solid #e3e7ef;
+
+    border-radius: 14px;
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.je-execution-card:hover {
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 7px 20px rgba(27, 39, 72, 0.06);
+}
+
+.je-execution-card.active {
+    border-color: #fed7aa;
+
+    background:
+        linear-gradient(
+            180deg,
+            #fffdfa 0%,
+            #ffffff 100%
+        );
+}
+
+.je-execution-card.completed {
+    border-color: #bbf7d0;
+
+    background:
+        linear-gradient(
+            180deg,
+            #fbfffc 0%,
+            #ffffff 100%
+        );
+}
+
+
+/* =========================================================
+   EXECUTION TOP
+========================================================= */
+
+.je-execution-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 15px;
+
+    margin-bottom: 18px;
+}
+
+.je-execution-title {
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+
+    min-width: 0;
+}
+
+.je-execution-icon {
+    width: 43px;
+    height: 43px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 11px;
+
+    background: #eef2ff;
+
+    color: #5548e8;
+
+    font-size: 19px;
+    font-weight: 800;
+}
+
+.je-execution-title h3 {
+    overflow: hidden;
+
+    margin: 0 0 4px;
+
+    color: #17233c;
+
+    font-size: 15px;
+    font-weight: 750;
+
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.je-execution-title p {
+    margin: 0;
+
+    color: #8a94a6;
+
+    font-size: 11px;
+}
+
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+.je-status {
+    flex-shrink: 0;
+
+    padding: 7px 11px;
+
+    border-radius: 20px;
+
+    font-size: 9px;
+    font-weight: 800;
+
+    letter-spacing: 0.5px;
+
+    text-transform: uppercase;
+}
+
+.je-status.not-started {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.je-status.in-progress {
+    background: #fff7ed;
+    color: #c2410c;
+}
+
+.je-status.completed {
+    background: #ecfdf3;
+    color: #15803d;
+}
+
+.je-status.cancelled {
+    background: #fef2f2;
     color: #b91c1c;
 }
 
 
-.execution-actions button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
+/* =========================================================
+   EXECUTION DETAILS
+========================================================= */
+
+.je-execution-details {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+
+    margin-bottom: 18px;
+
+    overflow: hidden;
+
+    border-top: 1px solid #edf0f4;
+    border-bottom: 1px solid #edf0f4;
+}
+
+.je-detail-item {
+    min-width: 0;
+
+    padding: 13px 15px;
+
+    border-right: 1px solid #edf0f4;
+}
+
+.je-detail-item:last-child {
+    border-right: none;
+}
+
+.je-detail-item span {
+    display: block;
+
+    margin-bottom: 5px;
+
+    color: #9aa3b2;
+
+    font-size: 9px;
+    font-weight: 800;
+
+    letter-spacing: 0.6px;
+
+    text-transform: uppercase;
+}
+
+.je-detail-item strong {
+    display: block;
+
+    overflow: hidden;
+
+    color: #374151;
+
+    font-size: 11px;
+    font-weight: 700;
+
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 
-/* =========================================
-   COMPLETED
-========================================= */
+/* =========================================================
+   NOTES
+========================================================= */
 
-.completed-info {
-    margin-top: 15px;
-    padding: 12px;
+.je-notes {
+    display: flex;
+    flex-direction: column;
+
+    gap: 5px;
+
+    margin-top: 12px;
+    padding: 12px 14px;
+
+    border-radius: 9px;
+
+    background: #f8fafc;
+
+    color: #64748b;
+
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.je-notes strong {
+    color: #475569;
+
+    font-size: 10px;
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.5px;
+}
+
+.je-notes span {
+    color: #64748b;
+}
+
+.je-completion-notes {
     background: #f0fdf4;
+}
+
+.je-completion-notes strong {
     color: #15803d;
-    border-radius: 8px;
-    font-size: 13px;
 }
 
 
-/* =========================================
-   EMPTY
-========================================= */
+/* =========================================================
+   ACTIONS
+========================================================= */
 
-.empty-jobs {
-    padding: 60px 30px;
+.je-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+
+    gap: 9px;
+
+    margin-top: 18px;
+}
+
+.je-complete-btn {
+    padding: 10px 17px;
+
+    border: none;
+    border-radius: 8px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #22c55e,
+            #16a34a
+        );
+
+    color: #ffffff;
+
+    font-size: 11px;
+    font-weight: 800;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 4px 10px rgba(22, 163, 74, 0.15);
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.je-complete-btn:hover {
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 6px 14px rgba(22, 163, 74, 0.22);
+}
+
+.je-cancel-btn {
+    padding: 9px 16px;
+
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+
+    background: #fff5f5;
+
+    color: #dc2626;
+
+    font-size: 11px;
+    font-weight: 800;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.je-cancel-btn:hover {
+    background: #fee2e2;
+
+    border-color: #fca5a5;
+}
+
+
+/* =========================================================
+   EMPTY STATE
+========================================================= */
+
+.je-empty {
+    padding: 58px 20px;
+
     text-align: center;
 }
 
+.je-empty-icon {
+    width: 62px;
+    height: 62px;
 
-.empty-job-icon {
-    font-size: 45px;
-    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin: 0 auto 15px;
+
+    border-radius: 17px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #f1f5f9,
+            #e9eef5
+        );
+
+    font-size: 27px;
 }
 
+.je-empty h3 {
+    margin: 0 0 6px;
 
-.empty-jobs h3 {
-    margin: 0 0 7px;
     color: #374151;
+
+    font-size: 15px;
+    font-weight: 750;
 }
 
+.je-empty p {
+    max-width: 350px;
 
-.empty-jobs p {
+    margin: 0 auto;
+
     color: #9ca3af;
-    margin: 0;
+
+    font-size: 12px;
+    line-height: 1.5;
 }
 
 
-/* =========================================
+/* =========================================================
    LOADING
-========================================= */
+========================================================= */
 
-.job-loading {
+.je-loading {
     min-height: 70vh;
+
     display: flex;
     flex-direction: column;
+
     justify-content: center;
     align-items: center;
-    color: #6b7280;
+
+    text-align: center;
 }
 
+.je-spinner {
+    width: 34px;
+    height: 34px;
 
-.job-spinner {
-    width: 35px;
-    height: 35px;
     border: 4px solid #e5e7eb;
-    border-top-color: #2563eb;
+    border-top-color: #5548e8;
+
     border-radius: 50%;
-    animation: job-spin 0.8s linear infinite;
-    margin-bottom: 12px;
+
+    animation:
+        je-spin 0.8s linear infinite;
 }
 
+.je-loading h2 {
+    margin: 15px 0 5px;
 
-@keyframes job-spin {
+    color: #374151;
 
-    from {
-        transform: rotate(0deg);
-    }
+    font-size: 18px;
+    font-weight: 750;
+}
+
+.je-loading p {
+    margin: 0;
+
+    color: #9ca3af;
+
+    font-size: 13px;
+}
+
+@keyframes je-spin {
 
     to {
         transform: rotate(360deg);
@@ -504,40 +948,244 @@
 }
 
 
-/* =========================================
-   RESPONSIVE
-========================================= */
+/* =========================================================
+   TABLET
+========================================================= */
 
-@media (max-width: 900px) {
+@media (max-width: 1000px) {
 
-    .execution-info-grid {
-        grid-template-columns:
-            repeat(2, 1fr);
+    .je-page {
+        padding: 25px;
+    }
+
+    .je-schedule-card {
+        align-items: flex-start;
+    }
+
+    .je-schedule-content {
+        min-width: 0;
+    }
+
+    .je-priority {
+        margin-left: 12px;
+        margin-right: 12px;
     }
 
 }
 
 
-@media (max-width: 600px) {
+/* =========================================================
+   SMALL TABLET
+========================================================= */
 
-    .job-execution-page {
-        padding: 15px;
-    }
+@media (max-width: 800px) {
 
-
-    .job-header h1 {
-        font-size: 23px;
-    }
-
-
-    .execution-info-grid {
+    .je-execution-details {
         grid-template-columns: 1fr;
     }
 
+    .je-detail-item {
+        border-right: none;
 
-    .execution-card-header {
+        border-bottom: 1px solid #edf0f4;
+    }
+
+    .je-detail-item:last-child {
+        border-bottom: none;
+    }
+
+    .je-schedule-card {
+        flex-wrap: wrap;
+    }
+
+    .je-schedule-content {
+        flex: 1;
+
+        width: calc(100% - 70px);
+    }
+
+    .je-priority {
+        margin-left: 69px;
+        margin-right: 12px;
+        margin-top: 10px;
+    }
+
+    .je-start-btn {
+        margin-top: 10px;
+    }
+
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 600px) {
+
+    .je-page {
+        padding: 16px;
+    }
+
+    .je-header {
         align-items: flex-start;
-        gap: 10px;
+
+        flex-direction: column;
+
+        gap: 16px;
+
+        margin-bottom: 22px;
+    }
+
+    .je-header h1 {
+        font-size: 25px;
+    }
+
+    .je-header p {
+        font-size: 13px;
+    }
+
+    .je-count-box {
+        width: 100%;
+
+        text-align: left;
+    }
+
+    .je-count-number {
+        display: inline;
+
+        margin-right: 7px;
+
+        font-size: 21px;
+    }
+
+    .je-count-label {
+        font-size: 10px;
+    }
+
+    .je-section {
+        border-radius: 14px;
+    }
+
+    .je-section-header {
+        padding: 19px 17px;
+    }
+
+    .je-section-header h2 {
+        font-size: 17px;
+    }
+
+    .je-schedule-list,
+    .je-execution-list {
+        padding: 13px;
+    }
+
+    .je-schedule-card {
+        padding: 15px;
+    }
+
+    .je-schedule-icon {
+        width: 46px;
+        height: 46px;
+
+        margin-right: 12px;
+    }
+
+    .je-schedule-content {
+        width: calc(100% - 58px);
+    }
+
+    .je-schedule-title {
+        white-space: normal;
+    }
+
+    .je-schedule-meta {
+        flex-direction: column;
+        align-items: flex-start;
+
+        gap: 5px;
+    }
+
+    .je-priority {
+        width: fit-content;
+
+        margin-left: 58px;
+        margin-right: 0;
+    }
+
+    .je-start-btn {
+        width: 100%;
+
+        margin-top: 8px;
+    }
+
+    .je-execution-card {
+        padding: 16px;
+    }
+
+    .je-execution-top {
+        align-items: flex-start;
+    }
+
+    .je-execution-title h3 {
+        white-space: normal;
+    }
+
+    .je-status {
+        font-size: 8px;
+    }
+
+    .je-actions {
+        flex-direction: column-reverse;
+
+        align-items: stretch;
+    }
+
+    .je-complete-btn,
+    .je-cancel-btn {
+        width: 100%;
+    }
+
+    .je-empty {
+        padding: 45px 18px;
+    }
+
+}
+
+
+/* =========================================================
+   VERY SMALL MOBILE
+========================================================= */
+
+@media (max-width: 400px) {
+
+    .je-page {
+        padding: 12px;
+    }
+
+    .je-header h1 {
+        font-size: 23px;
+    }
+
+    .je-section-header {
+        padding: 17px 14px;
+    }
+
+    .je-schedule-list,
+    .je-execution-list {
+        padding: 10px;
+    }
+
+    .je-schedule-card {
+        padding: 13px;
+    }
+
+    .je-execution-top {
+        flex-direction: column;
+    }
+
+    .je-status {
+        align-self: flex-start;
     }
 
 }

@@ -4,7 +4,8 @@ import {
     getInventoryParts,
     createInventoryPart,
     updateInventoryPart,
-    deleteInventoryPart
+    deleteInventoryPart,
+    updateInventoryStock
 } from "../services/api";
 
 import "./Inventory.css";
@@ -46,7 +47,7 @@ function Inventory() {
 
             const data = await getInventoryParts();
 
-            setParts(data);
+            setParts(data || []);
 
         } catch (error) {
 
@@ -264,6 +265,79 @@ function Inventory() {
 
             alert(
                 "Failed to delete inventory part"
+            );
+        }
+    }
+
+
+    // -----------------------------------------
+    // UPDATE STOCK
+    // -----------------------------------------
+
+    async function handleStockUpdate(part) {
+
+        const newQuantity = window.prompt(
+            `Enter new quantity for ${part.partName}:`,
+            part.quantity
+        );
+
+
+        // User clicked Cancel
+        if (newQuantity === null) {
+            return;
+        }
+
+
+        // Empty input
+        if (newQuantity.trim() === "") {
+
+            alert(
+                "Quantity cannot be empty"
+            );
+
+            return;
+        }
+
+
+        const quantity = Number(newQuantity);
+
+
+        // Validate quantity
+        if (
+            !Number.isInteger(quantity) ||
+            quantity < 0
+        ) {
+
+            alert(
+                "Please enter a valid quantity (0 or greater)."
+            );
+
+            return;
+        }
+
+
+        try {
+
+            await updateInventoryStock(
+                part.id,
+                quantity
+            );
+
+            alert(
+                "Stock updated successfully!"
+            );
+
+            await loadInventory();
+
+        } catch (error) {
+
+            console.error(
+                "Stock update error:",
+                error
+            );
+
+            alert(
+                "Failed to update stock."
             );
         }
     }
@@ -789,6 +863,18 @@ function Inventory() {
                                                     }
                                                 >
                                                     Edit
+                                                </button>
+
+
+                                                <button
+                                                    className="stock-btn"
+                                                    onClick={() =>
+                                                        handleStockUpdate(
+                                                            part
+                                                        )
+                                                    }
+                                                >
+                                                    Stock
                                                 </button>
 
 
