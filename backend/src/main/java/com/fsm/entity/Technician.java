@@ -13,9 +13,8 @@ public class Technician {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id")
+    @Column(name = "user_id", unique = true)
     private Long userId;
-
     @Column(name = "employee_code")
     private String employeeCode;
 

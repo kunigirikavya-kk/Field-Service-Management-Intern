@@ -1,10 +1,10 @@
+
 import { useEffect, useState } from "react";
 
 import {
     getInvoices,
     getWorkOrders,
     createInvoice,
-    updateInvoice,
     markInvoiceAsPaid,
     cancelInvoice,
     deleteInvoice
@@ -15,9 +15,9 @@ import "./Billing.css";
 
 function Billing() {
 
-    // ================================
+    // =====================================================
     // STATE
-    // ================================
+    // =====================================================
 
     const [invoices, setInvoices] = useState([]);
     const [workOrders, setWorkOrders] = useState([]);
@@ -25,8 +25,13 @@ function Billing() {
     const [loading, setLoading] = useState(true);
     const [creating, setCreating] = useState(false);
 
-    // Invoice details modal
     const [selectedInvoice, setSelectedInvoice] = useState(null);
+
+    const [toast, setToast] = useState({
+        show: false,
+        type: "",
+        message: ""
+    });
 
     const [form, setForm] = useState({
         workOrderId: "",
@@ -38,9 +43,9 @@ function Billing() {
     });
 
 
-    // ================================
+    // =====================================================
     // LOAD DATA
-    // ================================
+    // =====================================================
 
     useEffect(() => {
         loadBillingData();
@@ -78,7 +83,10 @@ function Billing() {
                 error
             );
 
-            alert("Failed to load billing data");
+            showToast(
+                "error",
+                "Unable to load billing data. Please try again."
+            );
 
         } finally {
 
@@ -87,9 +95,33 @@ function Billing() {
     }
 
 
-    // ================================
+    // =====================================================
+    // TOAST MESSAGE
+    // =====================================================
+
+    function showToast(type, message) {
+
+        setToast({
+            show: true,
+            type,
+            message
+        });
+
+        setTimeout(() => {
+
+            setToast({
+                show: false,
+                type: "",
+                message: ""
+            });
+
+        }, 3500);
+    }
+
+
+    // =====================================================
     // FORM CHANGE
-    // ================================
+    // =====================================================
 
     function handleChange(e) {
 
@@ -102,9 +134,9 @@ function Billing() {
     }
 
 
-    // ================================
-    // WORK ORDER SELECT
-    // ================================
+    // =====================================================
+    // WORK ORDER CHANGE
+    // =====================================================
 
     function handleWorkOrderChange(e) {
 
@@ -135,9 +167,9 @@ function Billing() {
     }
 
 
-    // ================================
+    // =====================================================
     // CALCULATE TOTAL
-    // ================================
+    // =====================================================
 
     const serviceAmount =
         Number(form.serviceAmount) || 0;
@@ -149,9 +181,9 @@ function Billing() {
         serviceAmount + taxAmount;
 
 
-    // ================================
+    // =====================================================
     // CREATE INVOICE
-    // ================================
+    // =====================================================
 
     async function handleSubmit(e) {
 
@@ -159,19 +191,31 @@ function Billing() {
 
         if (!form.workOrderId) {
 
-            alert("Please select a work order");
+            showToast(
+                "warning",
+                "Please select a work order."
+            );
+
             return;
         }
 
         if (!form.customerId) {
 
-            alert("Please enter Customer ID");
+            showToast(
+                "warning",
+                "Please enter a customer ID."
+            );
+
             return;
         }
 
         if (serviceAmount <= 0) {
 
-            alert("Please enter a valid service amount");
+            showToast(
+                "warning",
+                "Please enter a valid service amount."
+            );
+
             return;
         }
 
@@ -187,7 +231,6 @@ function Billing() {
                     `${form.dueDate}T23:59:59`;
             }
 
-
             const invoice = {
 
                 invoiceNumber:
@@ -201,11 +244,9 @@ function Billing() {
 
                 dueDate,
 
-                serviceAmount:
-                    serviceAmount,
+                serviceAmount,
 
-                taxAmount:
-                    taxAmount,
+                taxAmount,
 
                 notes:
                     form.notes,
@@ -215,30 +256,16 @@ function Billing() {
             };
 
 
-            console.log(
-                "Creating invoice:",
-                invoice
-            );
+            await createInvoice(invoice);
 
+clearForm();
 
-            const createdInvoice =
-                await createInvoice(invoice);
+await loadBillingData();
 
-
-            console.log(
-                "Invoice created:",
-                createdInvoice
-            );
-
-
-            alert(
-                "Invoice created successfully!"
-            );
-
-
-            clearForm();
-
-            await loadBillingData();
+showToast(
+    "success",
+    "Invoice created successfully."
+);
 
         } catch (error) {
 
@@ -247,9 +274,10 @@ function Billing() {
                 error
             );
 
-            alert(
+            showToast(
+                "error",
                 `Failed to create invoice: ${
-                    error.message
+                    error.message || "Unknown error"
                 }`
             );
 
@@ -260,9 +288,9 @@ function Billing() {
     }
 
 
-    // ================================
+    // =====================================================
     // CLEAR FORM
-    // ================================
+    // =====================================================
 
     function clearForm() {
 
@@ -277,9 +305,9 @@ function Billing() {
     }
 
 
-    // ================================
+    // =====================================================
     // VIEW INVOICE
-    // ================================
+    // =====================================================
 
     function handleViewInvoice(invoice) {
 
@@ -287,9 +315,9 @@ function Billing() {
     }
 
 
-    // ================================
-    // CLOSE INVOICE DETAILS
-    // ================================
+    // =====================================================
+    // CLOSE MODAL
+    // =====================================================
 
     function closeInvoiceDetails() {
 
@@ -297,9 +325,9 @@ function Billing() {
     }
 
 
-    // ================================
-    // MARK AS PAID
-    // ================================
+    // =====================================================
+    // MARK PAID
+    // =====================================================
 
     async function handleMarkPaid(id) {
 
@@ -316,31 +344,23 @@ function Billing() {
 
             await markInvoiceAsPaid(id);
 
-            alert(
-                "Invoice marked as PAID successfully!"
+            showToast(
+                "success",
+                "Invoice marked as paid successfully."
             );
 
             await loadBillingData();
 
-            // Update currently opened invoice
             if (
                 selectedInvoice &&
                 selectedInvoice.id === id
             ) {
 
-                const updatedInvoice =
-                    invoices.find(
-                        invoice =>
-                            invoice.id === id
-                    );
-
-                if (updatedInvoice) {
-
-                    setSelectedInvoice({
-                        ...updatedInvoice,
-                        status: "PAID"
-                    });
-                }
+                setSelectedInvoice(prev => ({
+                    ...prev,
+                    status: "PAID",
+                    paymentDate: new Date().toISOString()
+                }));
             }
 
         } catch (error) {
@@ -350,18 +370,19 @@ function Billing() {
                 error
             );
 
-            alert(
+            showToast(
+                "error",
                 `Failed to mark invoice as paid: ${
-                    error.message
+                    error.message || "Unknown error"
                 }`
             );
         }
     }
 
 
-    // ================================
+    // =====================================================
     // CANCEL INVOICE
-    // ================================
+    // =====================================================
 
     async function handleCancel(id) {
 
@@ -378,31 +399,22 @@ function Billing() {
 
             await cancelInvoice(id);
 
-            alert(
-                "Invoice cancelled successfully!"
+            showToast(
+                "success",
+                "Invoice cancelled successfully."
             );
 
             await loadBillingData();
 
-            // Update currently opened invoice
             if (
                 selectedInvoice &&
                 selectedInvoice.id === id
             ) {
 
-                const updatedInvoice =
-                    invoices.find(
-                        invoice =>
-                            invoice.id === id
-                    );
-
-                if (updatedInvoice) {
-
-                    setSelectedInvoice({
-                        ...updatedInvoice,
-                        status: "CANCELLED"
-                    });
-                }
+                setSelectedInvoice(prev => ({
+                    ...prev,
+                    status: "CANCELLED"
+                }));
             }
 
         } catch (error) {
@@ -412,24 +424,25 @@ function Billing() {
                 error
             );
 
-            alert(
+            showToast(
+                "error",
                 `Failed to cancel invoice: ${
-                    error.message
+                    error.message || "Unknown error"
                 }`
             );
         }
     }
 
 
-    // ================================
+    // =====================================================
     // DELETE INVOICE
-    // ================================
+    // =====================================================
 
     async function handleDelete(id) {
 
         const confirmed =
             window.confirm(
-                "Are you sure you want to delete this invoice?"
+                "Are you sure you want to permanently delete this invoice?"
             );
 
         if (!confirmed) {
@@ -440,8 +453,9 @@ function Billing() {
 
             await deleteInvoice(id);
 
-            alert(
-                "Invoice deleted successfully!"
+            showToast(
+                "success",
+                "Invoice deleted successfully."
             );
 
             if (
@@ -461,18 +475,19 @@ function Billing() {
                 error
             );
 
-            alert(
+            showToast(
+                "error",
                 `Failed to delete invoice: ${
-                    error.message
+                    error.message || "Unknown error"
                 }`
             );
         }
     }
 
 
-    // ================================
+    // =====================================================
     // FORMAT DATE
-    // ================================
+    // =====================================================
 
     function formatDate(date) {
 
@@ -488,7 +503,6 @@ function Billing() {
                 parsedDate.getTime()
             )
         ) {
-
             return "-";
         }
 
@@ -498,9 +512,9 @@ function Billing() {
     }
 
 
-    // ================================
-    // FORMAT DATE + TIME
-    // ================================
+    // =====================================================
+    // FORMAT DATE TIME
+    // =====================================================
 
     function formatDateTime(date) {
 
@@ -516,7 +530,6 @@ function Billing() {
                 parsedDate.getTime()
             )
         ) {
-
             return "-";
         }
 
@@ -524,7 +537,7 @@ function Billing() {
             "en-GB",
             {
                 day: "2-digit",
-                month: "2-digit",
+                month: "short",
                 year: "numeric",
                 hour: "2-digit",
                 minute: "2-digit"
@@ -533,9 +546,9 @@ function Billing() {
     }
 
 
-    // ================================
+    // =====================================================
     // FORMAT MONEY
-    // ================================
+    // =====================================================
 
     function formatMoney(amount) {
 
@@ -552,9 +565,9 @@ function Billing() {
     }
 
 
-    // ================================
+    // =====================================================
     // STATUS CLASS
-    // ================================
+    // =====================================================
 
     function getStatusClass(status) {
 
@@ -578,9 +591,35 @@ function Billing() {
     }
 
 
-    // ================================
+    // =====================================================
+    // STATUS ICON
+    // =====================================================
+
+    function getStatusIcon(status) {
+
+        switch (status) {
+
+            case "PAID":
+                return "✓";
+
+            case "UNPAID":
+                return "◷";
+
+            case "OVERDUE":
+                return "!";
+
+            case "CANCELLED":
+                return "×";
+
+            default:
+                return "•";
+        }
+    }
+
+
+    // =====================================================
     // STATISTICS
-    // ================================
+    // =====================================================
 
     const totalInvoices =
         invoices.length;
@@ -616,17 +655,33 @@ function Billing() {
             );
 
 
-    // ================================
+    // =====================================================
     // LOADING
-    // ================================
+    // =====================================================
 
     if (loading) {
 
         return (
             <div className="billing-page">
 
-                <div className="billing-loading">
-                    Loading billing data...
+                <div className="billing-loading-screen">
+
+                    <div className="billing-loading-art">
+                        ◇
+                    </div>
+
+                    <div className="billing-loading-title">
+                        Preparing Billing
+                    </div>
+
+                    <div className="billing-loading-text">
+                        Loading invoices and payment information...
+                    </div>
+
+                    <div className="billing-loader">
+                        <span></span>
+                    </div>
+
                 </div>
 
             </div>
@@ -634,127 +689,197 @@ function Billing() {
     }
 
 
-    // ================================
+    // =====================================================
     // UI
-    // ================================
+    // =====================================================
 
     return (
 
         <div className="billing-page">
 
-            {/* =====================================
-                PAGE HEADER
-            ====================================== */}
+            {/* =================================================
+                TOAST
+            ================================================= */}
+
+            {toast.show && (
+
+                <div
+                    className={`billing-toast toast-${toast.type}`}
+                >
+
+                    <div className="toast-symbol">
+
+                        {toast.type === "success" && "✓"}
+
+                        {toast.type === "error" && "!"}
+
+                        {toast.type === "warning" && "!"}
+
+                    </div>
+
+                    <div className="toast-message">
+                        {toast.message}
+                    </div>
+
+                    <button
+                        type="button"
+                        className="toast-close"
+                        onClick={() =>
+                            setToast({
+                                show: false,
+                                type: "",
+                                message: ""
+                            })
+                        }
+                    >
+                        ×
+                    </button>
+
+                </div>
+            )}
+
+
+            {/* =================================================
+                HEADER
+            ================================================= */}
 
             <div className="billing-header">
 
-                <div>
+                <div className="billing-title-area">
 
-                    <h1>
-                        Billing Management
-                    </h1>
+                    <div className="billing-art-mark">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
 
-                    <p>
-                        Create invoices and manage payments
-                    </p>
+                    <div>
 
+                        <div className="billing-eyebrow">
+                            FINANCE • FIELDSYNC
+                        </div>
+
+                        <h1>
+                            Billing Management
+                        </h1>
+
+                        <p>
+                            Create invoices, track payments and manage your service revenue.
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <div className="billing-header-decoration">
+                    <span></span>
+                    <span></span>
+                    <span></span>
                 </div>
 
             </div>
 
 
-            {/* =====================================
+            {/* =================================================
                 STATISTICS
-            ====================================== */}
+            ================================================= */}
 
             <div className="billing-stats">
 
-                {/* TOTAL */}
-
                 <div className="billing-stat-card">
 
-                    <div className="stat-icon invoice-icon">
-                        📄
+                    <div className="stat-art stat-art-blue">
+                        <span>▤</span>
                     </div>
 
-                    <div>
+                    <div className="stat-content">
+
+                        <span className="stat-label">
+                            TOTAL INVOICES
+                        </span>
 
                         <h3>
                             {totalInvoices}
                         </h3>
 
-                        <p>
-                            Total Invoices
-                        </p>
+                        <span className="stat-caption">
+                            All generated bills
+                        </span>
 
                     </div>
 
                 </div>
 
 
-                {/* PAID */}
-
                 <div className="billing-stat-card">
 
-                    <div className="stat-icon paid-icon">
-                        ✓
+                    <div className="stat-art stat-art-green">
+                        <span>✓</span>
                     </div>
 
-                    <div>
+                    <div className="stat-content">
+
+                        <span className="stat-label">
+                            PAID INVOICES
+                        </span>
 
                         <h3>
                             {paidInvoices}
                         </h3>
 
-                        <p>
-                            Paid Invoices
-                        </p>
+                        <span className="stat-caption">
+                            Successfully collected
+                        </span>
 
                     </div>
 
                 </div>
 
 
-                {/* UNPAID */}
-
                 <div className="billing-stat-card">
 
-                    <div className="stat-icon unpaid-icon">
-                        ⏳
+                    <div className="stat-art stat-art-orange">
+                        <span>◷</span>
                     </div>
 
-                    <div>
+                    <div className="stat-content">
+
+                        <span className="stat-label">
+                            OUTSTANDING
+                        </span>
 
                         <h3>
                             {unpaidInvoices}
                         </h3>
 
-                        <p>
-                            Unpaid Invoices
-                        </p>
+                        <span className="stat-caption">
+                            Awaiting payment
+                        </span>
 
                     </div>
 
                 </div>
 
 
-                {/* REVENUE */}
-
                 <div className="billing-stat-card">
 
-                    <div className="stat-icon revenue-icon">
-                        ₹
+                    <div className="stat-art stat-art-purple">
+                        <span>₹</span>
                     </div>
 
-                    <div>
+                    <div className="stat-content">
 
-                        <h3>
+                        <span className="stat-label">
+                            PAID REVENUE
+                        </span>
+
+                        <h3 className="revenue-value">
                             {formatMoney(revenue)}
                         </h3>
 
-                        <p>
-                            Revenue
-                        </p>
+                        <span className="stat-caption">
+                            Revenue collected
+                        </span>
 
                     </div>
 
@@ -763,21 +888,33 @@ function Billing() {
             </div>
 
 
-            {/* =====================================
-                CREATE INVOICE CARD
-            ====================================== */}
+            {/* =================================================
+                CREATE INVOICE
+            ================================================= */}
 
-            <div className="billing-card">
+            <div className="billing-card create-billing-card">
 
                 <div className="billing-card-header">
 
-                    <h2>
-                        Create Invoice
-                    </h2>
+                    <div className="section-icon">
+                        +
+                    </div>
 
-                    <p>
-                        Generate a bill for a completed service
-                    </p>
+                    <div>
+
+                        <h2>
+                            Create Invoice
+                        </h2>
+
+                        <p>
+                            Generate a professional bill for a completed service.
+                        </p>
+
+                    </div>
+
+                    <div className="section-shape">
+                        ◆
+                    </div>
 
                 </div>
 
@@ -791,52 +928,56 @@ function Billing() {
 
                     <div className="invoice-form-grid">
 
-                        {/* WORK ORDER */}
-
                         <div className="form-group">
 
                             <label>
                                 Work Order
                             </label>
 
-                            <select
-                                name="workOrderId"
-                                value={form.workOrderId}
-                                onChange={
-                                    handleWorkOrderChange
-                                }
-                                required
-                            >
+                            <div className="input-wrapper">
 
-                                <option value="">
-                                    Select Work Order
-                                </option>
+                                <span className="input-icon">
+                                    #
+                                </span>
 
-                                {workOrders.map(
-                                    workOrder => (
+                                <select
+                                    name="workOrderId"
+                                    value={form.workOrderId}
+                                    onChange={
+                                        handleWorkOrderChange
+                                    }
+                                    required
+                                >
 
-                                        <option
-                                            key={workOrder.id}
-                                            value={workOrder.id}
-                                        >
+                                    <option value="">
+                                        Select Work Order
+                                    </option>
 
-                                            {workOrder.orderNumber ||
-                                                `WO-${workOrder.id}`}
-                                            {" - "}
-                                            {workOrder.description ||
-                                                "Service Work Order"}
+                                    {workOrders.map(
+                                        workOrder => (
 
-                                        </option>
+                                            <option
+                                                key={workOrder.id}
+                                                value={workOrder.id}
+                                            >
 
-                                    )
-                                )}
+                                                {workOrder.orderNumber ||
+                                                    `WO-${workOrder.id}`}
+                                                {" — "}
+                                                {workOrder.description ||
+                                                    "Service Work Order"}
 
-                            </select>
+                                            </option>
+
+                                        )
+                                    )}
+
+                                </select>
+
+                            </div>
 
                         </div>
 
-
-                        {/* CUSTOMER ID */}
 
                         <div className="form-group">
 
@@ -844,19 +985,25 @@ function Billing() {
                                 Customer ID
                             </label>
 
-                            <input
-                                type="number"
-                                name="customerId"
-                                value={form.customerId}
-                                onChange={handleChange}
-                                placeholder="Customer ID"
-                                required
-                            />
+                            <div className="input-wrapper">
+
+                                <span className="input-icon">
+                                    ◉
+                                </span>
+
+                                <input
+                                    type="number"
+                                    name="customerId"
+                                    value={form.customerId}
+                                    onChange={handleChange}
+                                    placeholder="Enter customer ID"
+                                    required
+                                />
+
+                            </div>
 
                         </div>
 
-
-                        {/* DUE DATE */}
 
                         <div className="form-group">
 
@@ -864,12 +1011,20 @@ function Billing() {
                                 Due Date
                             </label>
 
-                            <input
-                                type="date"
-                                name="dueDate"
-                                value={form.dueDate}
-                                onChange={handleChange}
-                            />
+                            <div className="input-wrapper">
+
+                                <span className="input-icon">
+                                    □
+                                </span>
+
+                                <input
+                                    type="date"
+                                    name="dueDate"
+                                    value={form.dueDate}
+                                    onChange={handleChange}
+                                />
+
+                            </div>
 
                         </div>
 
@@ -880,29 +1035,33 @@ function Billing() {
 
                     <div className="invoice-form-grid">
 
-                        {/* SERVICE AMOUNT */}
-
                         <div className="form-group">
 
                             <label>
                                 Service Amount
                             </label>
 
-                            <input
-                                type="number"
-                                name="serviceAmount"
-                                value={form.serviceAmount}
-                                onChange={handleChange}
-                                placeholder="0.00"
-                                min="0"
-                                step="0.01"
-                                required
-                            />
+                            <div className="input-wrapper">
+
+                                <span className="input-icon">
+                                    ₹
+                                </span>
+
+                                <input
+                                    type="number"
+                                    name="serviceAmount"
+                                    value={form.serviceAmount}
+                                    onChange={handleChange}
+                                    placeholder="0.00"
+                                    min="0"
+                                    step="0.01"
+                                    required
+                                />
+
+                            </div>
 
                         </div>
 
-
-                        {/* TAX */}
 
                         <div className="form-group">
 
@@ -910,30 +1069,44 @@ function Billing() {
                                 Tax Amount
                             </label>
 
-                            <input
-                                type="number"
-                                name="taxAmount"
-                                value={form.taxAmount}
-                                onChange={handleChange}
-                                placeholder="0.00"
-                                min="0"
-                                step="0.01"
-                            />
+                            <div className="input-wrapper">
+
+                                <span className="input-icon">
+                                    %
+                                </span>
+
+                                <input
+                                    type="number"
+                                    name="taxAmount"
+                                    value={form.taxAmount}
+                                    onChange={handleChange}
+                                    placeholder="0.00"
+                                    min="0"
+                                    step="0.01"
+                                />
+
+                            </div>
 
                         </div>
 
 
-                        {/* TOTAL */}
-
                         <div className="invoice-total-box">
 
-                            <span>
-                                Invoice Total
-                            </span>
+                            <div className="total-art">
+                                ◆
+                            </div>
 
-                            <strong>
-                                {formatMoney(totalAmount)}
-                            </strong>
+                            <div>
+
+                                <span>
+                                    INVOICE TOTAL
+                                </span>
+
+                                <strong>
+                                    {formatMoney(totalAmount)}
+                                </strong>
+
+                            </div>
 
                         </div>
 
@@ -952,7 +1125,7 @@ function Billing() {
                             name="notes"
                             value={form.notes}
                             onChange={handleChange}
-                            placeholder="Add invoice notes..."
+                            placeholder="Add additional invoice notes, service details or payment instructions..."
                             rows="4"
                         />
 
@@ -964,26 +1137,28 @@ function Billing() {
                     <div className="invoice-form-actions">
 
                         <button
-                            type="submit"
-                            className="create-invoice-btn"
-                            disabled={creating}
-                        >
-
-                            {creating
-                                ? "Creating..."
-                                : "+ Create Invoice"}
-
-                        </button>
-
-
-                        <button
                             type="button"
                             className="clear-invoice-btn"
                             onClick={clearForm}
                             disabled={creating}
                         >
+                            <span>↺</span>
+                            Clear Form
+                        </button>
 
-                            Clear
+                        <button
+                            type="submit"
+                            className="create-invoice-btn"
+                            disabled={creating}
+                        >
+
+                            <span className="button-symbol">
+                                {creating ? "…" : "＋"}
+                            </span>
+
+                            {creating
+                                ? "Creating Invoice..."
+                                : "Create Invoice"}
 
                         </button>
 
@@ -994,21 +1169,33 @@ function Billing() {
             </div>
 
 
-            {/* =====================================
-                INVOICES TABLE
-            ====================================== */}
+            {/* =================================================
+                INVOICES
+            ================================================= */}
 
             <div className="billing-card invoices-card">
 
                 <div className="billing-card-header">
 
-                    <h2>
-                        Invoices
-                    </h2>
+                    <div className="section-icon invoice-section-icon">
+                        ▤
+                    </div>
 
-                    <p>
-                        View and manage all invoices
-                    </p>
+                    <div>
+
+                        <h2>
+                            Invoice Ledger
+                        </h2>
+
+                        <p>
+                            View and manage every generated invoice.
+                        </p>
+
+                    </div>
+
+                    <div className="invoice-count-badge">
+                        {totalInvoices} Records
+                    </div>
 
                 </div>
 
@@ -1017,8 +1204,12 @@ function Billing() {
 
                     <div className="empty-invoices">
 
-                        <div className="empty-icon">
-                            📄
+                        <div className="empty-art">
+
+                            <div>□</div>
+                            <span></span>
+                            <span></span>
+
                         </div>
 
                         <h3>
@@ -1026,14 +1217,14 @@ function Billing() {
                         </h3>
 
                         <p>
-                            Create your first invoice above.
+                            Your generated invoices will appear here.
                         </p>
 
                     </div>
 
                 ) : (
 
-                    <div className="invoice-table-wrapper">
+                    <div className="invoice-table-scroll">
 
                         <table className="invoice-table">
 
@@ -1041,37 +1232,21 @@ function Billing() {
 
                                 <tr>
 
-                                    <th>
-                                        Invoice
-                                    </th>
+                                    <th>INVOICE</th>
 
-                                    <th>
-                                        Work Order
-                                    </th>
+                                    <th>WORK ORDER</th>
 
-                                    <th>
-                                        Service Amount
-                                    </th>
+                                    <th>SERVICE</th>
 
-                                    <th>
-                                        Tax
-                                    </th>
+                                    <th>TAX</th>
 
-                                    <th>
-                                        Total
-                                    </th>
+                                    <th>TOTAL</th>
 
-                                    <th>
-                                        Due Date
-                                    </th>
+                                    <th>DUE DATE</th>
 
-                                    <th>
-                                        Status
-                                    </th>
+                                    <th>STATUS</th>
 
-                                    <th>
-                                        Actions
-                                    </th>
+                                    <th>ACTIONS</th>
 
                                 </tr>
 
@@ -1085,41 +1260,59 @@ function Billing() {
 
                                         <tr key={invoice.id}>
 
-                                            <td className="invoice-number">
+                                            <td>
 
-                                                {invoice.invoiceNumber}
+                                                <div className="invoice-number-cell">
+
+                                                    <div className="invoice-mini-icon">
+                                                        ◇
+                                                    </div>
+
+                                                    <div>
+
+                                                        <strong>
+                                                            {invoice.invoiceNumber}
+                                                        </strong>
+
+                                                        <span>
+                                                            #{invoice.id}
+                                                        </span>
+
+                                                    </div>
+
+                                                </div>
 
                                             </td>
 
 
                                             <td>
 
-                                                WO-
-                                                {String(
-                                                    invoice.workOrderId
-                                                ).padStart(
-                                                    4,
-                                                    "0"
-                                                )}
+                                                <span className="work-order-chip">
+
+                                                    WO-
+                                                    {String(
+                                                        invoice.workOrderId
+                                                    ).padStart(
+                                                        4,
+                                                        "0"
+                                                    )}
+
+                                                </span>
 
                                             </td>
 
 
                                             <td>
-
                                                 {formatMoney(
                                                     invoice.serviceAmount
                                                 )}
-
                                             </td>
 
 
                                             <td>
-
                                                 {formatMoney(
                                                     invoice.taxAmount
                                                 )}
-
                                             </td>
 
 
@@ -1134,9 +1327,13 @@ function Billing() {
 
                                             <td>
 
-                                                {formatDate(
-                                                    invoice.dueDate
-                                                )}
+                                                <span className="due-date-text">
+
+                                                    {formatDate(
+                                                        invoice.dueDate
+                                                    )}
+
+                                                </span>
 
                                             </td>
 
@@ -1149,6 +1346,14 @@ function Billing() {
                                                     )}`}
                                                 >
 
+                                                    <span className="status-dot">
+
+                                                        {getStatusIcon(
+                                                            invoice.status
+                                                        )}
+
+                                                    </span>
+
                                                     {invoice.status}
 
                                                 </span>
@@ -1160,22 +1365,20 @@ function Billing() {
 
                                                 <div className="invoice-actions">
 
-                                                    {/* VIEW */}
-
                                                     <button
                                                         type="button"
-                                                        className="view-invoice-btn"
+                                                        className="action-view"
                                                         onClick={() =>
                                                             handleViewInvoice(
                                                                 invoice
                                                             )
                                                         }
+                                                        title="View invoice"
                                                     >
+                                                        <span>⌕</span>
                                                         View
                                                     </button>
 
-
-                                                    {/* MARK PAID */}
 
                                                     {invoice.status !==
                                                         "PAID" &&
@@ -1184,19 +1387,20 @@ function Billing() {
 
                                                             <button
                                                                 type="button"
-                                                                className="mark-paid-btn"
+                                                                className="action-paid"
                                                                 onClick={() =>
                                                                     handleMarkPaid(
                                                                         invoice.id
                                                                     )
                                                                 }
+                                                                title="Mark as paid"
                                                             >
-                                                                Mark Paid
+                                                                <span>✓</span>
+                                                                Paid
                                                             </button>
+
                                                         )}
 
-
-                                                    {/* CANCEL */}
 
                                                     {invoice.status !==
                                                         "PAID" &&
@@ -1205,29 +1409,32 @@ function Billing() {
 
                                                             <button
                                                                 type="button"
-                                                                className="cancel-invoice-btn"
+                                                                className="action-cancel"
                                                                 onClick={() =>
                                                                     handleCancel(
                                                                         invoice.id
                                                                     )
                                                                 }
+                                                                title="Cancel invoice"
                                                             >
+                                                                <span>×</span>
                                                                 Cancel
                                                             </button>
+
                                                         )}
 
 
-                                                    {/* DELETE */}
-
                                                     <button
                                                         type="button"
-                                                        className="delete-invoice-btn"
+                                                        className="action-delete"
                                                         onClick={() =>
                                                             handleDelete(
                                                                 invoice.id
                                                             )
                                                         }
+                                                        title="Delete invoice"
                                                     >
+                                                        <span>⌫</span>
                                                         Delete
                                                     </button>
 
@@ -1251,9 +1458,9 @@ function Billing() {
             </div>
 
 
-            {/* =====================================
+            {/* =================================================
                 INVOICE DETAILS MODAL
-            ====================================== */}
+            ================================================= */}
 
             {selectedInvoice && (
 
@@ -1269,23 +1476,31 @@ function Billing() {
                         }
                     >
 
-                        {/* MODAL HEADER */}
-
                         <div className="invoice-modal-header">
 
-                            <div>
+                            <div className="modal-title-area">
 
-                                <div className="invoice-brand">
-                                    FIELDSYNC
+                                <div className="modal-brand-mark">
+                                    <span></span>
+                                    <span></span>
+                                    <span></span>
                                 </div>
 
-                                <h2>
-                                    Invoice Details
-                                </h2>
+                                <div>
 
-                                <p>
-                                    {selectedInvoice.invoiceNumber}
-                                </p>
+                                    <div className="invoice-brand">
+                                        FIELDSYNC
+                                    </div>
+
+                                    <h2>
+                                        Invoice Details
+                                    </h2>
+
+                                    <p>
+                                        {selectedInvoice.invoiceNumber}
+                                    </p>
+
+                                </div>
 
                             </div>
 
@@ -1296,6 +1511,7 @@ function Billing() {
                                 onClick={
                                     closeInvoiceDetails
                                 }
+                                aria-label="Close invoice"
                             >
                                 ×
                             </button>
@@ -1303,7 +1519,7 @@ function Billing() {
                         </div>
 
 
-                        {/* INVOICE INFORMATION */}
+                        {/* DETAILS */}
 
                         <div className="invoice-details-section">
 
@@ -1337,9 +1553,17 @@ function Billing() {
                                                 selectedInvoice.status
                                             )}`}
                                         >
+
+                                            <span className="status-dot">
+                                                {getStatusIcon(
+                                                    selectedInvoice.status
+                                                )}
+                                            </span>
+
                                             {
                                                 selectedInvoice.status
                                             }
+
                                         </span>
 
                                     </strong>
@@ -1419,9 +1643,17 @@ function Billing() {
 
                         <div className="invoice-breakdown">
 
-                            <h3>
-                                Billing Summary
-                            </h3>
+                            <div className="breakdown-title">
+
+                                <span className="breakdown-icon">
+                                    ₹
+                                </span>
+
+                                <h3>
+                                    Billing Summary
+                                </h3>
+
+                            </div>
 
 
                             <div className="invoice-breakdown-row">
@@ -1471,21 +1703,29 @@ function Billing() {
                         </div>
 
 
-                        {/* PAYMENT INFORMATION */}
+                        {/* PAYMENT */}
 
                         {selectedInvoice.paymentDate && (
 
                             <div className="payment-info">
 
-                                <span>
-                                    Payment Date
-                                </span>
+                                <div className="payment-icon">
+                                    ✓
+                                </div>
 
-                                <strong>
-                                    {formatDateTime(
-                                        selectedInvoice.paymentDate
-                                    )}
-                                </strong>
+                                <div>
+
+                                    <span>
+                                        PAYMENT RECEIVED
+                                    </span>
+
+                                    <strong>
+                                        {formatDateTime(
+                                            selectedInvoice.paymentDate
+                                        )}
+                                    </strong>
+
+                                </div>
 
                             </div>
                         )}
@@ -1497,19 +1737,27 @@ function Billing() {
 
                             <div className="invoice-notes">
 
-                                <h3>
-                                    Notes
-                                </h3>
+                                <div className="notes-icon">
+                                    ✦
+                                </div>
 
-                                <p>
-                                    {selectedInvoice.notes}
-                                </p>
+                                <div>
+
+                                    <h3>
+                                        Notes
+                                    </h3>
+
+                                    <p>
+                                        {selectedInvoice.notes}
+                                    </p>
+
+                                </div>
 
                             </div>
                         )}
 
 
-                        {/* MODAL ACTIONS */}
+                        {/* ACTIONS */}
 
                         <div className="invoice-modal-actions">
 
@@ -1529,7 +1777,7 @@ function Billing() {
                                                 )
                                             }
                                         >
-                                            Mark Paid
+                                            ✓ Mark Paid
                                         </button>
 
 
@@ -1542,7 +1790,7 @@ function Billing() {
                                                 )
                                             }
                                         >
-                                            Cancel Invoice
+                                            × Cancel Invoice
                                         </button>
 
                                     </>
@@ -1572,3 +1820,4 @@ function Billing() {
 
 
 export default Billing;
+

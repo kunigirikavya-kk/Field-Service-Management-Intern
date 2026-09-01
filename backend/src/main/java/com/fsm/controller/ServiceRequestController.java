@@ -1,3 +1,5 @@
+// ServiceRequestController.java
+
 package com.fsm.controller;
 
 import com.fsm.dto.ServiceRequestRequest;
@@ -24,46 +26,47 @@ public class ServiceRequestController {
                 serviceRequestService;
     }
 
-
-    // ==============================
+    // =====================================================
     // GET ALL SERVICE REQUESTS
-    // ==============================
+    // =====================================================
 
     @GetMapping
-    public ResponseEntity<List<ServiceRequest>> getAllServiceRequests() {
+    public ResponseEntity<List<ServiceRequest>>
+    getAllServiceRequests() {
 
         return ResponseEntity.ok(
-                serviceRequestService.getAllServiceRequests()
+                serviceRequestService
+                        .getAllServiceRequests()
         );
     }
 
-
-    // ==============================
+    // =====================================================
     // GET SERVICE REQUEST BY ID
-    // ==============================
+    // =====================================================
 
     @GetMapping("/{id}")
-    public ResponseEntity<ServiceRequest> getServiceRequestById(
+    public ResponseEntity<ServiceRequest>
+    getServiceRequestById(
             @PathVariable Long id) {
 
         return ResponseEntity.ok(
-                serviceRequestService.getServiceRequestById(id)
+                serviceRequestService
+                        .getServiceRequestById(id)
         );
     }
 
-
-    // ==============================
+    // =====================================================
     // CREATE SERVICE REQUEST
-    // ==============================
+    // =====================================================
 
     @PostMapping
-    public ResponseEntity<ServiceRequest> createServiceRequest(
+    public ResponseEntity<ServiceRequest>
+    createServiceRequest(
             @RequestBody ServiceRequestRequest request) {
 
         ServiceRequest createdRequest =
-                serviceRequestService.createServiceRequest(
-                        request
-                );
+                serviceRequestService
+                        .createServiceRequest(request);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)

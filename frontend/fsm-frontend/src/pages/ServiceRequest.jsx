@@ -1,3 +1,5 @@
+
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -11,7 +13,8 @@ import {
 
 function ServiceRequest() {
 
-    const navigate = useNavigate();
+    const navigate =
+        useNavigate();
 
 
     // =====================================================
@@ -21,7 +24,9 @@ function ServiceRequest() {
     const storedUser =
         localStorage.getItem("fieldsyncUser");
 
+
     let currentUser = null;
+
 
     try {
 
@@ -50,6 +55,15 @@ function ServiceRequest() {
         currentUserRole === "CUSTOMER";
 
 
+    const isTechnician =
+        currentUserRole === "TECHNICIAN";
+
+
+    const canCreateForCustomer =
+        currentUserRole === "DISPATCHER" ||
+        currentUserRole === "MANAGER";
+
+
     // =====================================================
     // STATE
     // =====================================================
@@ -57,18 +71,23 @@ function ServiceRequest() {
     const [customers, setCustomers] =
         useState([]);
 
+
     const [loadingCustomers, setLoadingCustomers] =
         useState(false);
 
+
     const [submitting, setSubmitting] =
         useState(false);
+
 
     const [formData, setFormData] =
         useState({
 
             customerId:
                 isCustomer && currentUser?.id
-                    ? String(currentUser.id)
+                    ? String(
+                        currentUser.id
+                    )
                     : "",
 
             title: "",
@@ -115,38 +134,64 @@ function ServiceRequest() {
 
     useEffect(() => {
 
-        /*
-         * CUSTOMER
-         * --------
-         * Do not call GET /customers.
-         *
-         * The logged-in customer already represents
-         * the customer creating this service request.
-         */
+        // -------------------------------------------------
+        // TECHNICIAN
+        // -------------------------------------------------
 
-        if (isCustomer) {
+        if (isTechnician) {
 
-            setLoadingCustomers(false);
+            navigate(
+                "/dashboard"
+            );
 
             return;
+
         }
 
 
-        /*
-         * ADMIN / DISPATCHER / MANAGER
-         * ----------------------------
-         * They can select a customer.
-         */
+        // -------------------------------------------------
+        // CUSTOMER
+        // -------------------------------------------------
+
+        if (isCustomer) {
+
+            setLoadingCustomers(
+                false
+            );
+
+            return;
+
+        }
+
+
+        // -------------------------------------------------
+        // ONLY DISPATCHER / MANAGER MAY LOAD CUSTOMERS
+        // -------------------------------------------------
+
+        if (!canCreateForCustomer) {
+
+            navigate(
+                "/dashboard"
+            );
+
+            return;
+
+        }
+
 
         const loadCustomers =
             async () => {
 
                 try {
 
-                    setLoadingCustomers(true);
+                    setLoadingCustomers(
+                        true
+                    );
+
 
                     const data =
                         await getCustomers();
+
 
                     console.log(
                         "👥 CUSTOMERS LOADED:",
@@ -180,7 +225,9 @@ function ServiceRequest() {
 
                 } finally {
 
-                    setLoadingCustomers(false);
+                    setLoadingCustomers(
+                        false
+                    );
 
                 }
 
@@ -189,7 +236,12 @@ function ServiceRequest() {
 
         loadCustomers();
 
-    }, [isCustomer]);
+    }, [
+        isCustomer,
+        isTechnician,
+        canCreateForCustomer,
+        navigate
+    ]);
 
 
     // =====================================================
@@ -202,9 +254,11 @@ function ServiceRequest() {
             "fieldsyncToken"
         );
 
+
         localStorage.removeItem(
             "fieldsyncAuthenticated"
         );
+
 
         localStorage.removeItem(
             "fieldsyncUser"
@@ -216,7 +270,9 @@ function ServiceRequest() {
         );
 
 
-        navigate("/login");
+        navigate(
+            "/login"
+        );
 
     }
 
@@ -232,7 +288,9 @@ function ServiceRequest() {
 
 
             if (submitting) {
+
                 return;
+
             }
 
 
@@ -247,6 +305,25 @@ function ServiceRequest() {
                 handleSessionExpired();
 
                 return;
+
+            }
+
+
+            // =================================================
+            // VALIDATE ROLE
+            // =================================================
+
+            if (
+                !isCustomer &&
+                !canCreateForCustomer
+            ) {
+
+                alert(
+                    "You do not have permission to create a service request."
+                );
+
+                return;
+
             }
 
 
@@ -258,16 +335,16 @@ function ServiceRequest() {
                 formData.customerId;
 
 
-            /*
-             * For CUSTOMER users, always use the
-             * logged-in user's ID.
-             */
+            // Customer must always use
+            // the logged-in user's ID.
 
             if (isCustomer) {
 
                 customerId =
                     currentUser?.id
-                        ? String(currentUser.id)
+                        ? String(
+                            currentUser.id
+                        )
                         : "";
 
             }
@@ -280,6 +357,7 @@ function ServiceRequest() {
                 );
 
                 return;
+
             }
 
 
@@ -290,7 +368,9 @@ function ServiceRequest() {
             const requestData = {
 
                 customerId:
-                    Number(customerId),
+                    Number(
+                        customerId
+                    ),
 
                 title:
                     formData.title.trim(),
@@ -321,19 +401,10 @@ function ServiceRequest() {
 
             try {
 
-                setSubmitting(true);
+                setSubmitting(
+                    true
+                );
 
-
-                /*
-                 * IMPORTANT
-                 * ----------
-                 * Use the centralized API function.
-                 *
-                 * api.js automatically adds:
-                 *
-                 * Authorization:
-                 * Bearer <JWT>
-                 */
 
                 const result =
                     await createServiceRequest(
@@ -381,14 +452,11 @@ function ServiceRequest() {
                 });
 
 
-                /*
-                 * Do NOT navigate to Work Orders.
-                 *
-                 * CUSTOMER users may not have permission
-                 * to view all work orders.
-                 */
+                // Go back to dashboard.
 
-                navigate("/dashboard");
+                navigate(
+                    "/dashboard"
+                );
 
 
             } catch (error) {
@@ -408,12 +476,15 @@ function ServiceRequest() {
                 // =================================================
 
                 if (
-                    message.includes("401")
+                    message.includes(
+                        "401"
+                    )
                 ) {
 
                     handleSessionExpired();
 
                     return;
+
                 }
 
 
@@ -422,7 +493,9 @@ function ServiceRequest() {
                 // =================================================
 
                 if (
-                    message.includes("403")
+                    message.includes(
+                        "403"
+                    )
                 ) {
 
                     alert(
@@ -430,6 +503,7 @@ function ServiceRequest() {
                     );
 
                     return;
+
                 }
 
 
@@ -443,7 +517,9 @@ function ServiceRequest() {
 
             } finally {
 
-                setSubmitting(false);
+                setSubmitting(
+                    false
+                );
 
             }
 
@@ -472,8 +548,11 @@ function ServiceRequest() {
                     </h1>
 
                     <p>
-                        Create a new service request
-                        for a customer.
+
+                        {isCustomer
+                            ? "Create a new service request for your account."
+                            : "Create a new service request for a customer."}
+
                     </p>
 
                 </div>
@@ -487,7 +566,11 @@ function ServiceRequest() {
 
             <div className="service-request-card">
 
-                <form onSubmit={handleSubmit}>
+                <form
+                    onSubmit={
+                        handleSubmit
+                    }
+                >
 
 
                     <div className="form-grid">
@@ -787,7 +870,9 @@ function ServiceRequest() {
                                     "/dashboard"
                                 )
                             }
-                            disabled={submitting}
+                            disabled={
+                                submitting
+                            }
                         >
 
                             Cancel
@@ -825,3 +910,4 @@ function ServiceRequest() {
 
 
 export default ServiceRequest;
+

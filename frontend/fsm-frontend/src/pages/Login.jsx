@@ -1,89 +1,64 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
 import { loginUser } from "../services/api";
-
 import "./Login.css";
 
-
 function Login() {
-
     const navigate = useNavigate();
 
-
-    const [email, setEmail] =
-        useState("");
-
-    const [password, setPassword] =
-        useState("");
-
-    const [loading, setLoading] =
-        useState(false);
-
-    const [error, setError] =
-        useState("");
-
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
     const handleLogin = async (e) => {
-
         e.preventDefault();
-
         setError("");
 
-
         if (!email || !password) {
-
-            setError(
-                "Please enter your email and password."
-            );
-
+            setError("Please enter your email and password.");
             return;
         }
 
-
         try {
-
             setLoading(true);
 
+            const user = await loginUser({
+                email: email,
+                password: password
+            });
 
-            const user =
-    await loginUser({
+            localStorage.setItem(
+                "fieldsyncUser",
+                JSON.stringify(user)
+            );
 
-        email: email,
+            localStorage.setItem(
+                "fieldsyncAuthenticated",
+                "true"
+            );
 
-        password: password
+            const role = String(user.role || "").toUpperCase();
 
-    });
+            console.log("👤 LOGIN ROLE:", role);
 
-localStorage.setItem(
-    "fieldsyncUser",
-    JSON.stringify(user)
-);
-
-localStorage.setItem(
-    "fieldsyncAuthenticated",
-    "true"
-);
-
-navigate("/dashboard");
-
+            // All users go to Dashboard.
+            // Dashboard will display role-specific content.
+            navigate("/dashboard");
 
         } catch (error) {
+            console.error("❌ Login error:", error);
 
             setError(
-                error.message ||
-                "Invalid email or password."
+                error.message || "Invalid email or password."
             );
 
         } finally {
-
             setLoading(false);
         }
     };
 
-
     return (
-
         <div className="login-page">
 
             <div className="login-left">
@@ -95,19 +70,11 @@ navigate("/dashboard");
                     </div>
 
                     <div>
-
-                        <h1>
-                            FieldSync
-                        </h1>
-
-                        <p>
-                            Field Service Management
-                        </p>
-
+                        <h1>FieldSync</h1>
+                        <p>Field Service Management</p>
                     </div>
 
                 </div>
-
 
                 <div className="login-message">
 
@@ -121,7 +88,6 @@ navigate("/dashboard");
                         schedule technicians and keep your operations
                         running smoothly.
                     </p>
-
 
                     <div className="login-features">
 
@@ -146,28 +112,21 @@ navigate("/dashboard");
 
             </div>
 
-
             <div className="login-right">
 
                 <div className="login-card">
 
-                    <h2>
-                        Welcome back
-                    </h2>
+                    <h2>Welcome back</h2>
 
                     <p>
                         Sign in to access your dashboard
                     </p>
 
-
                     {error && (
-
                         <div className="login-error">
                             {error}
                         </div>
-
                     )}
-
 
                     <form onSubmit={handleLogin}>
 
@@ -180,14 +139,10 @@ navigate("/dashboard");
                             placeholder="admin@fsm.com"
                             value={email}
                             onChange={(e) => {
-
                                 setEmail(e.target.value);
-
                                 setError("");
-
                             }}
                         />
-
 
                         <label>
                             Password
@@ -198,27 +153,20 @@ navigate("/dashboard");
                             placeholder="Enter your password"
                             value={password}
                             onChange={(e) => {
-
                                 setPassword(e.target.value);
-
                                 setError("");
-
                             }}
                         />
-
 
                         <div className="form-options">
 
                             <label className="remember">
 
-                                <input
-                                    type="checkbox"
-                                />
+                                <input type="checkbox" />
 
                                 Remember me
 
                             </label>
-
 
                             <a href="#">
                                 Forgot password?
@@ -226,22 +174,18 @@ navigate("/dashboard");
 
                         </div>
 
-
                         <button
                             type="submit"
                             className="login-button"
                             disabled={loading}
                         >
-
                             {loading
                                 ? "Signing In..."
                                 : "Sign In"
                             }
-
                         </button>
 
                     </form>
-
 
                     <div className="demo-login">
 
@@ -251,9 +195,7 @@ navigate("/dashboard");
 
                         <button
                             type="button"
-                            onClick={() =>
-                                navigate("/register")
-                            }
+                            onClick={() => navigate("/register")}
                         >
                             Create an account
                         </button>
@@ -267,6 +209,5 @@ navigate("/dashboard");
         </div>
     );
 }
-
 
 export default Login;

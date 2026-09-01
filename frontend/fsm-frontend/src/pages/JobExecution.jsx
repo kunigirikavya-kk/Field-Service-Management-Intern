@@ -1,13 +1,22 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import {
+    useEffect,
+    useState
+} from "react";
 
 import {
-    getSchedules,
-    getJobExecutions,
+    useNavigate
+} from "react-router-dom";
+
+import {
+    getSchedulesByTechnician,
+    getJobExecutionsByTechnician,
     getWorkOrdersByTechnician,
+    getTechnicianByUserId,
+    getJobPhotosByExecution,
     startJob,
     completeJob,
-    cancelJobExecution
+    cancelJobExecution,
+    uploadJobPhoto
 } from "../services/api";
 
 import "./JobExecution.css";
@@ -15,21 +24,40 @@ import "./JobExecution.css";
 
 function JobExecution() {
 
-    const navigate = useNavigate();
+    const navigate =
+        useNavigate();
+
 
     // =====================================================
     // STATE
     // =====================================================
 
-    const [schedules, setSchedules] = useState([]);
-    const [jobExecutions, setJobExecutions] = useState([]);
-    const [workOrders, setWorkOrders] = useState([]);
+    const [schedules, setSchedules] =
+        useState([]);
 
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState("");
+    const [jobExecutions, setJobExecutions] =
+        useState([]);
 
-    const [startingJob, setStartingJob] = useState(false);
-    const [selectedJob, setSelectedJob] = useState(null);
+    const [workOrders, setWorkOrders] =
+        useState([]);
+
+    const [jobPhotos, setJobPhotos] =
+        useState({});
+
+    const [loading, setLoading] =
+        useState(true);
+
+    const [error, setError] =
+        useState("");
+
+    const [startingJob, setStartingJob] =
+        useState(false);
+
+    const [uploadingPhotoId, setUploadingPhotoId] =
+        useState(null);
+
+    const [selectedPhoto, setSelectedPhoto] =
+        useState(null);
 
 
     // =====================================================
@@ -37,7 +65,9 @@ function JobExecution() {
     // =====================================================
 
     useEffect(() => {
+
         loadData();
+
     }, []);
 
 
@@ -46,122 +76,262 @@ function JobExecution() {
         try {
 
             setLoading(true);
+
             setError("");
 
-            const storedUser = localStorage.getItem("fieldsyncUser");
+
+            const storedUser =
+                localStorage.getItem(
+                    "fieldsyncUser"
+                );
+
 
             if (!storedUser) {
-                throw new Error("User session not found.");
+
+                logoutAndRedirect();
+
+                return;
+
             }
 
-            const user = JSON.parse(storedUser);
 
-            console.log("👤 LOGGED-IN USER:", user);
-
-            const role = String(user.role || "").toUpperCase();
-
-            const technicianId = user.id;
-
-            console.log("🔐 USER ROLE:", role);
-            console.log("🔧 TECHNICIAN ID:", technicianId);
-
-
-            // =================================================
-            // LOAD SCHEDULES
-            // =================================================
-
-            const scheduleData = await getSchedules();
-
-            console.log("📅 SCHEDULES:", scheduleData);
-
-            setSchedules(
-                Array.isArray(scheduleData)
-                    ? scheduleData
-                    : []
-            );
-
-
-            // =================================================
-            // LOAD JOB EXECUTIONS
-            // =================================================
-
-            const executionData = await getJobExecutions();
-
-            console.log("⚙️ JOB EXECUTIONS:", executionData);
-
-            setJobExecutions(
-                Array.isArray(executionData)
-                    ? executionData
-                    : []
-            );
-
-
-            // =================================================
-            // LOAD WORK ORDERS
-            // =================================================
-
-            let workOrderData = [];
-
-            if (role === "TECHNICIAN") {
-
-                if (!technicianId) {
-                    throw new Error(
-                        "Technician ID is missing from the logged-in user."
-                    );
-                }
-
-                console.log(
-                    "🔧 Loading technician work orders..."
+            const user =
+                JSON.parse(
+                    storedUser
                 );
 
-                workOrderData =
-                    await getWorkOrdersByTechnician(
-                        technicianId
-                    );
 
-            } else {
+            const role =
+                String(
+                    user.role || ""
+                ).toUpperCase();
 
-                console.log(
-                    "👨‍💼 Non-technician user detected."
+
+            if (role !== "TECHNICIAN") {
+
+                navigate(
+                    "/dashboard"
                 );
 
-                workOrderData = [];
+                return;
+
+            }
+
+
+            if (!user.id) {
+
+                throw new Error(
+                    "Logged-in user ID is missing."
+                );
+
+            }
+
+
+            const technician =
+                await getTechnicianByUserId(
+                    user.id
+                );
+
+
+            const technicianId =
+                technician?.id;
+
+
+            if (!technicianId) {
+
+                throw new Error(
+                    "Technician profile ID is missing."
+                );
 
             }
 
 
             console.log(
-                "📋 WORK ORDERS:",
-                workOrderData
+                "👨‍🔧 TECHNICIAN ID:",
+                technicianId
             );
+
+
+            // =================================================
+            // LOAD MAIN DATA
+            // =================================================
+
+            const [
+                scheduleData,
+                executionData,
+                workOrderData
+            ] =
+                await Promise.all([
+
+                    getSchedulesByTechnician(
+                        technicianId
+                    ),
+
+                    getJobExecutionsByTechnician(
+                        technicianId
+                    ),
+
+                    getWorkOrdersByTechnician(
+                        technicianId
+                    )
+
+                ]);
+
+
+            const scheduleList =
+                Array.isArray(
+                    scheduleData
+                )
+                    ? scheduleData
+                    : [];
+
+
+            const executionList =
+                Array.isArray(
+                    executionData
+                )
+                    ? executionData
+                    : [];
+
+
+            const workOrderList =
+                Array.isArray(
+                    workOrderData
+                )
+                    ? workOrderData
+                    : [];
+
+
+            setSchedules(
+                scheduleList
+            );
+
+
+            setJobExecutions(
+                executionList
+            );
+
 
             setWorkOrders(
-                Array.isArray(workOrderData)
-                    ? workOrderData
-                    : []
+                workOrderList
             );
 
+
+            // =================================================
+            // LOAD PHOTOS BY EXECUTION
+            // =================================================
+
+            const executionIds =
+                executionList
+                    .map(
+                        execution =>
+                            execution.id
+                    )
+                    .filter(Boolean);
+
+
+            if (
+                executionIds.length > 0
+            ) {
+
+                const photoResults =
+                    await Promise.all(
+                        executionIds.map(
+                            async (
+                                executionId
+                            ) => {
+
+                                try {
+
+                                    const photos =
+                                        await getJobPhotosByExecution(
+                                            executionId
+                                        );
+
+
+                                    return {
+                                        executionId,
+
+                                        photos:
+                                            Array.isArray(
+                                                photos
+                                            )
+                                                ? photos
+                                                : []
+                                    };
+
+                                } catch (
+                                    photoError
+                                ) {
+
+                                    console.error(
+                                        `Failed to load photos for execution ${executionId}:`,
+                                        photoError
+                                    );
+
+
+                                    return {
+                                        executionId,
+
+                                        photos: []
+                                    };
+
+                                }
+
+                            }
+                        )
+                    );
+
+
+                const photoMap = {};
+
+
+                photoResults.forEach(
+                    result => {
+
+                        photoMap[
+                            result.executionId
+                        ] =
+                            result.photos;
+
+                    }
+                );
+
+
+                setJobPhotos(
+                    photoMap
+                );
+
+            } else {
+
+                setJobPhotos({});
+
+            }
 
         } catch (err) {
 
             console.error(
-                "❌ Job execution loading error:",
+                "Job execution loading error:",
                 err
             );
 
+
             if (
-                err.message &&
-                err.message.includes("HTTP 401")
+                err.message?.includes(
+                    "HTTP 401"
+                )
             ) {
 
                 logoutAndRedirect();
 
                 return;
+
             }
+
 
             setError(
                 err.message ||
-                "Unable to load job execution data."
+                "Unable to load your service jobs."
             );
 
         } finally {
@@ -174,39 +344,129 @@ function JobExecution() {
 
 
     // =====================================================
-    // LOGOUT / REDIRECT
+    // LOGOUT
     // =====================================================
 
     function logoutAndRedirect() {
 
-        localStorage.removeItem("fieldsyncToken");
-        localStorage.removeItem("fieldsyncAuthenticated");
-        localStorage.removeItem("fieldsyncUser");
+        localStorage.removeItem(
+            "fieldsyncToken"
+        );
 
-        navigate("/login");
+
+        localStorage.removeItem(
+            "fieldsyncAuthenticated"
+        );
+
+
+        localStorage.removeItem(
+            "fieldsyncUser"
+        );
+
+
+        navigate(
+            "/login"
+        );
+
     }
 
 
     // =====================================================
-    // FIND WORK ORDER FOR SCHEDULE
+    // GET TECHNICIAN ID
     // =====================================================
 
-    function getWorkOrderForSchedule(schedule) {
+    async function getCurrentTechnicianId() {
+
+        const storedUser =
+            localStorage.getItem(
+                "fieldsyncUser"
+            );
+
+
+        if (!storedUser) {
+
+            logoutAndRedirect();
+
+            throw new Error(
+                "Logged-in user not found."
+            );
+
+        }
+
+
+        const user =
+            JSON.parse(
+                storedUser
+            );
+
+
+        if (!user?.id) {
+
+            throw new Error(
+                "Logged-in user ID is missing."
+            );
+
+        }
+
+
+        const technician =
+            await getTechnicianByUserId(
+                user.id
+            );
+
+
+        const technicianId =
+            technician?.id;
+
+
+        if (!technicianId) {
+
+            throw new Error(
+                "Technician ID is missing."
+            );
+
+        }
+
+
+        return technicianId;
+
+    }
+
+
+    // =====================================================
+    // FIND WORK ORDER
+    // =====================================================
+
+    function getWorkOrderForSchedule(
+        schedule
+    ) {
 
         if (!schedule) {
+
             return null;
+
         }
 
-        const workOrderId = schedule.workOrderId;
+
+        const workOrderId =
+            schedule.workOrderId;
+
 
         if (!workOrderId) {
+
             return null;
+
         }
+
 
         return workOrders.find(
             workOrder =>
-                Number(workOrder.id) ===
-                Number(workOrderId)
+                Number(
+                    workOrder.id
+                ) ===
+                Number(
+                    workOrderId
+                )
         );
 
     }
@@ -216,87 +476,98 @@ function JobExecution() {
     // START JOB
     // =====================================================
 
-    async function handleStartJob(schedule) {
+    async function handleStartJob(
+        schedule
+    ) {
 
         if (startingJob) {
+
             return;
+
         }
+
 
         try {
 
-            setStartingJob(true);
+            setStartingJob(
+                true
+            );
 
-            const storedUser =
-                localStorage.getItem("fieldsyncUser");
 
-            const user =
-                storedUser
-                    ? JSON.parse(storedUser)
-                    : null;
+            const technicianId =
+                await getCurrentTechnicianId();
 
-            const technicianId = user?.id;
-
-            if (!technicianId) {
-                throw new Error(
-                    "Technician ID is missing."
-                );
-            }
 
             const workOrder =
-                getWorkOrderForSchedule(schedule);
+                getWorkOrderForSchedule(
+                    schedule
+                );
+
 
             if (!workOrder) {
+
                 throw new Error(
                     "No work order was found for this schedule."
                 );
+
             }
+
 
             const requestData = {
 
-                scheduleId: schedule.id,
+                scheduleId:
+                    schedule.id,
 
-                workOrderId: workOrder.id,
+                workOrderId:
+                    workOrder.id,
 
-                technicianId: technicianId,
+                technicianId:
+                    technicianId,
 
-                status: "IN_PROGRESS"
+                status:
+                    "IN_PROGRESS"
 
             };
 
+
             console.log(
-                "🚀 STARTING JOB:",
+                "STARTING JOB:",
                 requestData
             );
 
-            const result =
-                await startJob(requestData);
 
-            console.log(
-                "✅ JOB STARTED:",
-                result
+            await startJob(
+                requestData
             );
+
 
             alert(
                 "Job started successfully! 🚀"
             );
+
 
             await loadData();
 
         } catch (err) {
 
             console.error(
-                "❌ Error starting job:",
+                "Error starting job:",
                 err
             );
 
+
             if (
-                err.message?.includes("HTTP 401")
+                err.message?.includes(
+                    "HTTP 401"
+                )
             ) {
 
                 logoutAndRedirect();
 
                 return;
+
             }
+
 
             alert(
                 `Unable to start job.\n\n${err.message}`
@@ -304,7 +575,9 @@ function JobExecution() {
 
         } finally {
 
-            setStartingJob(false);
+            setStartingJob(
+                false
+            );
 
         }
 
@@ -315,62 +588,68 @@ function JobExecution() {
     // COMPLETE JOB
     // =====================================================
 
-    async function handleCompleteJob(execution) {
+    async function handleCompleteJob(
+        execution
+    ) {
 
         try {
 
             const completionNotes =
                 window.prompt(
                     "Enter completion notes:",
+                    execution.completionNotes ||
                     ""
                 );
 
-            if (completionNotes === null) {
+
+            if (
+                completionNotes === null
+            ) {
+
                 return;
+
             }
 
-            const requestData = {
-
-                completionNotes:
-                    completionNotes,
-
-                status:
-                    "COMPLETED"
-
-            };
-
-            console.log(
-                "🏁 COMPLETING JOB:",
-                execution.id,
-                requestData
-            );
 
             await completeJob(
                 execution.id,
-                requestData
+                {
+                    completionNotes:
+                        completionNotes,
+
+                    status:
+                        "COMPLETED"
+                }
             );
+
 
             alert(
                 "Job completed successfully! 🎉"
             );
+
 
             await loadData();
 
         } catch (err) {
 
             console.error(
-                "❌ Error completing job:",
+                "Error completing job:",
                 err
             );
 
+
             if (
-                err.message?.includes("HTTP 401")
+                err.message?.includes(
+                    "HTTP 401"
+                )
             ) {
 
                 logoutAndRedirect();
 
                 return;
+
             }
+
 
             alert(
                 `Unable to complete job.\n\n${err.message}`
@@ -385,16 +664,22 @@ function JobExecution() {
     // CANCEL JOB
     // =====================================================
 
-    async function handleCancelJob(execution) {
+    async function handleCancelJob(
+        execution
+    ) {
 
         const confirmed =
             window.confirm(
                 "Are you sure you want to cancel this job?"
             );
 
+
         if (!confirmed) {
+
             return;
+
         }
+
 
         try {
 
@@ -402,27 +687,34 @@ function JobExecution() {
                 execution.id
             );
 
+
             alert(
                 "Job cancelled successfully."
             );
+
 
             await loadData();
 
         } catch (err) {
 
             console.error(
-                "❌ Error cancelling job:",
+                "Error cancelling job:",
                 err
             );
 
+
             if (
-                err.message?.includes("HTTP 401")
+                err.message?.includes(
+                    "HTTP 401"
+                )
             ) {
 
                 logoutAndRedirect();
 
                 return;
+
             }
+
 
             alert(
                 `Unable to cancel job.\n\n${err.message}`
@@ -434,16 +726,189 @@ function JobExecution() {
 
 
     // =====================================================
-    // STATUS CLASS
+    // PHOTO UPLOAD
     // =====================================================
 
-    function getStatusClass(status) {
+    async function handlePhotoUpload(
+        execution,
+        event
+    ) {
+
+        const file =
+            event.target.files?.[0];
+
+
+        if (!file) {
+
+            return;
+
+        }
+
+
+        if (
+            !file.type.startsWith(
+                "image/"
+            )
+        ) {
+
+            alert(
+                "Please select an image file."
+            );
+
+
+            event.target.value = "";
+
+            return;
+
+        }
+
+
+        if (
+            file.size >
+            10 * 1024 * 1024
+        ) {
+
+            alert(
+                "Image size must be 10 MB or less."
+            );
+
+
+            event.target.value = "";
+
+            return;
+
+        }
+
+
+        try {
+
+            setUploadingPhotoId(
+                execution.id
+            );
+
+
+            const result =
+                await uploadJobPhoto(
+                    file,
+                    execution.id
+                );
+
+
+            console.log(
+                "✅ PHOTO UPLOADED:",
+                result
+            );
+
+
+            if (
+                result &&
+                result.id
+            ) {
+
+                setJobPhotos(
+                    previous => ({
+
+                        ...previous,
+
+                        [execution.id]:
+                            [
+                                ...(previous[
+                                    execution.id
+                                ] || []),
+
+                                result
+                            ]
+
+                    })
+                );
+
+            } else {
+
+                const photos =
+                    await getJobPhotosByExecution(
+                        execution.id
+                    );
+
+
+                setJobPhotos(
+                    previous => ({
+
+                        ...previous,
+
+                        [execution.id]:
+                            Array.isArray(
+                                photos
+                            )
+                                ? photos
+                                : []
+
+                    })
+                );
+
+            }
+
+
+            alert(
+                "Photo uploaded successfully! 📸"
+            );
+
+        } catch (err) {
+
+            console.error(
+                "Error uploading photo:",
+                err
+            );
+
+
+            if (
+                err.message?.includes(
+                    "HTTP 401"
+                )
+            ) {
+
+                logoutAndRedirect();
+
+                return;
+
+            }
+
+
+            alert(
+                `Unable to upload photo.\n\n${err.message}`
+            );
+
+        } finally {
+
+            setUploadingPhotoId(
+                null
+            );
+
+
+            event.target.value = "";
+
+        }
+
+    }
+
+
+    // =====================================================
+    // STATUS
+    // =====================================================
+
+    function getStatusClass(
+        status
+    ) {
 
         const normalized =
-            String(status || "")
+            String(
+                status || ""
+            )
                 .toUpperCase();
 
-        switch (normalized) {
+
+        switch (
+            normalized
+        ) {
 
             case "COMPLETED":
                 return "completed";
@@ -465,18 +930,58 @@ function JobExecution() {
     }
 
 
+    function getStatusIcon(
+        status
+    ) {
+
+        const normalized =
+            String(
+                status || ""
+            )
+                .toUpperCase();
+
+
+        switch (
+            normalized
+        ) {
+
+            case "COMPLETED":
+                return "✓";
+
+            case "CANCELLED":
+                return "×";
+
+            case "IN_PROGRESS":
+                return "●";
+
+            default:
+                return "○";
+
+        }
+
+    }
+
+
     // =====================================================
     // FORMAT DATE
     // =====================================================
 
-    function formatDate(date) {
+    function formatDate(
+        date
+    ) {
 
         if (!date) {
+
             return "-";
+
         }
 
+
         const parsed =
-            new Date(date);
+            new Date(
+                date
+            );
+
 
         if (
             Number.isNaN(
@@ -488,14 +993,24 @@ function JobExecution() {
 
         }
 
+
         return parsed.toLocaleString(
             "en-IN",
             {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit"
+                day:
+                    "2-digit",
+
+                month:
+                    "short",
+
+                year:
+                    "numeric",
+
+                hour:
+                    "2-digit",
+
+                minute:
+                    "2-digit"
             }
         );
 
@@ -503,7 +1018,24 @@ function JobExecution() {
 
 
     // =====================================================
-    // COUNT ACTIVE JOBS
+    // GET PHOTOS FOR EXECUTION
+    // =====================================================
+
+    function getPhotosForExecution(
+        execution
+    ) {
+
+        return (
+            jobPhotos[
+                execution.id
+            ] || []
+        );
+
+    }
+
+
+    // =====================================================
+    // COUNTS
     // =====================================================
 
     const activeJobs =
@@ -514,6 +1046,30 @@ function JobExecution() {
                 ).toUpperCase() ===
                 "IN_PROGRESS"
         ).length;
+
+
+    const completedJobs =
+        jobExecutions.filter(
+            execution =>
+                String(
+                    execution.status || ""
+                ).toUpperCase() ===
+                "COMPLETED"
+        ).length;
+
+
+    const totalPhotos =
+        Object.values(
+            jobPhotos
+        ).reduce(
+            (
+                total,
+                photos
+            ) =>
+                total +
+                photos.length,
+            0
+        );
 
 
     // =====================================================
@@ -528,14 +1084,20 @@ function JobExecution() {
 
                 <div className="je-loading">
 
-                    <div className="je-spinner"></div>
+                    <div className="je-loading-orbit">
+
+                        <div></div>
+
+                    </div>
+
 
                     <h2>
-                        Loading Service Execution
+                        Preparing Service Execution
                     </h2>
 
+
                     <p>
-                        Preparing technician jobs...
+                        Loading your field operations...
                     </p>
 
                 </div>
@@ -555,39 +1117,120 @@ function JobExecution() {
 
         <div className="je-page">
 
+
+            <div className="je-art je-art-one"></div>
+            <div className="je-art je-art-two"></div>
+            <div className="je-art je-art-three"></div>
+
+
             {/* =================================================
                 HEADER
             ================================================= */}
 
             <header className="je-header">
 
-                <div>
+                <div className="je-heading">
 
-                    <span className="je-eyebrow">
-                        FIELDSYNC OPERATIONS
-                    </span>
+                    <div className="je-eyebrow-row">
+
+                        <span className="je-eyebrow">
+                            FIELDSYNC / FIELD OPERATIONS
+                        </span>
+
+
+                        <span className="je-live-dot">
+
+                            <i></i>
+
+                            LIVE
+
+                        </span>
+
+                    </div>
+
 
                     <h1>
                         Service Execution
                     </h1>
 
+
                     <p>
-                        Start, manage and complete your
-                        technician service jobs.
+                        Execute assigned jobs, capture field
+                        evidence and close service work.
                     </p>
 
                 </div>
 
 
-                <div className="je-count-box">
+                <div className="je-summary">
 
-                    <span className="je-count-number">
-                        {activeJobs}
-                    </span>
+                    <div className="je-summary-card">
 
-                    <span className="je-count-label">
-                        ACTIVE JOBS
-                    </span>
+                        <span className="je-summary-icon active-icon">
+                            ●
+                        </span>
+
+
+                        <div>
+
+                            <strong>
+                                {activeJobs}
+                            </strong>
+
+
+                            <span>
+                                ACTIVE
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <div className="je-summary-card">
+
+                        <span className="je-summary-icon complete-icon">
+                            ✓
+                        </span>
+
+
+                        <div>
+
+                            <strong>
+                                {completedJobs}
+                            </strong>
+
+
+                            <span>
+                                COMPLETED
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <div className="je-summary-card">
+
+                        <span className="je-summary-icon photo-icon">
+                            ▣
+                        </span>
+
+
+                        <div>
+
+                            <strong>
+                                {totalPhotos}
+                            </strong>
+
+
+                            <span>
+                                PHOTOS
+                            </span>
+
+                        </div>
+
+                    </div>
 
                 </div>
 
@@ -602,16 +1245,29 @@ function JobExecution() {
 
                 <div className="je-error">
 
-                    <span className="je-error-icon">
-                        ⚠️
-                    </span>
+                    <div className="je-error-symbol">
+                        !
+                    </div>
 
-                    <span>
-                        {error}
-                    </span>
+
+                    <div className="je-error-content">
+
+                        <strong>
+                            Unable to load service data
+                        </strong>
+
+
+                        <span>
+                            {error}
+                        </span>
+
+                    </div>
+
 
                     <button
-                        onClick={loadData}
+                        onClick={
+                            loadData
+                        }
                     >
                         Retry
                     </button>
@@ -629,18 +1285,37 @@ function JobExecution() {
 
                 <div className="je-section-header">
 
-                    <span className="je-section-label">
-                        SCHEDULED JOBS
-                    </span>
+                    <div>
 
-                    <h2>
-                        Start a Scheduled Job
-                    </h2>
+                        <span className="je-section-label">
+                            TODAY'S WORK QUEUE
+                        </span>
 
-                    <p>
-                        Select a scheduled work order to
-                        begin service execution.
-                    </p>
+
+                        <h2>
+                            Scheduled Jobs
+                        </h2>
+
+
+                        <p>
+                            Start the next assigned field job
+                            directly from your queue.
+                        </p>
+
+                    </div>
+
+
+                    <div className="je-queue-count">
+
+                        <span>
+                            {schedules.length}
+                        </span>
+
+                        <small>
+                            ASSIGNED
+                        </small>
+
+                    </div>
 
                 </div>
 
@@ -649,32 +1324,42 @@ function JobExecution() {
 
                     <div className="je-empty">
 
-                        <div className="je-empty-icon">
-                            📅
+                        <div className="je-empty-art">
+
+                            <span></span>
+                            <span></span>
+                            <span></span>
+
                         </div>
 
+
                         <h3>
-                            No scheduled jobs
+                            Your queue is clear
                         </h3>
 
+
                         <p>
-                            Create a schedule first to
-                            start a service job.
+                            There are no scheduled service
+                            jobs assigned to you right now.
                         </p>
 
                     </div>
 
                 ) : (
 
-                    <div className="je-schedule-list">
+                    <div className="je-schedule-grid">
 
                         {schedules.map(
-                            schedule => {
+                            (
+                                schedule,
+                                index
+                            ) => {
 
                                 const workOrder =
                                     getWorkOrderForSchedule(
                                         schedule
                                     );
+
 
                                 const priority =
                                     String(
@@ -686,55 +1371,95 @@ function JobExecution() {
 
                                 return (
 
-                                    <div
+                                    <article
                                         className="je-schedule-card"
-                                        key={schedule.id}
+                                        key={
+                                            schedule.id
+                                        }
                                     >
 
-                                        <div className="je-schedule-icon">
-                                            🔧
+                                        <div className="je-card-topline">
+
+                                            <span className="je-job-index">
+
+                                                {String(
+                                                    index + 1
+                                                ).padStart(
+                                                    2,
+                                                    "0"
+                                                )}
+
+                                            </span>
+
+
+                                            <span
+                                                className={`je-priority ${priority}`}
+                                            >
+
+                                                <i></i>
+
+                                                {priority}
+
+                                            </span>
+
                                         </div>
 
 
-                                        <div className="je-schedule-content">
+                                        <div className="je-work-order">
 
-                                            <div className="je-work-order">
+                                            {
+                                                workOrder?.orderNumber ||
+                                                `WORK ORDER #${schedule.workOrderId || "-"}`
+                                            }
 
-                                                {workOrder?.orderNumber ||
-                                                    `WORK ORDER #${schedule.workOrderId || "-"}`}
+                                        </div>
+
+
+                                        <h3 className="je-schedule-title">
+
+                                            {
+                                                schedule.title ||
+                                                schedule.description ||
+                                                workOrder?.title ||
+                                                workOrder?.description ||
+                                                "Scheduled Service"
+                                            }
+
+                                        </h3>
+
+
+                                        <div className="je-job-meta">
+
+                                            <div>
+
+                                                <span className="je-meta-icon">
+                                                    ◷
+                                                </span>
+
+                                                <span>
+                                                    {
+                                                        formatDate(
+                                                            schedule.scheduledDate
+                                                        )
+                                                    }
+                                                </span>
 
                                             </div>
 
 
-                                            <h3 className="je-schedule-title">
+                                            <div>
 
-                                                {schedule.title ||
-                                                    schedule.description ||
-                                                    workOrder?.description ||
-                                                    "Scheduled Service"}
-
-                                            </h3>
-
-
-                                            <div className="je-schedule-meta">
-
-                                                <span>
-                                                    📅
-                                                    {formatDate(
-                                                        schedule.scheduledDate
-                                                    )}
+                                                <span className="je-meta-icon">
+                                                    ◇
                                                 </span>
 
                                                 <span>
-                                                    👤
-                                                    Technician #{schedule.technicianId || "-"}
-                                                </span>
-
-                                                <span>
-                                                    📍
-                                                    {schedule.location ||
+                                                    {
+                                                        schedule.location ||
                                                         schedule.serviceLocation ||
-                                                        "Service Location"}
+                                                        workOrder?.serviceLocation ||
+                                                        "Service Location"
+                                                    }
                                                 </span>
 
                                             </div>
@@ -742,35 +1467,42 @@ function JobExecution() {
                                         </div>
 
 
-                                        <span
-                                            className={`je-priority ${priority}`}
-                                        >
-                                            {priority}
-                                        </span>
+                                        <div className="je-card-bottom">
+
+                                            <span className="je-assigned-label">
+                                                ASSIGNED TO YOU
+                                            </span>
 
 
-                                        <button
-                                            className="je-start-btn"
-                                            onClick={() =>
-                                                handleStartJob(
-                                                    schedule
-                                                )
-                                            }
-                                            disabled={
-                                                startingJob ||
-                                                !workOrder
-                                            }
-                                        >
+                                            <button
+                                                className="je-start-btn"
+                                                onClick={() =>
+                                                    handleStartJob(
+                                                        schedule
+                                                    )
+                                                }
+                                                disabled={
+                                                    startingJob ||
+                                                    !workOrder
+                                                }
+                                            >
 
-                                            {startingJob
-                                                ? "Starting..."
-                                                : workOrder
-                                                    ? "Start Job"
-                                                    : "Work Order Missing"}
+                                                <span>
+                                                    →
+                                                </span>
 
-                                        </button>
 
-                                    </div>
+                                                {startingJob
+                                                    ? "Starting..."
+                                                    : workOrder
+                                                        ? "Start Job"
+                                                        : "Missing Work Order"}
+
+                                            </button>
+
+                                        </div>
+
+                                    </article>
 
                                 );
 
@@ -785,25 +1517,40 @@ function JobExecution() {
 
 
             {/* =================================================
-                JOB EXECUTIONS
+                EXECUTION HISTORY
             ================================================= */}
 
             <section className="je-section">
 
                 <div className="je-section-header">
 
-                    <span className="je-section-label">
-                        JOB EXECUTIONS
-                    </span>
+                    <div>
 
-                    <h2>
-                        Active & Completed Jobs
-                    </h2>
+                        <span className="je-section-label">
+                            EXECUTION CENTER
+                        </span>
 
-                    <p>
-                        Monitor service execution progress
-                        and complete active jobs.
-                    </p>
+
+                        <h2>
+                            Active & Completed Jobs
+                        </h2>
+
+
+                        <p>
+                            Manage active work and review your
+                            completed field service history.
+                        </p>
+
+                    </div>
+
+
+                    <div className="je-execution-mark">
+
+                        <span></span>
+
+                        FIELD LOG
+
+                    </div>
 
                 </div>
 
@@ -812,17 +1559,23 @@ function JobExecution() {
 
                     <div className="je-empty">
 
-                        <div className="je-empty-icon">
-                            🔧
+                        <div className="je-empty-art execution-art">
+
+                            <span></span>
+                            <span></span>
+                            <span></span>
+
                         </div>
 
+
                         <h3>
-                            No job executions
+                            No execution history
                         </h3>
 
+
                         <p>
-                            Start a scheduled job to
-                            begin execution.
+                            Start a scheduled job to create
+                            your first execution record.
                         </p>
 
                     </div>
@@ -840,6 +1593,7 @@ function JobExecution() {
                                         "UNKNOWN"
                                     ).toUpperCase();
 
+
                                 const statusClass =
                                     getStatusClass(
                                         execution.status
@@ -851,38 +1605,54 @@ function JobExecution() {
                                         ? "active"
                                         : status === "COMPLETED"
                                             ? "completed"
-                                            : "";
+                                            : status === "CANCELLED"
+                                                ? "cancelled-card"
+                                                : "";
+
+
+                                const photos =
+                                    getPhotosForExecution(
+                                        execution
+                                    );
 
 
                                 return (
 
-                                    <div
+                                    <article
                                         className={`je-execution-card ${cardClass}`}
-                                        key={execution.id}
+                                        key={
+                                            execution.id
+                                        }
                                     >
-
-                                        {/* ==========================
-                                            EXECUTION TOP
-                                        =========================== */}
 
                                         <div className="je-execution-top">
 
                                             <div className="je-execution-title">
 
-                                                <div className="je-execution-icon">
-                                                    {status === "COMPLETED"
-                                                        ? "✓"
-                                                        : status === "CANCELLED"
-                                                            ? "×"
-                                                            : "🔧"}
+                                                <div
+                                                    className={`je-execution-icon ${statusClass}`}
+                                                >
+
+                                                    {
+                                                        getStatusIcon(
+                                                            status
+                                                        )
+                                                    }
+
                                                 </div>
 
 
                                                 <div>
 
+                                                    <div className="je-execution-kicker">
+                                                        EXECUTION RECORD
+                                                    </div>
+
+
                                                     <h3>
                                                         Job Execution #{execution.id}
                                                     </h3>
+
 
                                                     <p>
                                                         Work Order #{execution.workOrderId || "-"}
@@ -896,18 +1666,18 @@ function JobExecution() {
                                             <span
                                                 className={`je-status ${statusClass}`}
                                             >
+
+                                                <i></i>
+
                                                 {status.replace(
                                                     /_/g,
                                                     " "
                                                 )}
+
                                             </span>
 
                                         </div>
 
-
-                                        {/* ==========================
-                                            EXECUTION DETAILS
-                                        =========================== */}
 
                                         <div className="je-execution-details">
 
@@ -917,8 +1687,9 @@ function JobExecution() {
                                                     TECHNICIAN
                                                 </span>
 
+
                                                 <strong>
-                                                    #{execution.technicianId || "-"}
+                                                    You
                                                 </strong>
 
                                             </div>
@@ -930,10 +1701,13 @@ function JobExecution() {
                                                     STARTED
                                                 </span>
 
+
                                                 <strong>
-                                                    {formatDate(
-                                                        execution.startedAt
-                                                    )}
+                                                    {
+                                                        formatDate(
+                                                            execution.startedAt
+                                                        )
+                                                    }
                                                 </strong>
 
                                             </div>
@@ -945,10 +1719,13 @@ function JobExecution() {
                                                     COMPLETED
                                                 </span>
 
+
                                                 <strong>
-                                                    {formatDate(
-                                                        execution.completedAt
-                                                    )}
+                                                    {
+                                                        formatDate(
+                                                            execution.completedAt
+                                                        )
+                                                    }
                                                 </strong>
 
                                             </div>
@@ -956,21 +1733,58 @@ function JobExecution() {
                                         </div>
 
 
-                                        {/* ==========================
-                                            NOTES
-                                        =========================== */}
-
                                         {execution.workNotes && (
 
                                             <div className="je-notes">
 
-                                                <strong>
-                                                    Work Notes
-                                                </strong>
+                                                <div className="je-note-symbol">
+                                                    /
+                                                </div>
 
-                                                <span>
-                                                    {execution.workNotes}
-                                                </span>
+
+                                                <div>
+
+                                                    <strong>
+                                                        Work Notes
+                                                    </strong>
+
+
+                                                    <span>
+                                                        {
+                                                            execution.workNotes
+                                                        }
+                                                    </span>
+
+                                                </div>
+
+                                            </div>
+
+                                        )}
+
+
+                                        {execution.partsUsed && (
+
+                                            <div className="je-notes">
+
+                                                <div className="je-note-symbol">
+                                                    ⚙
+                                                </div>
+
+
+                                                <div>
+
+                                                    <strong>
+                                                        Parts Used
+                                                    </strong>
+
+
+                                                    <span>
+                                                        {
+                                                            execution.partsUsed
+                                                        }
+                                                    </span>
+
+                                                </div>
 
                                             </div>
 
@@ -981,22 +1795,221 @@ function JobExecution() {
 
                                             <div className="je-notes je-completion-notes">
 
-                                                <strong>
-                                                    Completion Notes
-                                                </strong>
+                                                <div className="je-note-symbol">
+                                                    ✓
+                                                </div>
 
-                                                <span>
-                                                    {execution.completionNotes}
-                                                </span>
+
+                                                <div>
+
+                                                    <strong>
+                                                        Completion Notes
+                                                    </strong>
+
+
+                                                    <span>
+                                                        {
+                                                            execution.completionNotes
+                                                        }
+                                                    </span>
+
+                                                </div>
 
                                             </div>
 
                                         )}
 
 
-                                        {/* ==========================
+                                        {/* =================================================
+                                            PHOTOS
+                                        ================================================= */}
+
+                                        <div className="je-photo-section">
+
+                                            <div className="je-photo-header">
+
+                                                <div>
+
+                                                    <div className="je-photo-title">
+
+                                                        <span className="je-photo-icon">
+                                                            📷
+                                                        </span>
+
+
+                                                        <strong>
+                                                            Job Photos
+                                                        </strong>
+
+
+                                                        <span className="je-photo-count">
+                                                            {
+                                                                photos.length
+                                                            }
+                                                        </span>
+
+                                                    </div>
+
+
+                                                    <p>
+                                                        Photos for this specific job execution
+                                                    </p>
+
+                                                </div>
+
+
+                                                <label className="je-upload-btn">
+
+                                                    <input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        onChange={
+                                                            event =>
+                                                                handlePhotoUpload(
+                                                                    execution,
+                                                                    event
+                                                                )
+                                                        }
+                                                        disabled={
+                                                            uploadingPhotoId ===
+                                                            execution.id
+                                                        }
+                                                    />
+
+
+                                                    <span>
+                                                        +
+                                                    </span>
+
+
+                                                    {
+                                                        uploadingPhotoId ===
+                                                        execution.id
+
+                                                            ? "Uploading..."
+
+                                                            : "Add Photo"
+                                                    }
+
+                                                </label>
+
+                                            </div>
+
+
+                                            {photos.length === 0 ? (
+
+                                                <div className="je-no-photos">
+
+                                                    <div className="je-no-photo-icon">
+                                                        📷
+                                                    </div>
+
+
+                                                    <div>
+
+                                                        <strong>
+                                                            No photos for this job
+                                                        </strong>
+
+
+                                                        <span>
+                                                            Upload equipment,
+                                                            site or completed-work photos.
+                                                        </span>
+
+                                                    </div>
+
+                                                </div>
+
+                                            ) : (
+
+                                                <div className="je-photo-grid">
+
+                                                    {photos.map(
+                                                        photo => (
+
+                                                            <button
+                                                                type="button"
+                                                                className="je-photo-card"
+                                                                key={
+                                                                    photo.id
+                                                                }
+                                                                onClick={() =>
+                                                                    setSelectedPhoto(
+                                                                        photo
+                                                                    )
+                                                                }
+                                                            >
+
+                                                                <img
+                                                                    src={
+                                                                        photo.imageUrl
+                                                                    }
+                                                                    alt={
+                                                                        `Job photo ${photo.id}`
+                                                                    }
+                                                                />
+
+
+                                                                <span className="je-photo-overlay">
+
+                                                                    <span>
+                                                                        View
+                                                                    </span>
+
+                                                                </span>
+
+                                                            </button>
+
+                                                        )
+                                                    )}
+
+
+                                                    <label className="je-photo-add-card">
+
+                                                        <input
+                                                            type="file"
+                                                            accept="image/*"
+                                                            onChange={
+                                                                event =>
+                                                                    handlePhotoUpload(
+                                                                        execution,
+                                                                        event
+                                                                    )
+                                                            }
+                                                            disabled={
+                                                                uploadingPhotoId ===
+                                                                execution.id
+                                                            }
+                                                        />
+
+
+                                                        <span className="je-photo-add-plus">
+                                                            +
+                                                        </span>
+
+
+                                                        <strong>
+                                                            Add Photo
+                                                        </strong>
+
+
+                                                        <small>
+                                                            JPG / PNG / WEBP
+                                                        </small>
+
+                                                    </label>
+
+                                                </div>
+
+                                            )}
+
+                                        </div>
+
+
+                                        {/* =================================================
                                             ACTIONS
-                                        =========================== */}
+                                        ================================================= */}
 
                                         {status === "IN_PROGRESS" && (
 
@@ -1009,8 +2022,14 @@ function JobExecution() {
                                                             execution
                                                         )
                                                     }
+                                                    disabled={
+                                                        uploadingPhotoId ===
+                                                        execution.id
+                                                    }
                                                 >
+
                                                     Cancel Job
+
                                                 </button>
 
 
@@ -1021,15 +2040,26 @@ function JobExecution() {
                                                             execution
                                                         )
                                                     }
+                                                    disabled={
+                                                        uploadingPhotoId ===
+                                                        execution.id
+                                                    }
                                                 >
+
+                                                    <span>
+                                                        ✓
+                                                    </span>
+
+
                                                     Complete Job
+
                                                 </button>
 
                                             </div>
 
                                         )}
 
-                                    </div>
+                                    </article>
 
                                 );
 
@@ -1041,6 +2071,75 @@ function JobExecution() {
                 )}
 
             </section>
+
+
+            {/* =================================================
+                PHOTO LIGHTBOX
+            ================================================= */}
+
+            {selectedPhoto && (
+
+                <div
+                    className="je-lightbox"
+                    onClick={() =>
+                        setSelectedPhoto(
+                            null
+                        )
+                    }
+                >
+
+                    <button
+                        type="button"
+                        className="je-lightbox-close"
+                        onClick={() =>
+                            setSelectedPhoto(
+                                null
+                            )
+                        }
+                    >
+                        ×
+                    </button>
+
+
+                    <div
+                        className="je-lightbox-content"
+                        onClick={
+                            event =>
+                                event.stopPropagation()
+                        }
+                    >
+
+                        <img
+                            src={
+                                selectedPhoto.imageUrl
+                            }
+                            alt="Job evidence"
+                        />
+
+
+                        <div className="je-lightbox-caption">
+
+                            <strong>
+                                Job Photo
+                            </strong>
+
+
+                            <span>
+                                Uploaded{" "}
+                                {
+                                    formatDate(
+                                        selectedPhoto.uploadedAt
+                                    )
+                                }
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            )}
 
         </div>
 

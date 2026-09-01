@@ -1,0 +1,19 @@
+# Maven
+backend/target/
+# Node
+frontend/fsm-frontend/node_modules/
+frontend/fsm-frontend/dist/
+# Environment / secrets
+.env
+.env.*
+!.env.example
+# IDE
+.idea/
+.vscode/
+*.iml
+# OS
+.DS_Store
+Thumbs.db
+
+# Accidental nested project repository
+/field-service-management/

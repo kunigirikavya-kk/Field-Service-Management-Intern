@@ -5,7 +5,6 @@ import {
     Navigate
 } from "react-router-dom";
 
-
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 
@@ -33,10 +32,9 @@ function getCurrentUser() {
 
     try {
 
-        const user =
-            localStorage.getItem(
-                "fieldsyncUser"
-            );
+        const user = localStorage.getItem(
+            "fieldsyncUser"
+        );
 
         if (!user) {
             return null;
@@ -62,8 +60,7 @@ function getCurrentUser() {
 
 function getCurrentRole() {
 
-    const user =
-        getCurrentUser();
+    const user = getCurrentUser();
 
     if (!user) {
         return null;
@@ -76,7 +73,7 @@ function getCurrentRole() {
 
 
 // =====================================================
-// DEFAULT PAGE
+// DEFAULT REDIRECT
 // =====================================================
 
 function DefaultRedirect() {
@@ -91,53 +88,13 @@ function DefaultRedirect() {
 
         return (
             <Navigate
-                to="/register"
+                to="/login"
                 replace
             />
         );
 
     }
 
-
-    const role =
-        getCurrentRole();
-
-
-    // -----------------------------------------
-    // CUSTOMER
-    // -----------------------------------------
-
-    if (role === "CUSTOMER") {
-
-        return (
-            <Navigate
-                to="/service-requests/new"
-                replace
-            />
-        );
-
-    }
-
-
-    // -----------------------------------------
-    // TECHNICIAN
-    // -----------------------------------------
-
-    if (role === "TECHNICIAN") {
-
-        return (
-            <Navigate
-                to="/job-execution"
-                replace
-            />
-        );
-
-    }
-
-
-    // -----------------------------------------
-    // DISPATCHER / MANAGER
-    // -----------------------------------------
 
     return (
         <Navigate
@@ -175,8 +132,7 @@ function RoleRoute({
     }
 
 
-    const role =
-        getCurrentRole();
+    const role = getCurrentRole();
 
 
     const normalizedRoles =
@@ -188,16 +144,15 @@ function RoleRoute({
         );
 
 
-    // -----------------------------------------
-    // ROLE NOT ALLOWED
-    // -----------------------------------------
-
     if (
         !normalizedRoles.includes(role)
     ) {
 
         return (
-            <DefaultRedirect />
+            <Navigate
+                to="/dashboard"
+                replace
+            />
         );
 
     }
@@ -219,9 +174,8 @@ function App() {
 
             <Routes>
 
-
                 {/* =====================================
-                    DEFAULT
+                    DEFAULT ROUTE
                 ====================================== */}
 
                 <Route
@@ -240,7 +194,6 @@ function App() {
                     path="/login"
                     element={<Login />}
                 />
-
 
                 <Route
                     path="/register"
@@ -262,11 +215,8 @@ function App() {
 
 
                         {/* =================================
-                            OPERATIONS DASHBOARD
-                            
-                            ONLY:
-                            DISPATCHER
-                            MANAGER
+                            DASHBOARD
+                            ALL ROLES
                         ================================= */}
 
                         <Route
@@ -275,8 +225,11 @@ function App() {
 
                                 <RoleRoute
                                     allowedRoles={[
+                                        "CUSTOMER",
                                         "DISPATCHER",
-                                        "MANAGER"
+                                        "TECHNICIAN",
+                                        "MANAGER",
+                                        "ADMIN"
                                     ]}
                                 >
 
@@ -290,10 +243,7 @@ function App() {
 
                         {/* =================================
                             CUSTOMERS
-                            
-                            ONLY:
-                            DISPATCHER
-                            MANAGER
+                            DISPATCHER / MANAGER
                         ================================= */}
 
                         <Route
@@ -303,7 +253,8 @@ function App() {
                                 <RoleRoute
                                     allowedRoles={[
                                         "DISPATCHER",
-                                        "MANAGER"
+                                        "MANAGER",
+                                        "ADMIN"
                                     ]}
                                 >
 
@@ -317,10 +268,7 @@ function App() {
 
                         {/* =================================
                             TECHNICIANS
-                            
-                            ONLY:
-                            DISPATCHER
-                            MANAGER
+                            DISPATCHER / MANAGER
                         ================================= */}
 
                         <Route
@@ -330,7 +278,8 @@ function App() {
                                 <RoleRoute
                                     allowedRoles={[
                                         "DISPATCHER",
-                                        "MANAGER"
+                                        "MANAGER",
+                                        "ADMIN"
                                     ]}
                                 >
 
@@ -343,11 +292,8 @@ function App() {
 
 
                         {/* =================================
-                            SERVICE REQUEST
-                            
-                            CUSTOMER CAN CREATE
-                            
-                            DISPATCHER/MANAGER CAN CREATE
+                            SERVICE REQUEST CREATION
+                            CUSTOMER / DISPATCHER / MANAGER
                         ================================= */}
 
                         <Route
@@ -358,7 +304,8 @@ function App() {
                                     allowedRoles={[
                                         "CUSTOMER",
                                         "DISPATCHER",
-                                        "MANAGER"
+                                        "MANAGER",
+                                        "ADMIN"
                                     ]}
                                 >
 
@@ -372,8 +319,7 @@ function App() {
 
                         {/* =================================
                             WORK ORDERS
-                            
-                            DISPATCHER / MANAGER
+                            ALL ROLES
                         ================================= */}
 
                         <Route
@@ -382,8 +328,11 @@ function App() {
 
                                 <RoleRoute
                                     allowedRoles={[
+                                        "CUSTOMER",
                                         "DISPATCHER",
-                                        "MANAGER"
+                                        "TECHNICIAN",
+                                        "MANAGER",
+                                        "ADMIN"
                                     ]}
                                 >
 
@@ -397,8 +346,7 @@ function App() {
 
                         {/* =================================
                             SCHEDULE
-                            
-                            DISPATCHER / MANAGER / TECHNICIAN
+                            DISPATCHER / TECHNICIAN / MANAGER
                         ================================= */}
 
                         <Route
@@ -408,8 +356,9 @@ function App() {
                                 <RoleRoute
                                     allowedRoles={[
                                         "DISPATCHER",
+                                        "TECHNICIAN",
                                         "MANAGER",
-                                        "TECHNICIAN"
+                                        "ADMIN"
                                     ]}
                                 >
 
@@ -423,8 +372,7 @@ function App() {
 
                         {/* =================================
                             JOB EXECUTION
-                            
-                            TECHNICIAN / DISPATCHER / MANAGER
+                            TECHNICIAN / MANAGER
                         ================================= */}
 
                         <Route
@@ -434,8 +382,8 @@ function App() {
                                 <RoleRoute
                                     allowedRoles={[
                                         "TECHNICIAN",
-                                        "DISPATCHER",
-                                        "MANAGER"
+                                        "MANAGER",
+                                        "ADMIN"
                                     ]}
                                 >
 
@@ -449,8 +397,7 @@ function App() {
 
                         {/* =================================
                             INVENTORY
-                            
-                            DISPATCHER / MANAGER
+                            TECHNICIAN / MANAGER
                         ================================= */}
 
                         <Route
@@ -459,9 +406,11 @@ function App() {
 
                                 <RoleRoute
                                     allowedRoles={[
-                                        "DISPATCHER",
-                                        "MANAGER"
-                                    ]}
+    "DISPATCHER",
+    "TECHNICIAN",
+    "MANAGER",
+    "ADMIN"
+]}
                                 >
 
                                     <Inventory />
@@ -474,8 +423,7 @@ function App() {
 
                         {/* =================================
                             BILLING
-                            
-                            DISPATCHER / MANAGER
+                            MANAGER
                         ================================= */}
 
                         <Route
@@ -484,9 +432,10 @@ function App() {
 
                                 <RoleRoute
                                     allowedRoles={[
-                                        "DISPATCHER",
-                                        "MANAGER"
-                                    ]}
+    "DISPATCHER",
+    "MANAGER",
+    "ADMIN"
+]}
                                 >
 
                                     <Billing />
@@ -499,8 +448,7 @@ function App() {
 
                         {/* =================================
                             REPORTS
-                            
-                            DISPATCHER / MANAGER
+                            MANAGER
                         ================================= */}
 
                         <Route
@@ -509,8 +457,8 @@ function App() {
 
                                 <RoleRoute
                                     allowedRoles={[
-                                        "DISPATCHER",
-                                        "MANAGER"
+                                        "MANAGER",
+                                        "ADMIN"
                                     ]}
                                 >
 
@@ -520,7 +468,6 @@ function App() {
 
                             }
                         />
-
 
                     </Route>
 
@@ -543,6 +490,5 @@ function App() {
         </BrowserRouter>
     );
 }
-
 
 export default App;

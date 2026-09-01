@@ -1,3 +1,4 @@
+
 package com.fsm.controller;
 
 import com.fsm.entity.Technician;
@@ -31,18 +32,26 @@ public class TechnicianController {
         this.technicianService = technicianService;
     }
 
+    // =====================================================
     // GET ALL TECHNICIANS
+    // =====================================================
+
     @GetMapping
-    public ResponseEntity<List<Technician>> getAllTechnicians() {
+    public ResponseEntity<List<Technician>>
+    getAllTechnicians() {
 
         return ResponseEntity.ok(
                 technicianService.getAllTechnicians()
         );
     }
 
+    // =====================================================
     // GET TECHNICIAN BY ID
+    // =====================================================
+
     @GetMapping("/{id}")
-    public ResponseEntity<Technician> getTechnicianById(
+    public ResponseEntity<Technician>
+    getTechnicianById(
             @PathVariable Long id) {
 
         return ResponseEntity.ok(
@@ -50,44 +59,81 @@ public class TechnicianController {
         );
     }
 
+    // =====================================================
+    // GET TECHNICIAN BY USER ID
+    // =====================================================
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<Technician>
+    getTechnicianByUserId(
+            @PathVariable Long userId) {
+
+        return ResponseEntity.ok(
+                technicianService
+                        .getTechnicianByUserId(userId)
+        );
+    }
+
+    // =====================================================
     // CREATE TECHNICIAN
+    // =====================================================
+
     @PostMapping
-    public ResponseEntity<Technician> createTechnician(
+    public ResponseEntity<Technician>
+    createTechnician(
             @RequestBody Technician technician) {
 
         Technician savedTechnician =
-                technicianService.createTechnician(technician);
+                technicianService
+                        .createTechnician(
+                                technician
+                        );
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(savedTechnician);
     }
 
+    // =====================================================
     // UPDATE TECHNICIAN
+    // =====================================================
+
     @PutMapping("/{id}")
-    public ResponseEntity<Technician> updateTechnician(
+    public ResponseEntity<Technician>
+    updateTechnician(
             @PathVariable Long id,
             @RequestBody Technician technician) {
 
         return ResponseEntity.ok(
-                technicianService.updateTechnician(
-                        id,
-                        technician
-                )
+                technicianService
+                        .updateTechnician(
+                                id,
+                                technician
+                        )
         );
     }
 
+    // =====================================================
     // DELETE TECHNICIAN
+    // =====================================================
+
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTechnician(
+    public ResponseEntity<Void>
+    deleteTechnician(
             @PathVariable Long id) {
 
-        technicianService.deleteTechnician(id);
+        technicianService
+                .deleteTechnician(id);
 
-        return ResponseEntity.noContent().build();
+        return ResponseEntity
+                .noContent()
+                .build();
     }
 
+    // =====================================================
     // GET BY STATUS
+    // =====================================================
+
     @GetMapping("/status/{status}")
     public ResponseEntity<List<Technician>>
     getTechniciansByStatus(
@@ -95,11 +141,16 @@ public class TechnicianController {
 
         return ResponseEntity.ok(
                 technicianService
-                        .getTechniciansByStatus(status)
+                        .getTechniciansByStatus(
+                                status
+                        )
         );
     }
 
+    // =====================================================
     // GET BY SPECIALIZATION
+    // =====================================================
+
     @GetMapping("/specialization/{specialization}")
     public ResponseEntity<List<Technician>>
     getTechniciansBySpecialization(
@@ -113,3 +164,4 @@ public class TechnicianController {
         );
     }
 }
+

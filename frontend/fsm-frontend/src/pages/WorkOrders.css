@@ -1,6 +1,6 @@
-/* =========================================
+/* =====================================================
    WORK ORDERS PAGE
-========================================= */
+===================================================== */
 
 .work-order-page {
     padding: 32px;
@@ -11,9 +11,9 @@
 }
 
 
-/* =========================================
+/* =====================================================
    HEADER
-========================================= */
+===================================================== */
 
 .work-order-header {
     display: flex;
@@ -48,9 +48,9 @@
 }
 
 
-/* =========================================
+/* =====================================================
    CARD
-========================================= */
+===================================================== */
 
 .work-order-card {
     background: #ffffff;
@@ -81,9 +81,9 @@
 }
 
 
-/* =========================================
+/* =====================================================
    FORM
-========================================= */
+===================================================== */
 
 .form-grid {
     display: grid;
@@ -119,9 +119,10 @@
     font-family: inherit;
     font-size: 14px;
     outline: none;
-    transition: border-color 0.2s ease,
-                box-shadow 0.2s ease,
-                background 0.2s ease;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        background 0.2s ease;
 }
 
 .form-group input,
@@ -161,9 +162,9 @@
 }
 
 
-/* =========================================
+/* =====================================================
    FORM ACTIONS
-========================================= */
+===================================================== */
 
 .form-actions {
     display: flex;
@@ -182,19 +183,16 @@
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
-    transition: transform 0.15s ease,
-                box-shadow 0.2s ease,
-                background 0.2s ease;
+    transition:
+        transform 0.15s ease,
+        box-shadow 0.2s ease,
+        background 0.2s ease;
 }
 
 .add-work-order-btn:hover {
     background: #4356c5;
     box-shadow: 0 6px 15px rgba(79, 99, 216, 0.22);
     transform: translateY(-1px);
-}
-
-.add-work-order-btn:active {
-    transform: translateY(0);
 }
 
 .add-work-order-btn:disabled {
@@ -205,9 +203,9 @@
 }
 
 
-/* =========================================
+/* =====================================================
    WORK ORDER LIST
-========================================= */
+===================================================== */
 
 .work-order-list-section {
     margin-top: 8px;
@@ -234,9 +232,9 @@
 }
 
 
-/* =========================================
+/* =====================================================
    GRID
-========================================= */
+===================================================== */
 
 .work-order-grid {
     display: grid;
@@ -245,9 +243,9 @@
 }
 
 
-/* =========================================
+/* =====================================================
    WORK ORDER ITEM
-========================================= */
+===================================================== */
 
 .work-order-item {
     background: #ffffff;
@@ -255,9 +253,10 @@
     border-radius: 15px;
     padding: 22px;
     box-shadow: 0 4px 15px rgba(31, 41, 55, 0.045);
-    transition: transform 0.2s ease,
-                box-shadow 0.2s ease,
-                border-color 0.2s ease;
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        border-color 0.2s ease;
 }
 
 .work-order-item:hover {
@@ -267,9 +266,9 @@
 }
 
 
-/* =========================================
+/* =====================================================
    TOP SECTION
-========================================= */
+===================================================== */
 
 .work-order-top {
     display: flex;
@@ -299,9 +298,9 @@
 }
 
 
-/* =========================================
+/* =====================================================
    STATUS BADGES
-========================================= */
+===================================================== */
 
 .status-badge {
     flex-shrink: 0;
@@ -339,9 +338,9 @@
 }
 
 
-/* =========================================
+/* =====================================================
    DETAILS
-========================================= */
+===================================================== */
 
 .work-order-details {
     padding-top: 17px;
@@ -364,9 +363,9 @@
 }
 
 
-/* =========================================
-   PRIORITY BADGES
-========================================= */
+/* =====================================================
+   PRIORITY
+===================================================== */
 
 .priority-badge {
     display: inline-flex;
@@ -399,9 +398,9 @@
 }
 
 
-/* =========================================
+/* =====================================================
    DESCRIPTION
-========================================= */
+===================================================== */
 
 .work-order-details .description {
     margin-top: 15px;
@@ -413,9 +412,88 @@
 }
 
 
-/* =========================================
+/* =====================================================
+   ASSIGN TECHNICIAN
+===================================================== */
+
+.assign-technician-section {
+    margin-top: 20px;
+    padding-top: 17px;
+    border-top: 1px solid #edf0f5;
+}
+
+.assign-technician-section label {
+    display: block;
+    margin-bottom: 8px;
+    color: #374156;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.assign-technician-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.assign-technician-controls select {
+    flex: 1;
+    min-width: 0;
+    height: 42px;
+    padding: 0 12px;
+    border: 1px solid #dce1e9;
+    border-radius: 9px;
+    background: #ffffff;
+    color: #202a3c;
+    font-family: inherit;
+    font-size: 13px;
+    outline: none;
+}
+
+.assign-technician-controls select:focus {
+    border-color: #5b6ee1;
+    box-shadow: 0 0 0 3px rgba(91, 110, 225, 0.10);
+}
+
+.assign-technician-controls select:disabled {
+    background: #f4f6f9;
+    color: #9aa2b1;
+}
+
+.assign-technician-btn {
+    height: 42px;
+    padding: 0 16px;
+    border: none;
+    border-radius: 9px;
+    background: #4f63d8;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition:
+        background 0.2s ease,
+        transform 0.15s ease,
+        box-shadow 0.2s ease;
+}
+
+.assign-technician-btn:hover {
+    background: #4356c5;
+    box-shadow: 0 5px 13px rgba(79, 99, 216, 0.22);
+    transform: translateY(-1px);
+}
+
+.assign-technician-btn:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+
+/* =====================================================
    LOADING
-========================================= */
+===================================================== */
 
 .loading {
     padding: 50px 20px;
@@ -428,9 +506,9 @@
 }
 
 
-/* =========================================
+/* =====================================================
    EMPTY STATE
-========================================= */
+===================================================== */
 
 .empty-state {
     padding: 55px 20px;
@@ -453,9 +531,9 @@
 }
 
 
-/* =========================================
+/* =====================================================
    RESPONSIVE
-========================================= */
+===================================================== */
 
 @media (max-width: 1000px) {
 
@@ -520,6 +598,16 @@
     }
 
     .add-work-order-btn {
+        width: 100%;
+    }
+
+    .assign-technician-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .assign-technician-controls select,
+    .assign-technician-btn {
         width: 100%;
     }
 

@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 
 import {
@@ -6,7 +7,8 @@ import {
     deleteSchedule,
     getWorkOrders,
     getWorkOrdersByTechnician,
-    getTechnicians
+    getTechnicians,
+    getTechnicianByUserId
 } from "../services/api";
 
 import "./Schedule.css";
@@ -19,27 +21,51 @@ function Schedule() {
     // =====================================================
 
     const [schedules, setSchedules] = useState([]);
-    const [workOrders, setWorkOrders] = useState([]);
-    const [technicians, setTechnicians] = useState([]);
 
-    const [user, setUser] = useState(null);
-    const [role, setRole] = useState("");
+    const [workOrders, setWorkOrders] =
+        useState([]);
 
-    const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
+    const [technicians, setTechnicians] =
+        useState([]);
 
-    const [error, setError] = useState("");
-    const [success, setSuccess] = useState("");
+    const [user, setUser] =
+        useState(null);
+
+    const [currentTechnician, setCurrentTechnician] =
+        useState(null);
+
+    const [role, setRole] =
+        useState("");
+
+    const [loading, setLoading] =
+        useState(true);
+
+    const [saving, setSaving] =
+        useState(false);
+
+    const [error, setError] =
+        useState("");
+
+    const [success, setSuccess] =
+        useState("");
 
 
     const [form, setForm] = useState({
+
         workOrderId: "",
+
         technicianId: "",
+
         scheduledDate: "",
+
         startTime: "",
+
         endTime: "",
+
         status: "SCHEDULED",
+
         notes: ""
+
     });
 
 
@@ -57,7 +83,8 @@ function Schedule() {
         role === "MANAGER";
 
     const canManageSchedules =
-        isDispatcher || isManager;
+        isDispatcher ||
+        isManager;
 
 
     // =====================================================
@@ -76,7 +103,9 @@ function Schedule() {
         try {
 
             setLoading(true);
+
             setError("");
+
             setSuccess("");
 
 
@@ -100,7 +129,9 @@ function Schedule() {
 
 
             const loggedInUser =
-                JSON.parse(storedUser);
+                JSON.parse(
+                    storedUser
+                );
 
 
             const currentRole =
@@ -109,8 +140,13 @@ function Schedule() {
                 ).toUpperCase();
 
 
-            setUser(loggedInUser);
-            setRole(currentRole);
+            setUser(
+                loggedInUser
+            );
+
+            setRole(
+                currentRole
+            );
 
 
             console.log(
@@ -125,112 +161,180 @@ function Schedule() {
 
 
             // =================================================
-            // LOAD SCHEDULES
+            // TECHNICIAN
             // =================================================
-
-            const schedulesData =
-                await getSchedules();
-
-
-            console.log(
-                "📅 SCHEDULES:",
-                schedulesData
-            );
-
-
-            setSchedules(
-                Array.isArray(schedulesData)
-                    ? schedulesData
-                    : []
-            );
-
-
-            // =================================================
-            // LOAD TECHNICIANS
-            // =================================================
-
-            const techniciansData =
-                await getTechnicians();
-
-
-            console.log(
-                "🔧 TECHNICIANS:",
-                techniciansData
-            );
-
-
-            setTechnicians(
-                Array.isArray(techniciansData)
-                    ? techniciansData
-                    : []
-            );
-
-
-            // =================================================
-            // LOAD WORK ORDERS
-            // =================================================
-
-            /*
-             * IMPORTANT
-             *
-             * TECHNICIAN:
-             *     Do NOT call /api/work-orders
-             *
-             * Dispatcher / Manager:
-             *     Can call /api/work-orders
-             */
 
             if (
                 currentRole === "TECHNICIAN"
             ) {
 
-                const technicianId =
+                // -------------------------------------------------
+                // FIND TECHNICIAN RECORD USING USER ID
+                // -------------------------------------------------
+
+                const userId =
                     loggedInUser.id;
 
 
-                if (!technicianId) {
+                if (!userId) {
 
-                    console.warn(
-                        "⚠️ Technician ID missing from user."
-                    );
-
-                    setWorkOrders([]);
-
-                } else {
-
-                    console.log(
-                        "🔧 Loading technician work orders:",
-                        technicianId
-                    );
-
-
-                    const technicianWorkOrders =
-                        await getWorkOrdersByTechnician(
-                            technicianId
-                        );
-
-
-                    console.log(
-                        "📋 TECHNICIAN WORK ORDERS:",
-                        technicianWorkOrders
-                    );
-
-
-                    setWorkOrders(
-                        Array.isArray(
-                            technicianWorkOrders
-                        )
-                            ? technicianWorkOrders
-                            : []
+                    throw new Error(
+                        "Logged-in user ID is missing."
                     );
 
                 }
 
-            } else {
 
-                /*
-                 * Dispatcher / Manager
-                 */
+                console.log(
+                    "🔎 Finding technician for user ID:",
+                    userId
+                );
+
+
+                const technician =
+                    await getTechnicianByUserId(
+                        userId
+                    );
+
+
+                console.log(
+                    "🔧 CURRENT TECHNICIAN:",
+                    technician
+                );
+
+
+                if (!technician?.id) {
+
+                    throw new Error(
+                        "Technician profile could not be found for the logged-in user."
+                    );
+
+                }
+
+
+                setCurrentTechnician(
+                    technician
+                );
+
+
+                // -------------------------------------------------
+                // LOAD ONLY THIS TECHNICIAN'S SCHEDULES
+                // -------------------------------------------------
+
+                const technicianSchedules =
+                    await getSchedulesByTechnicianSafe(
+                        technician.id
+                    );
+
+
+                console.log(
+                    "📅 MY SCHEDULES:",
+                    technicianSchedules
+                );
+
+
+                setSchedules(
+                    Array.isArray(
+                        technicianSchedules
+                    )
+                        ? technicianSchedules
+                        : []
+                );
+
+
+                // -------------------------------------------------
+                // LOAD ONLY THIS TECHNICIAN'S WORK ORDERS
+                // -------------------------------------------------
+
+                const technicianWorkOrders =
+                    await getWorkOrdersByTechnician(
+                        technician.id
+                    );
+
+
+                console.log(
+                    "📋 MY WORK ORDERS:",
+                    technicianWorkOrders
+                );
+
+
+                setWorkOrders(
+                    Array.isArray(
+                        technicianWorkOrders
+                    )
+                        ? technicianWorkOrders
+                        : []
+                );
+
+
+                // -------------------------------------------------
+                // DO NOT LOAD ALL TECHNICIANS
+                // -------------------------------------------------
+
+                setTechnicians([]);
+
+                return;
+            }
+
+
+            // =================================================
+            // DISPATCHER / MANAGER
+            // =================================================
+
+            if (
+                currentRole === "DISPATCHER" ||
+                currentRole === "MANAGER"
+            ) {
+
+                // -------------------------------------------------
+                // LOAD ALL SCHEDULES
+                // -------------------------------------------------
+
+                const schedulesData =
+                    await getSchedules();
+
+
+                console.log(
+                    "📅 ALL SCHEDULES:",
+                    schedulesData
+                );
+
+
+                setSchedules(
+                    Array.isArray(
+                        schedulesData
+                    )
+                        ? schedulesData
+                        : []
+                );
+
+
+                // -------------------------------------------------
+                // LOAD ALL TECHNICIANS
+                // -------------------------------------------------
+
+                const techniciansData =
+                    await getTechnicians();
+
+
+                console.log(
+                    "🔧 ALL TECHNICIANS:",
+                    techniciansData
+                );
+
+
+                setTechnicians(
+                    Array.isArray(
+                        techniciansData
+                    )
+                        ? techniciansData
+                        : []
+                );
+
+
+                // -------------------------------------------------
+                // LOAD ALL WORK ORDERS
+                // -------------------------------------------------
 
                 const workOrdersData =
                     await getWorkOrders();
@@ -243,12 +347,24 @@ function Schedule() {
 
 
                 setWorkOrders(
-                    Array.isArray(workOrdersData)
+                    Array.isArray(
+                        workOrdersData
+                    )
                         ? workOrdersData
                         : []
                 );
 
+                return;
             }
+
+
+            // =================================================
+            // UNKNOWN ROLE
+            // =================================================
+
+            throw new Error(
+                "Your account does not have a valid schedule role."
+            );
 
 
         } catch (err) {
@@ -259,35 +375,8 @@ function Schedule() {
             );
 
 
-            if (
-                err.message?.includes(
-                    "HTTP 401"
-                )
-            ) {
-
-                localStorage.removeItem(
-                    "fieldsyncToken"
-                );
-
-                localStorage.removeItem(
-                    "fieldsyncAuthenticated"
-                );
-
-                localStorage.removeItem(
-                    "fieldsyncUser"
-                );
-
-                window.location.href =
-                    "/login";
-
-                return;
-
-            }
-
-
-            setError(
-                err.message ||
-                "Failed to load schedule data."
+            handleAuthenticationError(
+                err
             );
 
 
@@ -296,6 +385,68 @@ function Schedule() {
             setLoading(false);
 
         }
+
+    }
+
+
+    // =====================================================
+    // SAFE TECHNICIAN SCHEDULE LOAD
+    // =====================================================
+
+    async function getSchedulesByTechnicianSafe(
+        technicianId
+    ) {
+
+        return await import(
+            "../services/api"
+        ).then(
+            api =>
+                api.getSchedulesByTechnician(
+                    technicianId
+                )
+        );
+
+    }
+
+
+    // =====================================================
+    // AUTH ERROR
+    // =====================================================
+
+    function handleAuthenticationError(
+        err
+    ) {
+
+        if (
+            err?.message?.includes(
+                "HTTP 401"
+            )
+        ) {
+
+            localStorage.removeItem(
+                "fieldsyncToken"
+            );
+
+            localStorage.removeItem(
+                "fieldsyncAuthenticated"
+            );
+
+            localStorage.removeItem(
+                "fieldsyncUser"
+            );
+
+            window.location.href =
+                "/login";
+
+            return;
+
+        }
+
+
+        setError(
+            err?.message ||
+            "Failed to load schedule data."
+        );
 
     }
 
@@ -314,8 +465,11 @@ function Schedule() {
 
         setForm(
             previousForm => ({
+
                 ...previousForm,
+
                 [name]: value
+
             })
         );
 
@@ -330,7 +484,9 @@ function Schedule() {
 
         e.preventDefault();
 
+
         setError("");
+
         setSuccess("");
 
 
@@ -346,7 +502,7 @@ function Schedule() {
 
 
         // -------------------------------------------------
-        // VALIDATION
+        // WORK ORDER
         // -------------------------------------------------
 
         if (!form.workOrderId) {
@@ -360,6 +516,10 @@ function Schedule() {
         }
 
 
+        // -------------------------------------------------
+        // TECHNICIAN
+        // -------------------------------------------------
+
         if (!form.technicianId) {
 
             setError(
@@ -371,6 +531,10 @@ function Schedule() {
         }
 
 
+        // -------------------------------------------------
+        // DATE
+        // -------------------------------------------------
+
         if (!form.scheduledDate) {
 
             setError(
@@ -381,6 +545,10 @@ function Schedule() {
 
         }
 
+
+        // -------------------------------------------------
+        // TIME
+        // -------------------------------------------------
 
         if (
             !form.startTime ||
@@ -403,6 +571,50 @@ function Schedule() {
 
             setError(
                 "End time must be after start time."
+            );
+
+            return;
+
+        }
+
+
+        // -------------------------------------------------
+        // CHECK SELECTED TECHNICIAN
+        // -------------------------------------------------
+
+        const selectedTechnician =
+            technicians.find(
+                technician =>
+                    Number(
+                        technician.id
+                    ) ===
+                    Number(
+                        form.technicianId
+                    )
+            );
+
+
+        if (!selectedTechnician) {
+
+            setError(
+                "Selected technician was not found."
+            );
+
+            return;
+
+        }
+
+
+        if (
+            String(
+                selectedTechnician.status ||
+                ""
+            ).toUpperCase() !==
+            "AVAILABLE"
+        ) {
+
+            setError(
+                "Selected technician is not available."
             );
 
             return;
@@ -437,7 +649,7 @@ function Schedule() {
                     form.endTime,
 
                 status:
-                    form.status,
+                    "SCHEDULED",
 
                 notes:
                     form.notes
@@ -471,19 +683,21 @@ function Schedule() {
             setForm({
 
                 workOrderId: "",
+
                 technicianId: "",
+
                 scheduledDate: "",
+
                 startTime: "",
+
                 endTime: "",
+
                 status: "SCHEDULED",
+
                 notes: ""
 
             });
 
-
-            /*
-             * Reload everything after creation.
-             */
 
             await loadData();
 
@@ -496,35 +710,8 @@ function Schedule() {
             );
 
 
-            if (
-                err.message?.includes(
-                    "HTTP 401"
-                )
-            ) {
-
-                localStorage.removeItem(
-                    "fieldsyncToken"
-                );
-
-                localStorage.removeItem(
-                    "fieldsyncAuthenticated"
-                );
-
-                localStorage.removeItem(
-                    "fieldsyncUser"
-                );
-
-                window.location.href =
-                    "/login";
-
-                return;
-
-            }
-
-
-            setError(
-                err.message ||
-                "Failed to create schedule."
+            handleAuthenticationError(
+                err
             );
 
         } finally {
@@ -540,7 +727,9 @@ function Schedule() {
     // DELETE SCHEDULE
     // =====================================================
 
-    async function handleDelete(id) {
+    async function handleDelete(
+        id
+    ) {
 
         if (!canManageSchedules) {
 
@@ -560,17 +749,22 @@ function Schedule() {
 
 
         if (!confirmed) {
+
             return;
+
         }
 
 
         try {
 
             setError("");
+
             setSuccess("");
 
 
-            await deleteSchedule(id);
+            await deleteSchedule(
+                id
+            );
 
 
             setSuccess(
@@ -589,35 +783,8 @@ function Schedule() {
             );
 
 
-            if (
-                err.message?.includes(
-                    "HTTP 401"
-                )
-            ) {
-
-                localStorage.removeItem(
-                    "fieldsyncToken"
-                );
-
-                localStorage.removeItem(
-                    "fieldsyncAuthenticated"
-                );
-
-                localStorage.removeItem(
-                    "fieldsyncUser"
-                );
-
-                window.location.href =
-                    "/login";
-
-                return;
-
-            }
-
-
-            setError(
-                err.message ||
-                "Failed to delete schedule."
+            handleAuthenticationError(
+                err
             );
 
         }
@@ -629,10 +796,14 @@ function Schedule() {
     // FIND WORK ORDER
     // =====================================================
 
-    function getWorkOrder(workOrderId) {
+    function getWorkOrder(
+        workOrderId
+    ) {
 
         if (!workOrderId) {
+
             return null;
+
         }
 
 
@@ -658,7 +829,9 @@ function Schedule() {
     ) {
 
         if (!technicianId) {
+
             return null;
+
         }
 
 
@@ -679,10 +852,14 @@ function Schedule() {
     // FORMAT DATE
     // =====================================================
 
-    function formatDate(date) {
+    function formatDate(
+        date
+    ) {
 
         if (!date) {
+
             return "-";
+
         }
 
 
@@ -719,10 +896,14 @@ function Schedule() {
     // FORMAT TIME
     // =====================================================
 
-    function formatTime(time) {
+    function formatTime(
+        time
+    ) {
 
         if (!time) {
+
             return "-";
+
         }
 
 
@@ -757,13 +938,16 @@ function Schedule() {
 
 
     // =====================================================
-    // GET STATUS CLASS
+    // STATUS CLASS
     // =====================================================
 
-    function getStatusClass(status) {
+    function getStatusClass(
+        status
+    ) {
 
         return String(
-            status || "SCHEDULED"
+            status ||
+            "SCHEDULED"
         )
             .toLowerCase()
             .replace(
@@ -775,7 +959,7 @@ function Schedule() {
 
 
     // =====================================================
-    // GET PAGE DESCRIPTION
+    // PAGE DESCRIPTION
     // =====================================================
 
     function getPageDescription() {
@@ -921,7 +1105,7 @@ function Schedule() {
 
                 {/* =================================================
                     CREATE SCHEDULE
-                    ONLY DISPATCHER / MANAGER
+                    DISPATCHER / MANAGER ONLY
                 ================================================= */}
 
                 {canManageSchedules && (
@@ -950,7 +1134,9 @@ function Schedule() {
 
 
                         <form
-                            onSubmit={handleSubmit}
+                            onSubmit={
+                                handleSubmit
+                            }
                             className="schedule-form"
                         >
 
@@ -967,8 +1153,12 @@ function Schedule() {
 
                                 <select
                                     name="workOrderId"
-                                    value={form.workOrderId}
-                                    onChange={handleChange}
+                                    value={
+                                        form.workOrderId
+                                    }
+                                    onChange={
+                                        handleChange
+                                    }
                                     required
                                 >
 
@@ -1024,38 +1214,59 @@ function Schedule() {
 
                                 <select
                                     name="technicianId"
-                                    value={form.technicianId}
-                                    onChange={handleChange}
+                                    value={
+                                        form.technicianId
+                                    }
+                                    onChange={
+                                        handleChange
+                                    }
                                     required
                                 >
 
                                     <option value="">
-                                        Select Technician
+                                        Select Available Technician
                                     </option>
 
 
-                                    {technicians.map(
-                                        technician => (
-
-                                            <option
-                                                key={
-                                                    technician.id
-                                                }
-                                                value={
-                                                    technician.id
-                                                }
-                                            >
-
-                                                {technician.fullName ||
-                                                    technician.name ||
-                                                    technician.employeeCode ||
-                                                    `Technician ${technician.id}`
-                                                }
-
-                                            </option>
-
+                                    {technicians
+                                        .filter(
+                                            technician =>
+                                                String(
+                                                    technician.status ||
+                                                    ""
+                                                ).toUpperCase() ===
+                                                "AVAILABLE"
                                         )
-                                    )}
+                                        .map(
+                                            technician => (
+
+                                                <option
+                                                    key={
+                                                        technician.id
+                                                    }
+                                                    value={
+                                                        technician.id
+                                                    }
+                                                >
+
+                                                    {
+                                                        technician.fullName ||
+                                                        technician.name ||
+                                                        technician.employeeCode ||
+                                                        `Technician ${technician.id}`
+                                                    }
+
+                                                    {" - "}
+
+                                                    {
+                                                        technician.employeeCode ||
+                                                        `TECH-${technician.id}`
+                                                    }
+
+                                                </option>
+
+                                            )
+                                        )}
 
                                 </select>
 
@@ -1161,18 +1372,6 @@ function Schedule() {
                                         Scheduled
                                     </option>
 
-                                    <option value="IN_PROGRESS">
-                                        In Progress
-                                    </option>
-
-                                    <option value="COMPLETED">
-                                        Completed
-                                    </option>
-
-                                    <option value="CANCELLED">
-                                        Cancelled
-                                    </option>
-
                                 </select>
 
                             </div>
@@ -1210,7 +1409,9 @@ function Schedule() {
                             <button
                                 type="submit"
                                 className="create-schedule-btn"
-                                disabled={saving}
+                                disabled={
+                                    saving
+                                }
                             >
 
                                 {saving
@@ -1243,17 +1444,21 @@ function Schedule() {
                         <div>
 
                             <h2>
+
                                 {isTechnician
                                     ? "My Scheduled Jobs"
                                     : "Scheduled Jobs"
                                 }
+
                             </h2>
 
                             <p>
+
                                 {isTechnician
                                     ? "View your assigned service jobs"
                                     : "View all assigned jobs"
                                 }
+
                             </p>
 
                         </div>
@@ -1278,10 +1483,12 @@ function Schedule() {
                             </h3>
 
                             <p>
+
                                 {isTechnician
                                     ? "You currently have no assigned jobs."
                                     : "Create your first schedule using the form."
                                 }
+
                             </p>
 
                         </div>
@@ -1350,13 +1557,6 @@ function Schedule() {
                                                 );
 
 
-                                            /*
-                                             * When a technician-specific
-                                             * work-order endpoint does not
-                                             * return the work order details,
-                                             * fall back to the schedule ID.
-                                             */
-
                                             const workOrderNumber =
                                                 workOrder?.orderNumber ||
                                                 `WO-${schedule.workOrderId}`;
@@ -1368,10 +1568,31 @@ function Schedule() {
                                                 "Work Order";
 
 
+                                            /*
+                                             * For technician users,
+                                             * currentTechnician contains
+                                             * their actual technician record.
+                                             */
+
                                             const technicianName =
                                                 technician?.fullName ||
                                                 technician?.name ||
                                                 technician?.employeeCode ||
+                                                (
+                                                    currentTechnician &&
+                                                    Number(
+                                                        currentTechnician.id
+                                                    ) ===
+                                                    Number(
+                                                        schedule.technicianId
+                                                    )
+                                                        ? (
+                                                            currentTechnician.fullName ||
+                                                            currentTechnician.name ||
+                                                            currentTechnician.employeeCode
+                                                        )
+                                                        : null
+                                                ) ||
                                                 `Technician ${schedule.technicianId}`;
 
 
@@ -1400,19 +1621,15 @@ function Schedule() {
                                                         <div className="work-order-info">
 
                                                             <strong>
-
                                                                 {
                                                                     workOrderNumber
                                                                 }
-
                                                             </strong>
 
                                                             <span>
-
                                                                 {
                                                                     workOrderTitle
                                                                 }
-
                                                             </span>
 
                                                         </div>
@@ -1432,10 +1649,10 @@ function Schedule() {
 
                                                                 {
                                                                     technicianName
-                                                                        .charAt(
+                                                                        ?.charAt(
                                                                             0
                                                                         )
-                                                                        .toUpperCase()
+                                                                        ?.toUpperCase()
                                                                 }
 
                                                             </div>
@@ -1604,3 +1821,4 @@ function Schedule() {
 
 
 export default Schedule;
+

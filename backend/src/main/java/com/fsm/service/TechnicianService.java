@@ -1,10 +1,11 @@
-
 package com.fsm.service;
 
 import com.fsm.entity.Technician;
 import com.fsm.repository.TechnicianRepository;
+
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -13,57 +14,153 @@ public class TechnicianService {
 
     private final TechnicianRepository technicianRepository;
 
-    public TechnicianService(TechnicianRepository technicianRepository) {
-        this.technicianRepository = technicianRepository;
+    public TechnicianService(
+            TechnicianRepository technicianRepository) {
+
+        this.technicianRepository =
+                technicianRepository;
     }
 
-    // Get all technicians
+    // =====================================================
+    // GET ALL TECHNICIANS
+    // =====================================================
+
     public List<Technician> getAllTechnicians() {
+
         return technicianRepository.findAll();
     }
 
-    // Get technician by ID
+    // =====================================================
+    // GET TECHNICIAN BY ID
+    // =====================================================
+
     public Technician getTechnicianById(Long id) {
-        return technicianRepository.findById(id)
+
+        return technicianRepository
+                .findById(id)
                 .orElseThrow(() ->
                         new RuntimeException(
-                                "Technician not found with id: " + id
+                                "Technician not found with id: "
+                                        + id
                         )
                 );
     }
 
-    // Create technician
-public Technician createTechnician(Technician technician) {
+    // =====================================================
+    // GET TECHNICIAN BY USER ID
+    // =====================================================
 
-    if (technician.getCreatedAt() == null) {
-        technician.setCreatedAt(LocalDateTime.now());
+    public Technician getTechnicianByUserId(Long userId) {
+
+        if (userId == null) {
+
+            throw new RuntimeException(
+                    "User ID is required"
+            );
+        }
+
+        return technicianRepository
+                .findByUserId(userId)
+                .orElseThrow(() ->
+                        new RuntimeException(
+                                "Technician profile not found for user id: "
+                                        + userId
+                        )
+                );
     }
 
-    if (technician.getStatus() == null ||
-            technician.getStatus().isBlank()) {
+    // =====================================================
+    // CREATE TECHNICIAN
+    // =====================================================
 
-        technician.setStatus("AVAILABLE");
-    }
+    public Technician createTechnician(
+            Technician technician) {
 
-    if (technician.getRating() == null) {
-        technician.setRating(
-                java.math.BigDecimal.ZERO
+        // -------------------------------------------------
+        // USER ID VALIDATION
+        // -------------------------------------------------
+
+        if (technician.getUserId() == null) {
+
+            throw new RuntimeException(
+                    "User ID is required"
+            );
+        }
+
+        // -------------------------------------------------
+        // PREVENT DUPLICATE TECHNICIAN PROFILE
+        // -------------------------------------------------
+
+        if (technicianRepository
+                .existsByUserId(
+                        technician.getUserId()
+                )) {
+
+            throw new RuntimeException(
+                    "A technician profile already exists for user id: "
+                            + technician.getUserId()
+            );
+        }
+
+        // -------------------------------------------------
+        // CREATED AT
+        // -------------------------------------------------
+
+        if (technician.getCreatedAt() == null) {
+
+            technician.setCreatedAt(
+                    LocalDateTime.now()
+            );
+        }
+
+        // -------------------------------------------------
+        // DEFAULT STATUS
+        // -------------------------------------------------
+
+        if (
+                technician.getStatus() == null ||
+                technician.getStatus().isBlank()
+        ) {
+
+            technician.setStatus(
+                    "AVAILABLE"
+            );
+        }
+
+        // -------------------------------------------------
+        // DEFAULT RATING
+        // -------------------------------------------------
+
+        if (technician.getRating() == null) {
+
+            technician.setRating(
+                    BigDecimal.ZERO
+            );
+        }
+
+        // -------------------------------------------------
+        // SYNCHRONIZE NAME
+        // -------------------------------------------------
+
+        if (
+                technician.getName() == null ||
+                technician.getName().isBlank()
+        ) {
+
+            technician.setName(
+                    technician.getFullName()
+            );
+        }
+
+        return technicianRepository.save(
+                technician
         );
     }
 
-    // Keep name synchronized with fullName
-    if (technician.getName() == null ||
-            technician.getName().isBlank()) {
+    // =====================================================
+    // UPDATE TECHNICIAN
+    // =====================================================
 
-        technician.setName(
-                technician.getFullName()
-        );
-    }
-
-    return technicianRepository.save(technician);
-}
-
-    // Update technician
     public Technician updateTechnician(
             Long id,
             Technician technicianDetails) {
@@ -71,67 +168,160 @@ public Technician createTechnician(Technician technician) {
         Technician technician =
                 getTechnicianById(id);
 
-        technician.setUserId(
-                technicianDetails.getUserId()
-        );
+        // -------------------------------------------------
+        // USER ID
+        // -------------------------------------------------
+
+        if (technicianDetails.getUserId() != null &&
+                !technicianDetails
+                        .getUserId()
+                        .equals(technician.getUserId())) {
+
+            if (technicianRepository
+                    .existsByUserId(
+                            technicianDetails.getUserId()
+                    )) {
+
+                throw new RuntimeException(
+                        "Another technician already uses user id: "
+                                + technicianDetails.getUserId()
+                );
+            }
+
+            technician.setUserId(
+                    technicianDetails.getUserId()
+            );
+        }
+
+        // -------------------------------------------------
+        // EMPLOYEE CODE
+        // -------------------------------------------------
 
         technician.setEmployeeCode(
                 technicianDetails.getEmployeeCode()
         );
 
+        // -------------------------------------------------
+        // FULL NAME
+        // -------------------------------------------------
+
         technician.setFullName(
                 technicianDetails.getFullName()
         );
+
+        // -------------------------------------------------
+        // EMAIL
+        // -------------------------------------------------
 
         technician.setEmail(
                 technicianDetails.getEmail()
         );
 
+        // -------------------------------------------------
+        // PHONE
+        // -------------------------------------------------
+
         technician.setPhone(
                 technicianDetails.getPhone()
         );
+
+        // -------------------------------------------------
+        // SPECIALIZATION
+        // -------------------------------------------------
 
         technician.setSpecialization(
                 technicianDetails.getSpecialization()
         );
 
-        technician.setStatus(
-                technicianDetails.getStatus()
-        );
+        // -------------------------------------------------
+        // STATUS
+        // -------------------------------------------------
 
-        technician.setRating(
-                technicianDetails.getRating()
-        );
+        if (
+                technicianDetails.getStatus() != null &&
+                !technicianDetails
+                        .getStatus()
+                        .isBlank()
+        ) {
 
-        technician.setName(
-                technicianDetails.getName()
-        );
+            technician.setStatus(
+                    technicianDetails.getStatus()
+            );
+        }
 
-        return technicianRepository.save(technician);
+        // -------------------------------------------------
+        // RATING
+        // -------------------------------------------------
+
+        if (technicianDetails.getRating() != null) {
+
+            technician.setRating(
+                    technicianDetails.getRating()
+            );
+        }
+
+        // -------------------------------------------------
+        // NAME
+        // -------------------------------------------------
+
+        if (
+                technicianDetails.getName() != null &&
+                !technicianDetails
+                        .getName()
+                        .isBlank()
+        ) {
+
+            technician.setName(
+                    technicianDetails.getName()
+            );
+
+        } else {
+
+            technician.setName(
+                    technicianDetails.getFullName()
+            );
+        }
+
+        return technicianRepository.save(
+                technician
+        );
     }
 
-    // Delete technician
+    // =====================================================
+    // DELETE TECHNICIAN
+    // =====================================================
+
     public void deleteTechnician(Long id) {
 
         Technician technician =
                 getTechnicianById(id);
 
-        technicianRepository.delete(technician);
+        technicianRepository.delete(
+                technician
+        );
     }
 
-    // Get technicians by status
+    // =====================================================
+    // GET TECHNICIANS BY STATUS
+    // =====================================================
+
     public List<Technician> getTechniciansByStatus(
             String status) {
 
-        return technicianRepository.findByStatus(status);
+        return technicianRepository
+                .findByStatus(status);
     }
 
-    // Get technicians by specialization
+    // =====================================================
+    // GET TECHNICIANS BY SPECIALIZATION
+    // =====================================================
+
     public List<Technician> getTechniciansBySpecialization(
             String specialization) {
 
         return technicianRepository
-                .findBySpecialization(specialization);
+                .findBySpecialization(
+                        specialization
+                );
     }
 }
-
