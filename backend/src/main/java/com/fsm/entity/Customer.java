@@ -39,6 +39,13 @@ public class Customer {
     public Customer() {
     }
 
+    @PrePersist
+    protected void onCreate() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+    }
+
     public Long getId() {
         return id;
     }

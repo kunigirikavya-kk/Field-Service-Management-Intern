@@ -1,5 +1,3 @@
-
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -13,8 +11,7 @@ import {
 
 function ServiceRequest() {
 
-    const navigate =
-        useNavigate();
+    const navigate = useNavigate();
 
 
     // =====================================================
@@ -83,12 +80,7 @@ function ServiceRequest() {
     const [formData, setFormData] =
         useState({
 
-            customerId:
-                isCustomer && currentUser?.id
-                    ? String(
-                        currentUser.id
-                    )
-                    : "",
+            customerId: "",
 
             title: "",
 
@@ -129,122 +121,6 @@ function ServiceRequest() {
 
 
     // =====================================================
-    // LOAD CUSTOMERS
-    // =====================================================
-
-    useEffect(() => {
-
-        // -------------------------------------------------
-        // TECHNICIAN
-        // -------------------------------------------------
-
-        if (isTechnician) {
-
-            navigate(
-                "/dashboard"
-            );
-
-            return;
-
-        }
-
-
-        // -------------------------------------------------
-        // CUSTOMER
-        // -------------------------------------------------
-
-        if (isCustomer) {
-
-            setLoadingCustomers(
-                false
-            );
-
-            return;
-
-        }
-
-
-        // -------------------------------------------------
-        // ONLY DISPATCHER / MANAGER MAY LOAD CUSTOMERS
-        // -------------------------------------------------
-
-        if (!canCreateForCustomer) {
-
-            navigate(
-                "/dashboard"
-            );
-
-            return;
-
-        }
-
-
-        const loadCustomers =
-            async () => {
-
-                try {
-
-                    setLoadingCustomers(
-                        true
-                    );
-
-
-                    const data =
-                        await getCustomers();
-
-
-                    console.log(
-                        "👥 CUSTOMERS LOADED:",
-                        data
-                    );
-
-
-                    setCustomers(
-                        Array.isArray(data)
-                            ? data
-                            : []
-                    );
-
-                } catch (error) {
-
-                    console.error(
-                        "❌ Error loading customers:",
-                        error
-                    );
-
-
-                    if (
-                        error.message?.includes(
-                            "401"
-                        )
-                    ) {
-
-                        handleSessionExpired();
-
-                    }
-
-                } finally {
-
-                    setLoadingCustomers(
-                        false
-                    );
-
-                }
-
-            };
-
-
-        loadCustomers();
-
-    }, [
-        isCustomer,
-        isTechnician,
-        canCreateForCustomer,
-        navigate
-    ]);
-
-
-    // =====================================================
     // SESSION EXPIRED
     // =====================================================
 
@@ -278,6 +154,125 @@ function ServiceRequest() {
 
 
     // =====================================================
+    // LOAD CUSTOMERS
+    // =====================================================
+
+    useEffect(() => {
+
+        // -------------------------------------------------
+        // TECHNICIAN
+        // -------------------------------------------------
+
+        if (isTechnician) {
+
+            navigate(
+                "/dashboard"
+            );
+
+            return;
+
+        }
+
+
+        // -------------------------------------------------
+        // CHECK PERMISSION
+        // -------------------------------------------------
+
+        if (
+            !isCustomer &&
+            !canCreateForCustomer
+        ) {
+
+            navigate(
+                "/dashboard"
+            );
+
+            return;
+
+        }
+
+
+        // -------------------------------------------------
+        // LOAD CUSTOMERS
+        // -------------------------------------------------
+
+        const loadCustomers =
+            async () => {
+
+                try {
+
+                    setLoadingCustomers(
+                        true
+                    );
+
+
+                    const data =
+                        await getCustomers();
+
+
+                    console.log(
+                        "👥 CUSTOMERS LOADED:",
+                        data
+                    );
+
+
+                    setCustomers(
+                        Array.isArray(data)
+                            ? data
+                            : []
+                    );
+
+
+                } catch (error) {
+
+                    console.error(
+                        "❌ Error loading customers:",
+                        error
+                    );
+
+
+                    const message =
+                        error?.message || "";
+
+
+                    if (
+                        message.includes(
+                            "401"
+                        )
+                    ) {
+
+                        handleSessionExpired();
+
+                    } else {
+
+                        alert(
+                            "Failed to load customers."
+                        );
+
+                    }
+
+                } finally {
+
+                    setLoadingCustomers(
+                        false
+                    );
+
+                }
+
+            };
+
+
+        loadCustomers();
+
+    }, [
+        isCustomer,
+        isTechnician,
+        canCreateForCustomer,
+        navigate
+    ]);
+
+
+    // =====================================================
     // CREATE SERVICE REQUEST
     // =====================================================
 
@@ -293,6 +288,10 @@ function ServiceRequest() {
 
             }
 
+
+            // =================================================
+            // CHECK TOKEN
+            // =================================================
 
             const token =
                 localStorage.getItem(
@@ -331,29 +330,84 @@ function ServiceRequest() {
             // VALIDATE CUSTOMER
             // =================================================
 
-            let customerId =
+            const customerId =
                 formData.customerId;
-
-
-            // Customer must always use
-            // the logged-in user's ID.
-
-            if (isCustomer) {
-
-                customerId =
-                    currentUser?.id
-                        ? String(
-                            currentUser.id
-                        )
-                        : "";
-
-            }
 
 
             if (!customerId) {
 
                 alert(
-                    "Unable to identify the customer. Please login again."
+                    "Please select a customer."
+                );
+
+                return;
+
+            }
+
+
+            // =================================================
+            // VALIDATE OTHER FIELDS
+            // =================================================
+
+            if (!formData.title.trim()) {
+
+                alert(
+                    "Please enter a service request title."
+                );
+
+                return;
+
+            }
+
+
+            if (!formData.serviceType) {
+
+                alert(
+                    "Please select a service type."
+                );
+
+                return;
+
+            }
+
+
+            if (!formData.priority) {
+
+                alert(
+                    "Please select a priority."
+                );
+
+                return;
+
+            }
+
+
+            if (!formData.preferredDate) {
+
+                alert(
+                    "Please select a preferred date."
+                );
+
+                return;
+
+            }
+
+
+            if (!formData.serviceLocation.trim()) {
+
+                alert(
+                    "Please enter the service location."
+                );
+
+                return;
+
+            }
+
+
+            if (!formData.description.trim()) {
+
+                alert(
+                    "Please enter a problem description."
                 );
 
                 return;
@@ -399,6 +453,10 @@ function ServiceRequest() {
             );
 
 
+            // =================================================
+            // CREATE REQUEST
+            // =================================================
+
             try {
 
                 setSubmitting(
@@ -429,13 +487,7 @@ function ServiceRequest() {
 
                 setFormData({
 
-                    customerId:
-                        isCustomer &&
-                        currentUser?.id
-                            ? String(
-                                currentUser.id
-                            )
-                            : "",
+                    customerId: "",
 
                     title: "",
 
@@ -452,7 +504,9 @@ function ServiceRequest() {
                 });
 
 
-                // Go back to dashboard.
+                // =================================================
+                // GO TO DASHBOARD
+                // =================================================
 
                 navigate(
                     "/dashboard"
@@ -515,6 +569,7 @@ function ServiceRequest() {
                     `Failed to create service request.\n\n${message}`
                 );
 
+
             } finally {
 
                 setSubmitting(
@@ -548,11 +603,9 @@ function ServiceRequest() {
                     </h1>
 
                     <p>
-
                         {isCustomer
                             ? "Create a new service request for your account."
                             : "Create a new service request for a customer."}
-
                     </p>
 
                 </div>
@@ -587,72 +640,55 @@ function ServiceRequest() {
                             </label>
 
 
-                            {isCustomer ? (
+                            <select
+                                name="customerId"
+                                value={
+                                    formData.customerId
+                                }
+                                onChange={
+                                    handleChange
+                                }
+                                required
+                                disabled={
+                                    loadingCustomers
+                                }
+                            >
 
-                                <input
-                                    type="text"
-                                    value={
-                                        currentUser?.fullName ||
-                                        currentUser?.username ||
-                                        currentUser?.email ||
-                                        "Current Customer"
-                                    }
-                                    disabled
-                                />
+                                <option value="">
 
-                            ) : (
+                                    {loadingCustomers
+                                        ? "Loading Customers..."
+                                        : "Select Customer"}
 
-                                <select
-                                    name="customerId"
-                                    value={
-                                        formData.customerId
-                                    }
-                                    onChange={
-                                        handleChange
-                                    }
-                                    required
-                                    disabled={
-                                        loadingCustomers
-                                    }
-                                >
-
-                                    <option value="">
-
-                                        {loadingCustomers
-                                            ? "Loading Customers..."
-                                            : "Select Customer"}
-
-                                    </option>
+                                </option>
 
 
-                                    {customers.map(
-                                        customer => (
+                                {customers.map(
+                                    customer => (
 
-                                            <option
-                                                key={
-                                                    customer.id
-                                                }
-                                                value={
-                                                    customer.id
-                                                }
-                                            >
+                                        <option
+                                            key={
+                                                customer.id
+                                            }
+                                            value={
+                                                customer.id
+                                            }
+                                        >
 
-                                                {
-                                                    customer.companyName ||
-                                                    customer.fullName ||
-                                                    customer.name ||
-                                                    customer.email ||
-                                                    `Customer #${customer.id}`
-                                                }
+                                            {
+                                                customer.companyName ||
+                                                customer.fullName ||
+                                                customer.name ||
+                                                customer.email ||
+                                                `Customer #${customer.id}`
+                                            }
 
-                                            </option>
+                                        </option>
 
-                                        )
-                                    )}
+                                    )
+                                )}
 
-                                </select>
-
-                            )}
+                            </select>
 
                         </div>
 
@@ -666,6 +702,7 @@ function ServiceRequest() {
                             <label>
                                 Service Type
                             </label>
+
 
                             <select
                                 name="serviceType"
@@ -682,17 +719,21 @@ function ServiceRequest() {
                                     Select Service Type
                                 </option>
 
+
                                 <option value="AC Maintenance">
                                     AC Maintenance
                                 </option>
+
 
                                 <option value="Equipment Repair">
                                     Equipment Repair
                                 </option>
 
+
                                 <option value="System Inspection">
                                     System Inspection
                                 </option>
+
 
                                 <option value="Installation">
                                     Installation
@@ -712,6 +753,7 @@ function ServiceRequest() {
                             <label>
                                 Preferred Date
                             </label>
+
 
                             <input
                                 type="date"
@@ -737,6 +779,7 @@ function ServiceRequest() {
                             <label>
                                 Service Request Title
                             </label>
+
 
                             <input
                                 type="text"
@@ -765,6 +808,7 @@ function ServiceRequest() {
                                 Priority
                             </label>
 
+
                             <select
                                 name="priority"
                                 value={
@@ -780,17 +824,21 @@ function ServiceRequest() {
                                     Select Priority
                                 </option>
 
+
                                 <option value="LOW">
                                     Low
                                 </option>
+
 
                                 <option value="MEDIUM">
                                     Medium
                                 </option>
 
+
                                 <option value="HIGH">
                                     High
                                 </option>
+
 
                                 <option value="URGENT">
                                     Urgent
@@ -810,6 +858,7 @@ function ServiceRequest() {
                             <label>
                                 Service Location
                             </label>
+
 
                             <input
                                 type="text"
@@ -836,6 +885,7 @@ function ServiceRequest() {
                             <label>
                                 Problem Description
                             </label>
+
 
                             <textarea
                                 name="description"
@@ -910,4 +960,3 @@ function ServiceRequest() {
 
 
 export default ServiceRequest;
-

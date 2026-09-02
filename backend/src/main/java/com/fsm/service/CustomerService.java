@@ -15,45 +15,92 @@ public class CustomerService {
         this.customerRepository = customerRepository;
     }
 
-    // Get all customers
+    // =====================================================
+    // GET ALL CUSTOMERS
+    // =====================================================
+
     public List<Customer> getAllCustomers() {
         return customerRepository.findAll();
     }
 
-    // Get customer by ID
+    // =====================================================
+    // GET CUSTOMER BY ID
+    // =====================================================
+
     public Customer getCustomerById(Long id) {
+
         return customerRepository.findById(id)
                 .orElseThrow(() ->
-                        new RuntimeException("Customer not found with id: " + id));
+                        new RuntimeException(
+                                "Customer not found with id: " + id
+                        )
+                );
     }
 
-    // Create customer
+    // =====================================================
+    // CREATE CUSTOMER
+    // =====================================================
+
     public Customer createCustomer(Customer customer) {
-        return customerRepository.save(customer);
-    }
-
-    // Update customer
-    public Customer updateCustomer(Long id, Customer customerDetails) {
-
-        Customer customer = getCustomerById(id);
-
-        customer.setUserId(customerDetails.getUserId());
-        customer.setCompanyName(customerDetails.getCompanyName());
-        customer.setContactPerson(customerDetails.getContactPerson());
-        customer.setEmail(customerDetails.getEmail());
-        customer.setPhone(customerDetails.getPhone());
-        customer.setAddress(customerDetails.getAddress());
-        customer.setCity(customerDetails.getCity());
-        customer.setState(customerDetails.getState());
-        customer.setZipCode(customerDetails.getZipCode());
 
         return customerRepository.save(customer);
     }
- 
-    // Delete customer
+
+    // =====================================================
+    // UPDATE CUSTOMER
+    // =====================================================
+
+    public Customer updateCustomer(
+            Long id,
+            Customer customerDetails
+    ) {
+
+        Customer customer =
+                getCustomerById(id);
+
+        customer.setCompanyName(
+                customerDetails.getCompanyName()
+        );
+
+        customer.setContactPerson(
+                customerDetails.getContactPerson()
+        );
+
+        customer.setEmail(
+                customerDetails.getEmail()
+        );
+
+        customer.setPhone(
+                customerDetails.getPhone()
+        );
+
+        customer.setAddress(
+                customerDetails.getAddress()
+        );
+
+        customer.setCity(
+                customerDetails.getCity()
+        );
+
+        customer.setState(
+                customerDetails.getState()
+        );
+
+        customer.setZipCode(
+                customerDetails.getZipCode()
+        );
+
+        return customerRepository.save(customer);
+    }
+
+    // =====================================================
+    // DELETE CUSTOMER
+    // =====================================================
+
     public void deleteCustomer(Long id) {
 
-        Customer customer = getCustomerById(id);
+        Customer customer =
+                getCustomerById(id);
 
         customerRepository.delete(customer);
     }

@@ -19,41 +19,89 @@ public class CustomerController {
 
     private final CustomerService customerService;
 
-    public CustomerController(CustomerService customerService) {
+    public CustomerController(
+            CustomerService customerService
+    ) {
         this.customerService = customerService;
     }
 
+    // =====================================================
+    // GET ALL CUSTOMERS
+    // =====================================================
+
     @GetMapping
     public ResponseEntity<List<Customer>> getAllCustomers() {
+
         return ResponseEntity.ok(
                 customerService.getAllCustomers()
         );
     }
 
+    // =====================================================
+    // GET CUSTOMER BY ID
+    // =====================================================
+
     @GetMapping("/{id}")
     public ResponseEntity<Customer> getCustomerById(
-            @PathVariable Long id) {
+            @PathVariable Long id
+    ) {
 
         return ResponseEntity.ok(
                 customerService.getCustomerById(id)
         );
     }
 
+    // =====================================================
+    // CREATE CUSTOMER
+    // =====================================================
+
     @PostMapping
     public ResponseEntity<Customer> createCustomer(
-            @Valid @RequestBody CustomerRequest request) {
+            @Valid @RequestBody CustomerRequest request
+    ) {
 
         Customer customer = new Customer();
 
-        customer.setUserId(request.getUserId());
-        customer.setCompanyName(request.getCompanyName());
-        customer.setContactPerson(request.getContactPerson());
-        customer.setEmail(request.getEmail());
-        customer.setPhone(request.getPhone());
-        customer.setAddress(request.getAddress());
-        customer.setCity(request.getCity());
-        customer.setState(request.getState());
-        customer.setZipCode(request.getZipCode());
+        /*
+         * Dispatcher-created customers do not need
+         * a user account at this stage.
+         *
+         * Therefore userId remains NULL.
+         */
+
+        customer.setUserId(null);
+
+        customer.setCompanyName(
+                request.getCompanyName()
+        );
+
+        customer.setContactPerson(
+                request.getContactPerson()
+        );
+
+        customer.setEmail(
+                request.getEmail()
+        );
+
+        customer.setPhone(
+                request.getPhone()
+        );
+
+        customer.setAddress(
+                request.getAddress()
+        );
+
+        customer.setCity(
+                request.getCity()
+        );
+
+        customer.setState(
+                request.getState()
+        );
+
+        customer.setZipCode(
+                request.getZipCode()
+        );
 
         Customer savedCustomer =
                 customerService.createCustomer(customer);
@@ -63,34 +111,71 @@ public class CustomerController {
                 .body(savedCustomer);
     }
 
+    // =====================================================
+    // UPDATE CUSTOMER
+    // =====================================================
+
     @PutMapping("/{id}")
     public ResponseEntity<Customer> updateCustomer(
             @PathVariable Long id,
-            @Valid @RequestBody CustomerRequest request) {
+            @Valid @RequestBody CustomerRequest request
+    ) {
 
         Customer customer = new Customer();
 
-        customer.setUserId(request.getUserId());
-        customer.setCompanyName(request.getCompanyName());
-        customer.setContactPerson(request.getContactPerson());
-        customer.setEmail(request.getEmail());
-        customer.setPhone(request.getPhone());
-        customer.setAddress(request.getAddress());
-        customer.setCity(request.getCity());
-        customer.setState(request.getState());
-        customer.setZipCode(request.getZipCode());
+        customer.setCompanyName(
+                request.getCompanyName()
+        );
+
+        customer.setContactPerson(
+                request.getContactPerson()
+        );
+
+        customer.setEmail(
+                request.getEmail()
+        );
+
+        customer.setPhone(
+                request.getPhone()
+        );
+
+        customer.setAddress(
+                request.getAddress()
+        );
+
+        customer.setCity(
+                request.getCity()
+        );
+
+        customer.setState(
+                request.getState()
+        );
+
+        customer.setZipCode(
+                request.getZipCode()
+        );
 
         return ResponseEntity.ok(
-                customerService.updateCustomer(id, customer)
+                customerService.updateCustomer(
+                        id,
+                        customer
+                )
         );
     }
 
+    // =====================================================
+    // DELETE CUSTOMER
+    // =====================================================
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCustomer(
-            @PathVariable Long id) {
+            @PathVariable Long id
+    ) {
 
         customerService.deleteCustomer(id);
 
-        return ResponseEntity.noContent().build();
+        return ResponseEntity
+                .noContent()
+                .build();
     }
 }

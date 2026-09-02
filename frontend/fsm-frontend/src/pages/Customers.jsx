@@ -17,12 +17,11 @@ function Customers() {
     const [expandedCustomer, setExpandedCustomer] = useState(null);
     const [showSiteForm, setShowSiteForm] = useState(null);
 
-    // -----------------------------
+    // =====================================================
     // CUSTOMER FORM
-    // -----------------------------
+    // =====================================================
 
     const [customerForm, setCustomerForm] = useState({
-        userId: 3,
         companyName: "",
         contactPerson: "",
         email: "",
@@ -33,10 +32,9 @@ function Customers() {
         zipCode: ""
     });
 
-
-    // -----------------------------
+    // =====================================================
     // SITE FORM
-    // -----------------------------
+    // =====================================================
 
     const [siteForm, setSiteForm] = useState({
         siteName: "",
@@ -48,10 +46,9 @@ function Customers() {
         zipCode: ""
     });
 
-
-    // -----------------------------
+    // =====================================================
     // LOAD CUSTOMERS
-    // -----------------------------
+    // =====================================================
 
     const loadCustomers = async () => {
 
@@ -80,10 +77,8 @@ function Customers() {
         } finally {
 
             setLoading(false);
-
         }
     };
-
 
     useEffect(() => {
 
@@ -91,10 +86,9 @@ function Customers() {
 
     }, []);
 
-
-    // -----------------------------
+    // =====================================================
     // CUSTOMER INPUT
-    // -----------------------------
+    // =====================================================
 
     const handleCustomerChange = (event) => {
 
@@ -102,13 +96,11 @@ function Customers() {
             ...customerForm,
             [event.target.name]: event.target.value
         });
-
     };
 
-
-    // -----------------------------
+    // =====================================================
     // CREATE CUSTOMER
-    // -----------------------------
+    // =====================================================
 
     const handleCustomerSubmit = async (event) => {
 
@@ -116,13 +108,9 @@ function Customers() {
 
         try {
 
-            await createCustomer({
-                ...customerForm,
-                userId: Number(customerForm.userId)
-            });
+            await createCustomer(customerForm);
 
             setCustomerForm({
-                userId: 3,
                 companyName: "",
                 contactPerson: "",
                 email: "",
@@ -139,19 +127,20 @@ function Customers() {
 
         } catch (error) {
 
-            console.error(error);
+            console.error(
+                "Failed to create customer:",
+                error
+            );
 
             alert(
                 "Failed to create customer."
             );
-
         }
     };
 
-
-    // -----------------------------
+    // =====================================================
     // LOAD SITES
-    // -----------------------------
+    // =====================================================
 
     const loadSites = async (customerId) => {
 
@@ -181,14 +170,12 @@ function Customers() {
                 ...previous,
                 [customerId]: []
             }));
-
         }
     };
 
-
-    // -----------------------------
+    // =====================================================
     // TOGGLE CUSTOMER SITES
-    // -----------------------------
+    // =====================================================
 
     const toggleSites = async (customerId) => {
 
@@ -202,13 +189,11 @@ function Customers() {
         setExpandedCustomer(customerId);
 
         await loadSites(customerId);
-
     };
 
-
-    // -----------------------------
+    // =====================================================
     // SITE INPUT
-    // -----------------------------
+    // =====================================================
 
     const handleSiteChange = (event) => {
 
@@ -216,13 +201,11 @@ function Customers() {
             ...siteForm,
             [event.target.name]: event.target.value
         });
-
     };
 
-
-    // -----------------------------
+    // =====================================================
     // CREATE SITE
-    // -----------------------------
+    // =====================================================
 
     const handleSiteSubmit = async (
         event,
@@ -266,14 +249,12 @@ function Customers() {
             alert(
                 "Failed to create site."
             );
-
         }
     };
 
-
-    // -----------------------------
+    // =====================================================
     // RENDER
-    // -----------------------------
+    // =====================================================
 
     return (
 
@@ -294,7 +275,6 @@ function Customers() {
 
             </div>
 
-
             {/* ADD CUSTOMER */}
 
             <div className="customer-card">
@@ -311,11 +291,8 @@ function Customers() {
 
                 </div>
 
-
                 <form
-                    onSubmit={
-                        handleCustomerSubmit
-                    }
+                    onSubmit={handleCustomerSubmit}
                 >
 
                     <div className="form-grid">
@@ -340,7 +317,6 @@ function Customers() {
 
                         </div>
 
-
                         <div className="form-group">
 
                             <label>
@@ -360,7 +336,6 @@ function Customers() {
                             />
 
                         </div>
-
 
                         <div className="form-group">
 
@@ -383,7 +358,6 @@ function Customers() {
 
                         </div>
 
-
                         <div className="form-group">
 
                             <label>
@@ -402,7 +376,6 @@ function Customers() {
                             />
 
                         </div>
-
 
                         <div className="form-group full-width">
 
@@ -423,7 +396,6 @@ function Customers() {
 
                         </div>
 
-
                         <div className="form-group">
 
                             <label>
@@ -443,7 +415,6 @@ function Customers() {
 
                         </div>
 
-
                         <div className="form-group">
 
                             <label>
@@ -462,7 +433,6 @@ function Customers() {
                             />
 
                         </div>
-
 
                         <div className="form-group">
 
@@ -485,7 +455,6 @@ function Customers() {
 
                     </div>
 
-
                     <div className="form-actions">
 
                         <button
@@ -500,7 +469,6 @@ function Customers() {
                 </form>
 
             </div>
-
 
             {/* CUSTOMER LIST */}
 
@@ -521,7 +489,6 @@ function Customers() {
 
                     </div>
 
-
                     <div className="customer-count">
 
                         {customers.length}
@@ -531,7 +498,6 @@ function Customers() {
                     </div>
 
                 </div>
-
 
                 {loading ? (
 
@@ -566,8 +532,6 @@ function Customers() {
                                     key={customer.id}
                                 >
 
-                                    {/* CUSTOMER INFO */}
-
                                     <div className="customer-main">
 
                                         <div className="customer-icon">
@@ -579,7 +543,6 @@ function Customers() {
                                                 : "C"}
 
                                         </div>
-
 
                                         <div className="customer-info">
 
@@ -635,9 +598,6 @@ function Customers() {
 
                                     </div>
 
-
-                                    {/* SITE BUTTON */}
-
                                     <div className="site-actions">
 
                                         <button
@@ -669,16 +629,12 @@ function Customers() {
                                                 loadSites(
                                                     customer.id
                                                 );
-
                                             }}
                                         >
                                             + Add Site
                                         </button>
 
                                     </div>
-
-
-                                    {/* SITES SECTION */}
 
                                     {expandedCustomer ===
                                         customer.id && (
@@ -718,9 +674,6 @@ function Customers() {
 
                                             </div>
 
-
-                                            {/* ADD SITE FORM */}
-
                                             {showSiteForm ===
                                                 customer.id && (
 
@@ -737,7 +690,6 @@ function Customers() {
                                                     <h4>
                                                         Add New Site
                                                     </h4>
-
 
                                                     <div className="site-form-grid">
 
@@ -761,7 +713,6 @@ function Customers() {
 
                                                         </div>
 
-
                                                         <div className="form-group">
 
                                                             <label>
@@ -780,7 +731,6 @@ function Customers() {
                                                             />
 
                                                         </div>
-
 
                                                         <div className="form-group">
 
@@ -801,7 +751,6 @@ function Customers() {
 
                                                         </div>
 
-
                                                         <div className="form-group">
 
                                                             <label>
@@ -820,7 +769,6 @@ function Customers() {
                                                             />
 
                                                         </div>
-
 
                                                         <div className="form-group">
 
@@ -841,7 +789,6 @@ function Customers() {
 
                                                         </div>
 
-
                                                         <div className="form-group">
 
                                                             <label>
@@ -860,7 +807,6 @@ function Customers() {
                                                             />
 
                                                         </div>
-
 
                                                         <div className="form-group">
 
@@ -882,7 +828,6 @@ function Customers() {
                                                         </div>
 
                                                     </div>
-
 
                                                     <div className="site-form-actions">
 
@@ -908,11 +853,7 @@ function Customers() {
                                                     </div>
 
                                                 </form>
-
                                             )}
-
-
-                                            {/* SITE LIST */}
 
                                             {sites[
                                                 customer.id
@@ -1027,26 +968,21 @@ function Customers() {
                                                                     </div>
 
                                                                 </div>
-
                                                             )
                                                         )}
 
                                                     </div>
-
                                                 )
                                             )}
 
                                         </div>
-
                                     )}
 
                                 </div>
-
                             )
                         )}
 
                     </div>
-
                 )}
 
             </div>

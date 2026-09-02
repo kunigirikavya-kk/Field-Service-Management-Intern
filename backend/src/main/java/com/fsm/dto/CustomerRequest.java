@@ -6,8 +6,6 @@ import jakarta.validation.constraints.Size;
 
 public class CustomerRequest {
 
-    private Long userId;
-
     @NotBlank(message = "Company name is required")
     @Size(max = 150, message = "Company name must not exceed 150 characters")
     private String companyName;
@@ -36,14 +34,6 @@ public class CustomerRequest {
     private String zipCode;
 
     public CustomerRequest() {
-    }
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
     }
 
     public String getCompanyName() {
