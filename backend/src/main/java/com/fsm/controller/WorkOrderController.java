@@ -14,7 +14,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/work-orders")
-@CrossOrigin(origins = "http://localhost:5174")
 public class WorkOrderController {
 
     private final WorkOrderService workOrderService;
