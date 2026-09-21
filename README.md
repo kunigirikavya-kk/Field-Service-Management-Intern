@@ -1,97 +1,90 @@
-<<<<<<< HEAD
-# field-management-system
+# FieldSync — Field Service Management
 
+Production-ready field service management application.
 
+## Features
+- JWT authentication and role-based access
+- Customers and sites
+- Service requests
+- Work orders and technician assignment
+- Scheduling and job execution
+- Inventory and parts usage
+- Billing and invoices
+- Reports
+- Cloudinary job-photo uploads
+- Responsive React dashboard
 
-## Getting started
+## Stack
+React 19 + Vite • Spring Boot 3.5 / Java 21 • Spring Security • JPA/Hibernate • MySQL 8 • Cloudinary
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+## Local development
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-* [Create](https://docs.gitlab.com/user/project/repository/web_editor/#create-a-file) or [upload](https://docs.gitlab.com/user/project/repository/web_editor/#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
-
+### Docker
+1. Copy `.env.example` to `.env`.
+2. Set a unique `JWT_SECRET` of at least 32 characters.
+3. Add Cloudinary credentials if photo uploads are needed.
+4. Run:
+```bash
+docker compose up --build
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/kunigirikavya16283/field-management-system.git
-git branch -M main
-git push -uf origin main
+Frontend: http://localhost:5174
+API health: http://localhost:8080/api/health
+
+### Manual
+```bash
+mysql -u root -p < database/database/fsm_database.sql
+cd backend
+./mvnw spring-boot:run
+cd ../frontend/fsm-frontend
+npm ci
+npm run dev
 ```
 
-## Integrate with your tools
+## Environment variables
+Backend: `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`, `JWT_SECRET`, `JWT_EXPIRATION_MINUTES`, `CORS_ALLOWED_ORIGINS`, `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`, `JPA_DDL_AUTO`, `JPA_SHOW_SQL`.
+Frontend: `VITE_API_BASE_URL`.
+Never commit `.env` or production credentials.
 
-* [Set up project integrations](https://gitlab.com/kunigirikavya16283/field-management-system/-/settings/integrations)
+## Deployment
+### Database
+Use a managed MySQL-compatible database. Run `database/database/fsm_database.sql` once for a new database. For an existing compatible schema, `JPA_DDL_AUTO=update` can apply Hibernate changes during initial deployment.
 
-## Collaborate with your team
+### Backend — Render or Railway
+Root directory: `backend`
+Build: `./mvnw -DskipTests package`
+Start: `java -jar target/field-service-management-0.0.1-SNAPSHOT.jar`
+Required environment: database variables, `JWT_SECRET` (32+ random characters), `JWT_EXPIRATION_MINUTES=120`, `CORS_ALLOWED_ORIGINS=https://<frontend-domain>`, `JPA_DDL_AUTO=update`, `JPA_SHOW_SQL=false`.
+Health check: `/api/health`.
 
-* [Invite team members and collaborators](https://docs.gitlab.com/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/user/project/merge_requests/creating_merge_requests/)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/user/project/issues/managing_issues/#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+### Frontend — Vercel or Netlify
+Root directory: `frontend/fsm-frontend`
+Build: `npm run build`
+Output: `dist`
+Environment: `VITE_API_BASE_URL=https://<backend-domain>/api`
+Configure SPA fallback so application routes serve `index.html`.
 
-## Test and Deploy
+## CI
+GitHub Actions builds the backend with Java 21 and frontend with Node 22, then runs the frontend linter.
 
-Use the built-in continuous integration in GitLab.
+## API
+Auth: `POST /api/users/register`, `POST /api/users/login`, `GET /api/health`.
+Resources: `/api/customers`, `/api/sites`, `/api/service-requests`, `/api/work-orders`, `/api/technicians`, `/api/schedules`, `/api/job-executions`, `/api/job-photos`, `/api/inventory`, `/api/part-usage`, `/api/invoices`, `/api/reports`.
+Protected endpoints use `Authorization: Bearer <JWT>`.
 
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/topics/autodevops/requirements/)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ci/environments/protected_environments/)
+## Seed data warning
+The SQL file contains demo records with plaintext passwords. Do not use those passwords in production. Prefer application registration or BCrypt password hashes.
 
-***
+## Production checklist
+- [ ] Create managed database and run schema
+- [ ] Configure backend environment variables
+- [ ] Configure Cloudinary if photos are required
+- [ ] Deploy backend and verify `/api/health`
+- [ ] Configure frontend API URL
+- [ ] Set exact backend CORS origin
+- [ ] Deploy frontend
+- [ ] Test registration/login
+- [ ] Test customer → service request → work order → schedule → technician execution
+- [ ] Confirm GitHub Actions is green
 
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
-=======
-# field-service-management
->>>>>>> b9f62ede4adab0ef2cc513fe2481aea56b2d41ab
+## Screenshots
+Add production screenshots here after deployment.

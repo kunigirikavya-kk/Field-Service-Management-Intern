@@ -5,17 +5,15 @@ import com.fsm.dto.LoginResponse;
 import com.fsm.dto.RegisterRequest;
 import com.fsm.entity.User;
 import com.fsm.service.UserService;
-
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
-@CrossOrigin(origins = "http://localhost:5174")
 public class UserController {
 
     private final UserService userService;
@@ -24,81 +22,41 @@ public class UserController {
         this.userService = userService;
     }
 
-    // =====================================================
-    // REGISTER
-    // =====================================================
-
     @PostMapping("/register")
-    public ResponseEntity<?> register(
-            @RequestBody RegisterRequest request
-    ) {
-
+    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
         try {
-
             User user = userService.register(request);
-
-            Map<String, Object> response = new HashMap<>();
-
-            response.put("message", "Registration successful");
-            response.put("id", user.getId());
-            response.put("username", user.getUsername());
-            response.put("fullName", user.getFullName());
-            response.put("email", user.getEmail());
-            response.put("phone", user.getPhone());
-            response.put("role", user.getRole());
-
-            return ResponseEntity
-                    .status(HttpStatus.CREATED)
-                    .body(response);
-
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                "message", "Registration successful",
+                "id", user.getId(),
+                "username", user.getUsername(),
+                "fullName", user.getFullName(),
+                "email", user.getEmail(),
+                "phone", user.getPhone(),
+                "role", user.getRole()
+            ));
         } catch (RuntimeException e) {
-
-            Map<String, String> error = new HashMap<>();
-
-            error.put("message", e.getMessage());
-
-            return ResponseEntity
-                    .badRequest()
-                    .body(error);
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
 
-    // =====================================================
-    // LOGIN
-    // =====================================================
-
     @PostMapping("/login")
-    public ResponseEntity<?> login(
-            @RequestBody LoginRequest request
-    ) {
-
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
         try {
-
-            LoginResponse response =
-                    userService.login(request);
-
-            Map<String, Object> result = new HashMap<>();
-
-            result.put("message", "Login successful");
-            result.put("token", response.getToken());
-            result.put("id", response.getId());
-            result.put("username", response.getUsername());
-            result.put("fullName", response.getFullName());
-            result.put("email", response.getEmail());
-            result.put("phone", response.getPhone());
-            result.put("role", response.getRole());
-
-            return ResponseEntity.ok(result);
-
+            LoginResponse response = userService.login(request);
+            return ResponseEntity.ok(Map.of(
+                "message", "Login successful",
+                "token", response.getToken(),
+                "id", response.getId(),
+                "username", response.getUsername(),
+                "fullName", response.getFullName(),
+                "email", response.getEmail(),
+                "phone", response.getPhone(),
+                "role", response.getRole()
+            ));
         } catch (RuntimeException e) {
-
-            Map<String, String> error = new HashMap<>();
-
-            error.put("message", e.getMessage());
-
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body(error);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "Invalid email or password"));
         }
     }
 }

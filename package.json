@@ -1,5 +1,8 @@
 {
-  "dependencies": {
-    "recharts": "^3.10.1"
+  "name": "field-service-management",
+  "private": true,
+  "scripts": {
+    "build": "npm --prefix frontend/fsm-frontend run build",
+    "lint": "npm --prefix frontend/fsm-frontend run lint"
   }
 }
