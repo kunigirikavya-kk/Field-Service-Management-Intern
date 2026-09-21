@@ -1,277 +1,54 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
 :root {
-  /* Inventory is the application-wide visual source of truth. */
-  --inventory-cream: #f5efe3; --inventory-paper: #fffdf8; --inventory-paper-2: #faf6ec;
-  --inventory-ink: #20263d; --inventory-indigo: #313b68; --inventory-indigo-dark: #242b50;
-  --inventory-terracotta: #c45b3c; --inventory-terracotta-dark: #9e432d;
-  --inventory-gold: #d39b38; --inventory-gold-soft: #f4dfae;
-  --inventory-sage: #527a68; --inventory-sage-soft: #dce9df;
-  --inventory-red: #a9473f; --inventory-red-soft: #f4d9d4;
-  --inventory-muted: #717687; --inventory-border: #e5ddcf;
-  --inventory-shadow: 0 12px 35px rgba(43, 40, 53, 0.08);
-  --inventory-shadow-hover: 0 18px 45px rgba(43, 40, 53, 0.13);
-  --font-family-base: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-size-xs: 11px; --font-size-sm: 13px; --font-size-md: 14px; --font-size-lg: 16px; --font-size-xl: 18px; --font-size-2xl: 24px; --font-size-3xl: 28px;
-  --font-weight-regular: 400; --font-weight-medium: 500; --font-weight-semibold: 600; --font-weight-bold: 700;
-  --line-height-tight: 1.25; --line-height-normal: 1.5; --line-height-relaxed: 1.6;
-  --primary: var(--inventory-indigo); --primary-dark: var(--inventory-indigo-dark); --primary-hover: var(--inventory-terracotta); --primary-light: var(--inventory-gold-soft);
-  --background: var(--inventory-cream); --bg: var(--inventory-cream); --surface: var(--inventory-paper); --card-bg: var(--inventory-paper);
-  --text-primary: var(--inventory-ink); --heading: var(--inventory-indigo-dark); --text: var(--inventory-ink); --text-secondary: var(--inventory-muted); --text-light: var(--inventory-muted); --text-muted: #9295a0; --border: var(--inventory-border);
-  --success: var(--inventory-sage); --success-bg: var(--inventory-sage-soft); --warning: #a16f18; --warning-bg: var(--inventory-gold-soft); --danger: var(--inventory-red); --danger-bg: var(--inventory-red-soft); --info: var(--inventory-indigo); --info-bg: #e5e7f5;
-  --sidebar-bg: var(--inventory-indigo-dark); --sidebar-hover: var(--inventory-indigo); --sidebar-active: rgba(211,155,56,.2); --sidebar-text: #d8d5cc; --sidebar-text-active: #fffdf8; --sidebar-width: 264px;
-  --topbar-bg: rgba(255,253,248,.94); --topbar-height: 72px; --topbar-border: var(--inventory-border);
-  --radius: 11px; --radius-lg: 18px; --shadow-sm: 0 6px 22px rgba(43,40,53,.05); --shadow: var(--inventory-shadow); --shadow-md: var(--inventory-shadow-hover); --shadow-lg: 0 24px 48px rgba(43,40,53,.16);
-  font-family: var(--font-family-base); color: var(--text); background: var(--background);
-}
-* { box-sizing: border-box; }
-html { min-width: 320px; background: var(--background); }
-body { min-width: 320px; min-height: 100vh; margin: 0; background: var(--background); line-height: var(--line-height-normal); font-family: var(--font-family-base) !important; }
-*, *::before, *::after, button, input, select, textarea { font-family: var(--font-family-base) !important; }
-button, input, select, textarea { font: inherit; } button { cursor: pointer; } button:disabled { cursor: not-allowed; } a { color: inherit; text-decoration: none; }
+  --font-family-base:"Plus Jakarta Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --font-size-xs:11px; --font-size-sm:13px; --font-size-md:14px; --font-size-lg:16px; --font-size-xl:18px; --font-size-2xl:24px; --font-size-3xl:28px;
+  --font-weight-regular:400; --font-weight-medium:500; --font-weight-semibold:600; --font-weight-bold:700;
+  --line-height-tight:1.25; --line-height-normal:1.5; --line-height-relaxed:1.6;
 
-h1, h2, h3, h4, h5, h6 { line-height: var(--line-height-tight); }
-p, li, td, th, label, input, select, textarea { line-height: var(--line-height-normal); }
-.page-header h1, .page-heading h1, .customer-header h1, .technician-header h1, .work-order-header h1, .schedule-header h1, .inventory-header h1, .billing-header h1, .reports-header h1 {
-  font-size: var(--font-size-3xl);
-  font-weight: var(--font-weight-bold);
-  letter-spacing: -0.02em;
-}
-.page-header p, .page-heading p, .customer-header p, .technician-header p, .work-order-header p, .schedule-header p { font-size: var(--font-size-md); font-weight: var(--font-weight-regular); line-height: var(--line-height-relaxed); }
-.card-title h2, .list-header h2, .card-heading h2, .chart-header h2, .section-heading h2 { font-weight: var(--font-weight-semibold); letter-spacing: -0.01em; }
-.form-group label, .register-field label, .assign-technician-section label { font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); line-height: 1.4; }
-.form-group input, .form-group select, .form-group textarea, .register-field input, .register-field select, .login-card input, .topbar-search input { font-size: var(--font-size-md); font-weight: var(--font-weight-regular); }
-.btn, button, .primary-button, .add-customer-btn, .add-technician-btn, .add-work-order-btn, .create-schedule-btn, .save-site-btn { font-size: var(--font-size-md); font-weight: var(--font-weight-semibold); line-height: 1.4; }
-.status-badge, .priority-badge, .invoice-status, .badge { font-size: var(--font-size-xs); font-weight: var(--font-weight-bold); line-height: 1.3; letter-spacing: 0.02em; }
-
-.app { display: flex; min-height: 100vh; }
-.main { display: flex; flex: 1; flex-direction: column; min-width: 0; min-height: 100vh; margin-left: var(--sidebar-width); }
-.content { flex: 1; min-width: 0; padding: 28px 32px 44px; background: var(--background); }
-
-/* Shared application primitives used by the existing feature pages. */
-.page-header, .page-heading { gap: 16px; margin-bottom: 26px; }
-.page-header h1, .page-heading h1 { color: var(--heading); letter-spacing: -.025em; }
-.card, .customer-card, .technician-card, .technician-list-section, .service-request-card, .work-order-card, .work-order-list-section, .schedule-card { border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
-.btn, .primary-button, .add-customer-btn, .add-technician-btn, .add-work-order-btn, .create-schedule-btn, .save-site-btn { min-height: 40px; border-radius: 9px; transition: transform .18s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease; }
-.btn-primary, .primary-button, .add-customer-btn, .add-technician-btn, .add-work-order-btn, .create-schedule-btn, .save-site-btn { background: var(--primary); box-shadow: 0 3px 8px rgba(79,70,229,.16); }
-.btn-primary:hover, .primary-button:hover, .add-customer-btn:hover, .add-technician-btn:hover, .add-work-order-btn:hover, .create-schedule-btn:hover, .save-site-btn:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 6px 16px rgba(79,70,229,.22); }
-.form-group input, .form-group select, .form-group textarea, .login-card input, .register-field input, .register-field select { border-color: var(--border); border-radius: 9px; color: var(--text-primary); transition: border-color .18s ease, box-shadow .18s ease; }
-.form-group input:focus, .form-group select:focus, .form-group textarea:focus, .login-card input:focus, .register-field input:focus, .register-field select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,70,229,.12); }
-.table-container, .report-table-wrapper, .schedule-table-container, .invoice-table-scroll { border-radius: var(--radius-lg); }
-.table-container { overflow-x: auto; }
-.badge, .status-badge, .priority-badge, .invoice-status { font-weight: 700; letter-spacing: .01em; }
-.empty-state, .reports-empty, .empty-invoices, .empty-schedules { border-radius: var(--radius-lg); }
-
-/* Shared polished page header used by Inventory, Billing, and Reports. */
-.inventory-inspired-title-row {
-  display: flex;
-  align-items: center;
-  gap: 17px;
+  --primary:#4f46e5; --primary-dark:#4338ca; --primary-hover:#4338ca; --primary-light:#eef2ff;
+  --background:#f8fafc; --bg:#f8fafc; --surface:#ffffff; --card-bg:#ffffff;
+  --text-primary:#334155; --heading:#0f172a; --text:#334155; --text-secondary:#64748b; --text-light:#64748b; --text-muted:#94a3b8;
+  --border:#e5e7eb; --border-strong:#d1d5db;
+  --success:#059669; --success-bg:#ecfdf5; --warning:#d97706; --warning-bg:#fffbeb; --danger:#dc2626; --danger-bg:#fef2f2; --info:#2563eb; --info-bg:#eff6ff;
+  --sidebar-bg:#111827; --sidebar-hover:#1f2937; --sidebar-active:#312e81; --sidebar-text:#94a3b8; --sidebar-text-active:#ffffff; --sidebar-width:264px;
+  --topbar-bg:rgba(255,255,255,.94); --topbar-height:72px; --topbar-border:#e5e7eb;
+  --radius:10px; --radius-lg:14px;
+  --shadow-sm:0 4px 18px rgba(15,23,42,.045); --shadow:0 6px 22px rgba(15,23,42,.06); --shadow-md:0 12px 30px rgba(15,23,42,.09); --shadow-lg:0 20px 45px rgba(15,23,42,.14);
+  font-family:var(--font-family-base); color:var(--text); background:var(--background);
 }
 
-.inventory-inspired-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 58px;
-  height: 58px;
-  flex: 0 0 58px;
-  border-radius: 17px;
-  background: linear-gradient(135deg, var(--inventory-indigo), var(--inventory-terracotta));
-  color: var(--inventory-paper);
-  font-size: 25px;
-  font-weight: 700;
-  box-shadow: 7px 7px 0 rgba(211,155,56,.35);
-}
+*,*::before,*::after{box-sizing:border-box}
+html{min-width:320px;background:var(--background)}
+body{min-width:320px;min-height:100vh;margin:0;background:var(--background);line-height:var(--line-height-normal);font-family:var(--font-family-base)!important;-webkit-font-smoothing:antialiased}
+*,*::before,*::after,button,input,select,textarea{font-family:var(--font-family-base)!important}
+button,input,select,textarea{font:inherit} button{cursor:pointer} button:disabled{cursor:not-allowed} a{color:inherit;text-decoration:none}
+h1,h2,h3,h4,h5,h6{line-height:var(--line-height-tight)}
+p,li,td,th,label,input,select,textarea{line-height:var(--line-height-normal)}
 
-.inventory-inspired-eyebrow {
-  display: block;
-  margin-bottom: 5px;
-  color: var(--inventory-terracotta);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: .16em;
-}
+.app{display:flex;min-height:100vh}
+.main{display:flex;flex:1;flex-direction:column;min-width:0;min-height:100vh;margin-left:var(--sidebar-width)}
+.content{flex:1;min-width:0;padding:0 0 40px;background:var(--background)}
 
-.customer-header .inventory-inspired-title-row,
-.technician-header .inventory-inspired-title-row,
-.work-order-header .inventory-inspired-title-row,
-.schedule-header .inventory-inspired-title-row,
-.page-heading .inventory-inspired-title-row {
-  align-items: flex-start;
-}
+.page-header,.page-heading{gap:16px;margin-bottom:24px}
+.page-header h1,.page-heading h1,.customer-header h1,.technician-header h1,.work-order-header h1,.schedule-header h1,.inventory-header h1,.billing-header h1,.reports-header h1{font-size:var(--font-size-3xl);font-weight:var(--font-weight-bold);letter-spacing:-.025em;color:var(--heading)}
+.page-header p,.page-heading p,.customer-header p,.technician-header p,.work-order-header p,.schedule-header p{font-size:var(--font-size-md);font-weight:var(--font-weight-regular);line-height:var(--line-height-relaxed)}
+.card,.customer-card,.technician-card,.technician-list-section,.service-request-card,.work-order-card,.work-order-list-section,.schedule-card{border:1px solid var(--border);box-shadow:var(--shadow-sm)}
+.btn,.primary-button,.add-customer-btn,.add-technician-btn,.add-work-order-btn,.create-schedule-btn,.save-site-btn{min-height:40px;border-radius:9px;transition:transform .18s ease,box-shadow .18s ease,background .18s ease,border-color .18s ease}
+.btn-primary,.primary-button,.add-customer-btn,.add-technician-btn,.add-work-order-btn,.create-schedule-btn,.save-site-btn{background:var(--primary);color:#fff;box-shadow:0 4px 12px rgba(79,70,229,.16)}
+.btn-primary:hover,.primary-button:hover,.add-customer-btn:hover,.add-technician-btn:hover,.add-work-order-btn:hover,.create-schedule-btn:hover,.save-site-btn:hover{background:var(--primary-dark);transform:translateY(-1px);box-shadow:0 7px 18px rgba(79,70,229,.22)}
+.form-group input,.form-group select,.form-group textarea,.login-card input,.register-field input,.register-field select{border-color:var(--border);border-radius:9px;color:var(--text-primary);transition:border-color .18s ease,box-shadow .18s ease}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus,.login-card input:focus,.register-field input:focus,.register-field select:focus{outline:none;border-color:#818cf8;box-shadow:0 0 0 3px rgba(99,102,241,.11)}
+.table-container,.report-table-wrapper,.schedule-table-container,.invoice-table-scroll{border-radius:var(--radius-lg)}
+.table-container{overflow-x:auto}
+.badge,.status-badge,.priority-badge,.invoice-status{font-weight:700;letter-spacing:.01em}
+.empty-state,.reports-empty,.empty-invoices,.empty-schedules{border-radius:var(--radius-lg)}
 
-.customer-header h1,
-.technician-header h1,
-.work-order-header h1,
-.schedule-header h1,
-.page-heading h1 {
-  margin: 0;
-  color: var(--inventory-indigo-dark);
-  font-size: 30px;
-  font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: -.03em;
-}
-
-.customer-header p,
-.technician-header p,
-.work-order-header p,
-.schedule-header p,
-.page-heading p {
-  margin-top: 8px;
-  color: var(--inventory-muted);
-  font-size: 14px;
-  line-height: 1.6;
-}
-
-.dash .page-header {
-  position: relative;
-  padding-left: 75px;
-}
-
-.dash .page-header::before {
-  content: "⌂";
-  position: absolute;
-  top: 0;
-  left: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 58px;
-  height: 58px;
-  border-radius: 17px;
-  background: linear-gradient(135deg, var(--inventory-indigo), var(--inventory-terracotta));
-  color: var(--inventory-paper);
-  font-size: 25px;
-  font-weight: 700;
-  box-shadow: 7px 7px 0 rgba(211,155,56,.35);
-}
-
-/* Shared Inventory-inspired surfaces for every authenticated page. */
-.content,
-.customer-page,
-.technician-page,
-.service-request-page,
-.work-order-page,
-.schedule-page,
-.je-page,
-.billing-page,
-.reports-page,
-.dash {
-  background: var(--inventory-cream) !important;
-  color: var(--inventory-ink);
-}
-
-.customer-card,
-.customer-item,
-.technician-card,
-.technician-list-section,
-.technician-item,
-.service-request-card,
-.work-order-card,
-.work-order-item,
-.schedule-card,
-.billing-card,
-.billing-stat-card,
-.kpi-card,
-.chart-card,
-.report-section,
-.dash-stat-card,
-.dash-section,
-.dash-panel,
-.je-section,
-.je-schedule-card,
-.je-execution-card {
-  background: var(--inventory-paper) !important;
-  border: 1px solid var(--inventory-border) !important;
-  border-radius: 18px;
-  box-shadow: var(--inventory-shadow);
-}
-
-.form-group input,
-.form-group select,
-.form-group textarea,
-.invoice-form input,
-.invoice-form select,
-.invoice-form textarea,
-.assign-technician-controls select,
-.search-box,
-.input-wrapper {
-  background: #fffdf9 !important;
-  border-color: var(--inventory-border) !important;
-  color: var(--inventory-ink) !important;
-}
-
-.form-group input::placeholder,
-.form-group textarea::placeholder,
-.search-box input::placeholder {
-  color: #aaa9a4 !important;
-}
-
-.btn-primary,
-.primary-button,
-.add-customer-btn,
-.add-technician-btn,
-.add-work-order-btn,
-.create-schedule-btn,
-.save-site-btn,
-.reports-primary-button,
-.create-invoice-btn {
-  background: var(--inventory-indigo) !important;
-  color: var(--inventory-paper) !important;
-  box-shadow: 0 6px 15px rgba(49,59,104,.20);
-}
-
-.btn-primary:hover,
-.primary-button:hover,
-.add-customer-btn:hover,
-.add-technician-btn:hover,
-.add-work-order-btn:hover,
-.create-schedule-btn:hover,
-.save-site-btn:hover,
-.reports-primary-button:hover,
-.create-invoice-btn:hover {
-  background: var(--inventory-indigo-dark) !important;
-}
-
-.table-container,
-.schedule-table-container,
-.report-table-wrapper,
-.invoice-table-scroll {
-  background: var(--inventory-paper) !important;
-  border-color: var(--inventory-border) !important;
-}
-
-.schedule-table thead th,
-.inventory-table thead th,
-.report-table-wrapper th,
-.invoice-table th {
-  background: var(--inventory-indigo) !important;
-  color: var(--inventory-paper) !important;
-}
-
-.schedule-table tbody td,
-.report-table-wrapper td,
-.invoice-table td {
-  background: var(--inventory-paper) !important;
-  color: var(--inventory-ink);
-  border-color: #eee7da;
-}
-
-.schedule-table tbody tr:hover td,
-.report-table-wrapper tbody tr:hover td,
-.invoice-table tbody tr:hover td {
-  background: #faf4e9 !important;
-}
-
-@media (max-width: 768px) {
-  .main { margin-left: 0; } .content { padding: 20px 16px 32px; }
-  .sidebar-overlay { display: block; position: fixed; inset: 0; z-index: 998; background: rgba(15,23,42,.45); backdrop-filter: blur(2px); opacity: 0; visibility: hidden; transition: opacity .2s ease, visibility .2s ease; }
-  .sidebar-overlay.active { opacity: 1; visibility: visible; }
-  .customer-page, .technician-page, .work-order-page, .schedule-page, .inventory-page, .billing-page, .job-execution-page, .reports-page { padding: 0 !important; }
-  .dash { padding: 0 !important; }
-  .page-header, .page-heading, .customer-header, .technician-header, .work-order-header, .schedule-header { align-items: flex-start; flex-direction: column; }
-  .form-grid, .invoice-form-grid, .site-form-grid, .new-site-grid { grid-template-columns: 1fr !important; }
-  .full-width { grid-column: 1 / -1; }
+@media(max-width:768px){
+  .main{margin-left:0}
+  .content{padding-bottom:28px}
+  .sidebar-overlay{display:block;position:fixed;inset:0;z-index:998;background:rgba(15,23,42,.45);backdrop-filter:blur(2px);opacity:0;visibility:hidden;transition:opacity .2s ease,visibility .2s ease}
+  .sidebar-overlay.active{opacity:1;visibility:visible}
+  .form-grid,.invoice-form-grid,.site-form-grid,.new-site-grid{grid-template-columns:1fr!important}
+  .full-width{grid-column:1/-1}
 }
