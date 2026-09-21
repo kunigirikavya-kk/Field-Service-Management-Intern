@@ -14,7 +14,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/service-requests")
-@CrossOrigin(origins = "http://localhost:5174")
 public class ServiceRequestController {
 
     private final ServiceRequestService serviceRequestService;
