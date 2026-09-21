@@ -11,7 +11,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/part-usage")
-@CrossOrigin(origins = "http://localhost:5174")
 public class PartUsageController {
 
     private final PartUsageService partUsageService;
