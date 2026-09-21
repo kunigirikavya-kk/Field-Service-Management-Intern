@@ -17,7 +17,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/job-photos")
-@CrossOrigin(origins = "http://localhost:5174")
 public class JobPhotoController {
 
     private final CloudinaryService cloudinaryService;
