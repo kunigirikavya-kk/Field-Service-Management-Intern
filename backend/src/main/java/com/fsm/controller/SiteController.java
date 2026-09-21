@@ -16,11 +16,16 @@ public class SiteController {
 
     private final SiteService siteService;
 
-    public SiteController(SiteService siteService) {
+    public SiteController(
+            SiteService siteService
+    ) {
         this.siteService = siteService;
     }
 
-    // Get all sites
+    // =========================================================
+    // GET ALL SITES
+    // =========================================================
+
     @GetMapping
     public ResponseEntity<List<Site>> getAllSites() {
 
@@ -29,59 +34,89 @@ public class SiteController {
         );
     }
 
-    // Get sites by customer
+    // =========================================================
+    // GET SITES BY CUSTOMER
+    // =========================================================
+
     @GetMapping("/customer/{customerId}")
     public ResponseEntity<List<Site>> getSitesByCustomer(
-            @PathVariable Long customerId) {
+            @PathVariable Long customerId
+    ) {
 
         return ResponseEntity.ok(
-                siteService.getSitesByCustomer(customerId)
+                siteService.getSitesByCustomer(
+                        customerId
+                )
         );
     }
 
-    // Create site for customer
+    // =========================================================
+    // CREATE SITE FOR CUSTOMER
+    // =========================================================
+
     @PostMapping("/customer/{customerId}")
     public ResponseEntity<Site> createSite(
             @PathVariable Long customerId,
-            @RequestBody Site site) {
+            @RequestBody Site site
+    ) {
 
+        // Always use the customer ID from the URL
+        // rather than trusting the request body.
         site.setCustomerId(customerId);
 
-        Site savedSite = siteService.createSite(site);
+        Site savedSite =
+                siteService.createSite(site);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(savedSite);
     }
 
-    // Get site by ID
+    // =========================================================
+    // GET SITE BY ID
+    // =========================================================
+
     @GetMapping("/{id}")
     public ResponseEntity<Site> getSiteById(
-            @PathVariable Long id) {
+            @PathVariable Long id
+    ) {
 
         return ResponseEntity.ok(
                 siteService.getSiteById(id)
         );
     }
 
-    // Update site
+    // =========================================================
+    // UPDATE SITE
+    // =========================================================
+
     @PutMapping("/{id}")
     public ResponseEntity<Site> updateSite(
             @PathVariable Long id,
-            @RequestBody Site site) {
+            @RequestBody Site site
+    ) {
 
         return ResponseEntity.ok(
-                siteService.updateSite(id, site)
+                siteService.updateSite(
+                        id,
+                        site
+                )
         );
     }
 
-    // Delete site
+    // =========================================================
+    // DELETE SITE
+    // =========================================================
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteSite(
-            @PathVariable Long id) {
+            @PathVariable Long id
+    ) {
 
         siteService.deleteSite(id);
 
-        return ResponseEntity.noContent().build();
+        return ResponseEntity
+                .noContent()
+                .build();
     }
 }

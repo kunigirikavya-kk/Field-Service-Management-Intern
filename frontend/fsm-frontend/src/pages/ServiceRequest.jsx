@@ -21,9 +21,7 @@ function ServiceRequest() {
     const storedUser =
         localStorage.getItem("fieldsyncUser");
 
-
     let currentUser = null;
-
 
     try {
 
@@ -98,63 +96,7 @@ function ServiceRequest() {
 
 
     // =====================================================
-    // HANDLE INPUT CHANGE
-    // =====================================================
-
-    const handleChange = (e) => {
-
-        const {
-            name,
-            value
-        } = e.target;
-
-
-        setFormData(prev => ({
-
-            ...prev,
-
-            [name]: value
-
-        }));
-
-    };
-
-
-    // =====================================================
-    // SESSION EXPIRED
-    // =====================================================
-
-    function handleSessionExpired() {
-
-        localStorage.removeItem(
-            "fieldsyncToken"
-        );
-
-
-        localStorage.removeItem(
-            "fieldsyncAuthenticated"
-        );
-
-
-        localStorage.removeItem(
-            "fieldsyncUser"
-        );
-
-
-        alert(
-            "Your session has expired. Please login again."
-        );
-
-
-        navigate(
-            "/login"
-        );
-
-    }
-
-
-    // =====================================================
-    // LOAD CUSTOMERS
+    // LOAD PAGE
     // =====================================================
 
     useEffect(() => {
@@ -165,9 +107,7 @@ function ServiceRequest() {
 
         if (isTechnician) {
 
-            navigate(
-                "/dashboard"
-            );
+            navigate("/dashboard");
 
             return;
 
@@ -175,17 +115,63 @@ function ServiceRequest() {
 
 
         // -------------------------------------------------
-        // CHECK PERMISSION
+        // CUSTOMER
         // -------------------------------------------------
 
-        if (
-            !isCustomer &&
-            !canCreateForCustomer
-        ) {
+        if (isCustomer) {
 
-            navigate(
-                "/dashboard"
+            /*
+             * IMPORTANT:
+             *
+             * CUSTOMER must NOT call:
+             *
+             * GET /api/customers
+             *
+             * because that endpoint is intentionally restricted
+             * to DISPATCHER and MANAGER.
+             *
+             * The logged-in customer's user ID is used instead.
+             *
+             * ServiceRequestService already supports resolving
+             * users.id -> customers.id using findByUserId().
+             */
+
+            const loggedInUserId =
+                currentUser?.id;
+
+
+            if (!loggedInUserId) {
+
+                console.error(
+                    "❌ Logged-in customer user ID not found."
+                );
+
+                alert(
+                    "Unable to identify your customer account. Please login again."
+                );
+
+                navigate("/login");
+
+                return;
+
+            }
+
+
+            console.log(
+                "👤 CUSTOMER USER ID:",
+                loggedInUserId
             );
+
+
+            setFormData(prev => ({
+
+                ...prev,
+
+                customerId:
+                    String(loggedInUserId)
+
+            }));
+
 
             return;
 
@@ -193,7 +179,20 @@ function ServiceRequest() {
 
 
         // -------------------------------------------------
-        // LOAD CUSTOMERS
+        // DISPATCHER / MANAGER
+        // -------------------------------------------------
+
+        if (!canCreateForCustomer) {
+
+            navigate("/dashboard");
+
+            return;
+
+        }
+
+
+        // -------------------------------------------------
+        // LOAD CUSTOMER LIST
         // -------------------------------------------------
 
         const loadCustomers =
@@ -201,9 +200,7 @@ function ServiceRequest() {
 
                 try {
 
-                    setLoadingCustomers(
-                        true
-                    );
+                    setLoadingCustomers(true);
 
 
                     const data =
@@ -236,9 +233,7 @@ function ServiceRequest() {
 
 
                     if (
-                        message.includes(
-                            "401"
-                        )
+                        message.includes("401")
                     ) {
 
                         handleSessionExpired();
@@ -253,9 +248,7 @@ function ServiceRequest() {
 
                 } finally {
 
-                    setLoadingCustomers(
-                        false
-                    );
+                    setLoadingCustomers(false);
 
                 }
 
@@ -270,6 +263,60 @@ function ServiceRequest() {
         canCreateForCustomer,
         navigate
     ]);
+
+
+    // =====================================================
+    // SESSION EXPIRED
+    // =====================================================
+
+    function handleSessionExpired() {
+
+        localStorage.removeItem(
+            "fieldsyncToken"
+        );
+
+
+        localStorage.removeItem(
+            "fieldsyncAuthenticated"
+        );
+
+
+        localStorage.removeItem(
+            "fieldsyncUser"
+        );
+
+
+        alert(
+            "Your session has expired. Please login again."
+        );
+
+
+        navigate("/login");
+
+    }
+
+
+    // =====================================================
+    // HANDLE INPUT CHANGE
+    // =====================================================
+
+    const handleChange = (e) => {
+
+        const {
+            name,
+            value
+        } = e.target;
+
+
+        setFormData(prev => ({
+
+            ...prev,
+
+            [name]: value
+
+        }));
+
+    };
 
 
     // =====================================================
@@ -289,9 +336,9 @@ function ServiceRequest() {
             }
 
 
-            // =================================================
+            // -------------------------------------------------
             // CHECK TOKEN
-            // =================================================
+            // -------------------------------------------------
 
             const token =
                 localStorage.getItem(
@@ -308,9 +355,9 @@ function ServiceRequest() {
             }
 
 
-            // =================================================
-            // VALIDATE ROLE
-            // =================================================
+            // -------------------------------------------------
+            // CHECK ROLE
+            // -------------------------------------------------
 
             if (
                 !isCustomer &&
@@ -326,9 +373,9 @@ function ServiceRequest() {
             }
 
 
-            // =================================================
-            // VALIDATE CUSTOMER
-            // =================================================
+            // -------------------------------------------------
+            // CUSTOMER ID
+            // -------------------------------------------------
 
             const customerId =
                 formData.customerId;
@@ -337,7 +384,9 @@ function ServiceRequest() {
             if (!customerId) {
 
                 alert(
-                    "Please select a customer."
+                    isCustomer
+                        ? "Unable to identify your customer account."
+                        : "Please select a customer."
                 );
 
                 return;
@@ -345,9 +394,9 @@ function ServiceRequest() {
             }
 
 
-            // =================================================
-            // VALIDATE OTHER FIELDS
-            // =================================================
+            // -------------------------------------------------
+            // TITLE
+            // -------------------------------------------------
 
             if (!formData.title.trim()) {
 
@@ -360,6 +409,10 @@ function ServiceRequest() {
             }
 
 
+            // -------------------------------------------------
+            // SERVICE TYPE
+            // -------------------------------------------------
+
             if (!formData.serviceType) {
 
                 alert(
@@ -370,6 +423,10 @@ function ServiceRequest() {
 
             }
 
+
+            // -------------------------------------------------
+            // PRIORITY
+            // -------------------------------------------------
 
             if (!formData.priority) {
 
@@ -382,6 +439,10 @@ function ServiceRequest() {
             }
 
 
+            // -------------------------------------------------
+            // PREFERRED DATE
+            // -------------------------------------------------
+
             if (!formData.preferredDate) {
 
                 alert(
@@ -393,6 +454,10 @@ function ServiceRequest() {
             }
 
 
+            // -------------------------------------------------
+            // LOCATION
+            // -------------------------------------------------
+
             if (!formData.serviceLocation.trim()) {
 
                 alert(
@@ -403,6 +468,10 @@ function ServiceRequest() {
 
             }
 
+
+            // -------------------------------------------------
+            // DESCRIPTION
+            // -------------------------------------------------
 
             if (!formData.description.trim()) {
 
@@ -421,10 +490,19 @@ function ServiceRequest() {
 
             const requestData = {
 
+                /*
+                 * CUSTOMER:
+                 * this is users.id.
+                 *
+                 * Backend ServiceRequestService will resolve
+                 * it to customers.id using findByUserId().
+                 *
+                 * DISPATCHER / MANAGER:
+                 * this is customers.id selected from dropdown.
+                 */
+
                 customerId:
-                    Number(
-                        customerId
-                    ),
+                    Number(customerId),
 
                 title:
                     formData.title.trim(),
@@ -454,14 +532,12 @@ function ServiceRequest() {
 
 
             // =================================================
-            // CREATE REQUEST
+            // SAVE
             // =================================================
 
             try {
 
-                setSubmitting(
-                    true
-                );
+                setSubmitting(true);
 
 
                 const result =
@@ -481,13 +557,16 @@ function ServiceRequest() {
                 );
 
 
-                // =================================================
-                // RESET FORM
-                // =================================================
+                // -------------------------------------------------
+                // RESET
+                // -------------------------------------------------
 
                 setFormData({
 
-                    customerId: "",
+                    customerId:
+                        isCustomer
+                            ? String(currentUser?.id || "")
+                            : "",
 
                     title: "",
 
@@ -504,14 +583,11 @@ function ServiceRequest() {
                 });
 
 
-                // =================================================
-                // GO TO DASHBOARD
-                // =================================================
+                // -------------------------------------------------
+                // DASHBOARD
+                // -------------------------------------------------
 
-                navigate(
-                    "/dashboard"
-                );
-
+                navigate("/dashboard");
 
             } catch (error) {
 
@@ -525,14 +601,8 @@ function ServiceRequest() {
                     error?.message || "";
 
 
-                // =================================================
-                // UNAUTHORIZED
-                // =================================================
-
                 if (
-                    message.includes(
-                        "401"
-                    )
+                    message.includes("401")
                 ) {
 
                     handleSessionExpired();
@@ -542,14 +612,8 @@ function ServiceRequest() {
                 }
 
 
-                // =================================================
-                // FORBIDDEN
-                // =================================================
-
                 if (
-                    message.includes(
-                        "403"
-                    )
+                    message.includes("403")
                 ) {
 
                     alert(
@@ -561,20 +625,13 @@ function ServiceRequest() {
                 }
 
 
-                // =================================================
-                // OTHER ERROR
-                // =================================================
-
                 alert(
                     `Failed to create service request.\n\n${message}`
                 );
 
-
             } finally {
 
-                setSubmitting(
-                    false
-                );
+                setSubmitting(false);
 
             }
 
@@ -598,15 +655,22 @@ function ServiceRequest() {
 
                 <div>
 
-                    <h1>
-                        New Service Request
-                    </h1>
+                    <div className="inventory-inspired-title-row">
+                        <div className="inventory-inspired-icon">✦</div>
+                        <div>
+                            <span className="inventory-inspired-eyebrow">SERVICE REQUESTS • FIELDSYNC</span>
 
-                    <p>
-                        {isCustomer
-                            ? "Create a new service request for your account."
-                            : "Create a new service request for a customer."}
-                    </p>
+                            <h1>
+                                New Service Request
+                            </h1>
+
+                            <p>
+                                {isCustomer
+                                    ? "Create a new service request for your account."
+                                    : "Create a new service request for a customer."}
+                            </p>
+                        </div>
+                    </div>
 
                 </div>
 
@@ -620,11 +684,8 @@ function ServiceRequest() {
             <div className="service-request-card">
 
                 <form
-                    onSubmit={
-                        handleSubmit
-                    }
+                    onSubmit={handleSubmit}
                 >
-
 
                     <div className="form-grid">
 
@@ -640,55 +701,86 @@ function ServiceRequest() {
                             </label>
 
 
-                            <select
-                                name="customerId"
-                                value={
-                                    formData.customerId
-                                }
-                                onChange={
-                                    handleChange
-                                }
-                                required
-                                disabled={
-                                    loadingCustomers
-                                }
-                            >
+                            {isCustomer ? (
 
-                                <option value="">
+                                /*
+                                 * CUSTOMER:
+                                 * Do NOT show a customer dropdown.
+                                 *
+                                 * The logged-in customer's account is
+                                 * automatically selected.
+                                 */
 
-                                    {loadingCustomers
-                                        ? "Loading Customers..."
-                                        : "Select Customer"}
+                                <input
+                                    type="text"
+                                    value={
+                                        currentUser?.companyName ||
+                                        currentUser?.fullName ||
+                                        currentUser?.name ||
+                                        currentUser?.email ||
+                                        "Your Customer Account"
+                                    }
+                                    disabled
+                                />
 
-                                </option>
+                            ) : (
+
+                                /*
+                                 * DISPATCHER / MANAGER:
+                                 * Show the customer dropdown.
+                                 */
+
+                                <select
+                                    name="customerId"
+                                    value={
+                                        formData.customerId
+                                    }
+                                    onChange={
+                                        handleChange
+                                    }
+                                    required
+                                    disabled={
+                                        loadingCustomers
+                                    }
+                                >
+
+                                    <option value="">
+
+                                        {loadingCustomers
+                                            ? "Loading Customers..."
+                                            : "Select Customer"}
+
+                                    </option>
 
 
-                                {customers.map(
-                                    customer => (
+                                    {customers.map(
+                                        customer => (
 
-                                        <option
-                                            key={
-                                                customer.id
-                                            }
-                                            value={
-                                                customer.id
-                                            }
-                                        >
+                                            <option
+                                                key={
+                                                    customer.id
+                                                }
+                                                value={
+                                                    customer.id
+                                                }
+                                            >
 
-                                            {
-                                                customer.companyName ||
-                                                customer.fullName ||
-                                                customer.name ||
-                                                customer.email ||
-                                                `Customer #${customer.id}`
-                                            }
+                                                {
+                                                    customer.companyName ||
+                                                    customer.fullName ||
+                                                    customer.name ||
+                                                    customer.email ||
+                                                    `Customer #${customer.id}`
+                                                }
 
-                                        </option>
+                                            </option>
 
-                                    )
-                                )}
+                                        )
+                                    )}
 
-                            </select>
+                                </select>
+
+                            )}
 
                         </div>
 
@@ -719,21 +811,17 @@ function ServiceRequest() {
                                     Select Service Type
                                 </option>
 
-
                                 <option value="AC Maintenance">
                                     AC Maintenance
                                 </option>
-
 
                                 <option value="Equipment Repair">
                                     Equipment Repair
                                 </option>
 
-
                                 <option value="System Inspection">
                                     System Inspection
                                 </option>
-
 
                                 <option value="Installation">
                                     Installation
@@ -771,7 +859,7 @@ function ServiceRequest() {
 
 
                         {/* =================================================
-                            SERVICE REQUEST TITLE
+                            TITLE
                         ================================================= */}
 
                         <div className="form-group">
@@ -824,21 +912,17 @@ function ServiceRequest() {
                                     Select Priority
                                 </option>
 
-
                                 <option value="LOW">
                                     Low
                                 </option>
-
 
                                 <option value="MEDIUM">
                                     Medium
                                 </option>
 
-
                                 <option value="HIGH">
                                     High
                                 </option>
-
 
                                 <option value="URGENT">
                                     Urgent
@@ -911,7 +995,6 @@ function ServiceRequest() {
 
                     <div className="form-actions">
 
-
                         <button
                             type="button"
                             className="cancel-button"
@@ -946,7 +1029,6 @@ function ServiceRequest() {
                         </button>
 
                     </div>
-
 
                 </form>
 

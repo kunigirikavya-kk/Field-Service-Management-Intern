@@ -1,5 +1,6 @@
 
 import { useEffect, useState } from "react";
+import { CalendarClock, CalendarDays, Trash2 } from "lucide-react";
 
 import {
     getSchedules,
@@ -1034,13 +1035,19 @@ function Schedule() {
 
                 <div>
 
-                    <h1>
-                        Schedule Management
-                    </h1>
+                    <div className="inventory-inspired-title-row">
+                        <div className="inventory-inspired-icon"><CalendarClock size={25} strokeWidth={1.8} aria-hidden /></div>
+                        <div>
+                            <span className="inventory-inspired-eyebrow">SCHEDULING • FIELDSYNC</span>
+                            <h1>
+                                Schedule Management
+                            </h1>
 
-                    <p>
-                        {getPageDescription()}
-                    </p>
+                            <p>
+                                {getPageDescription()}
+                            </p>
+                        </div>
+                    </div>
 
                 </div>
 
@@ -1115,7 +1122,7 @@ function Schedule() {
                         <div className="card-title">
 
                             <div className="title-icon">
-                                📅
+                                <CalendarDays size={19} strokeWidth={1.8} aria-hidden />
                             </div>
 
                             <div>
@@ -1475,7 +1482,7 @@ function Schedule() {
                         <div className="empty-schedules">
 
                             <div className="empty-icon">
-                                📅
+                                <CalendarClock size={40} strokeWidth={1.8} aria-hidden />
                             </div>
 
                             <h3>
@@ -1678,7 +1685,7 @@ function Schedule() {
 
                                                         <span className="date-value">
 
-                                                            📅{" "}
+                                                            <CalendarDays size={13} strokeWidth={1.8} aria-hidden />{" "}
 
                                                             {
                                                                 formatDate(
@@ -1786,7 +1793,7 @@ function Schedule() {
                                                                 title="Delete schedule"
                                                             >
 
-                                                                🗑️
+                                                                <Trash2 size={16} strokeWidth={1.8} aria-hidden />
 
                                                             </button>
 

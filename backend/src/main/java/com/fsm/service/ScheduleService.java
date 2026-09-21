@@ -1,4 +1,3 @@
-
 package com.fsm.service;
 
 import com.fsm.entity.Schedule;
@@ -11,6 +10,7 @@ import com.fsm.security.AuthorizationService;
 
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -30,17 +30,10 @@ public class ScheduleService {
             TechnicianRepository technicianRepository,
             AuthorizationService authorizationService) {
 
-        this.scheduleRepository =
-                scheduleRepository;
-
-        this.workOrderRepository =
-                workOrderRepository;
-
-        this.technicianRepository =
-                technicianRepository;
-
-        this.authorizationService =
-                authorizationService;
+        this.scheduleRepository = scheduleRepository;
+        this.workOrderRepository = workOrderRepository;
+        this.technicianRepository = technicianRepository;
+        this.authorizationService = authorizationService;
     }
 
     // =====================================================
@@ -49,53 +42,82 @@ public class ScheduleService {
 
     public List<Schedule> getAllSchedules() {
 
-    if (authorizationService.hasRole("TECHNICIAN")) {
+        if (authorizationService.hasRole("TECHNICIAN")) {
 
-        Long technicianId =
-                authorizationService
-                        .getCurrentTechnicianId();
+            Long technicianId =
+                    authorizationService.getCurrentTechnicianId();
 
-        return scheduleRepository
-                .findByTechnicianId(technicianId);
+            return scheduleRepository.findByTechnicianId(technicianId);
+        }
+
+        if (authorizationService.hasRole("DISPATCHER") ||
+            authorizationService.hasRole("MANAGER")) {
+
+            return scheduleRepository.findAll();
+        }
+
+        throw new AccessDeniedException(
+                "You don't have permission to access schedules"
+        );
     }
 
-    if (
-            authorizationService.hasRole("DISPATCHER") ||
-            authorizationService.hasRole("MANAGER")
-    ) {
-
-        return scheduleRepository.findAll();
-    }
-
-    throw new AccessDeniedException(
-            "You don't have permission to access schedules"
-    );
-}
     // =====================================================
     // GET SCHEDULE BY ID
     // =====================================================
 
-    public Optional<Schedule> getScheduleById(
-            Long id) {
+    public Optional<Schedule> getScheduleById(Long id) {
 
-        return scheduleRepository.findById(id);
+        if (id == null) {
+            throw new RuntimeException("Schedule ID is required");
+        }
+
+        Schedule schedule = scheduleRepository.findById(id)
+                .orElseThrow(() ->
+                        new RuntimeException(
+                                "Schedule not found with id: " + id
+                        )
+                );
+
+        if (authorizationService.hasRole("DISPATCHER") ||
+            authorizationService.hasRole("MANAGER")) {
+
+            return Optional.of(schedule);
+        }
+
+        if (authorizationService.hasRole("TECHNICIAN")) {
+
+            Long currentTechnicianId =
+                    authorizationService.getCurrentTechnicianId();
+
+            if (schedule.getTechnicianId() != null &&
+                schedule.getTechnicianId().equals(currentTechnicianId)) {
+
+                return Optional.of(schedule);
+            }
+
+            throw new AccessDeniedException(
+                    "You are not allowed to access this schedule"
+            );
+        }
+
+        throw new AccessDeniedException(
+                "You don't have permission to access this schedule"
+        );
     }
 
     // =====================================================
     // CREATE SCHEDULE
     // =====================================================
 
-    public Schedule createSchedule(
-            Schedule schedule) {
+    @Transactional
+    public Schedule createSchedule(Schedule schedule) {
 
         // -------------------------------------------------
         // ONLY DISPATCHER / MANAGER
         // -------------------------------------------------
 
-        if (
-                !authorizationService.hasRole("DISPATCHER") &&
-                !authorizationService.hasRole("MANAGER")
-        ) {
+        if (!authorizationService.hasRole("DISPATCHER") &&
+            !authorizationService.hasRole("MANAGER")) {
 
             throw new AccessDeniedException(
                     "Only Dispatcher or Manager can create schedules"
@@ -115,15 +137,37 @@ public class ScheduleService {
 
         WorkOrder workOrder =
                 workOrderRepository
-                        .findById(
-                                schedule.getWorkOrderId()
-                        )
+                        .findById(schedule.getWorkOrderId())
                         .orElseThrow(() ->
                                 new RuntimeException(
                                         "Work Order not found with id: "
                                                 + schedule.getWorkOrderId()
                                 )
                         );
+
+        // -------------------------------------------------
+        // WORK ORDER STATUS
+        // -------------------------------------------------
+
+        if (workOrder.getStatus() == WorkOrder.Status.COMPLETED ||
+            workOrder.getStatus() == WorkOrder.Status.CANCELLED) {
+
+            throw new RuntimeException(
+                    "Completed or cancelled work orders cannot be scheduled"
+            );
+        }
+
+        // -------------------------------------------------
+        // PREVENT DUPLICATE SCHEDULE
+        // -------------------------------------------------
+
+        if (scheduleRepository.existsByWorkOrderId(
+                schedule.getWorkOrderId())) {
+
+            throw new RuntimeException(
+                    "This work order already has a schedule"
+            );
+        }
 
         // -------------------------------------------------
         // TECHNICIAN VALIDATION
@@ -138,9 +182,7 @@ public class ScheduleService {
 
         Technician technician =
                 technicianRepository
-                        .findById(
-                                schedule.getTechnicianId()
-                        )
+                        .findById(schedule.getTechnicianId())
                         .orElseThrow(() ->
                                 new RuntimeException(
                                         "Technician not found with id: "
@@ -152,12 +194,9 @@ public class ScheduleService {
         // TECHNICIAN STATUS
         // -------------------------------------------------
 
-        if (
-                technician.getStatus() == null ||
-                !"AVAILABLE".equalsIgnoreCase(
-                        technician.getStatus()
-                )
-        ) {
+        if (technician.getStatus() == null ||
+            !"AVAILABLE".equalsIgnoreCase(
+                    technician.getStatus())) {
 
             throw new RuntimeException(
                     "Technician "
@@ -181,22 +220,16 @@ public class ScheduleService {
         // TIME VALIDATION
         // -------------------------------------------------
 
-        if (
-                schedule.getStartTime() == null ||
-                schedule.getEndTime() == null
-        ) {
+        if (schedule.getStartTime() == null ||
+            schedule.getEndTime() == null) {
 
             throw new RuntimeException(
                     "Start time and end time are required"
             );
         }
 
-        if (
-                !schedule.getStartTime()
-                        .isBefore(
-                                schedule.getEndTime()
-                        )
-        ) {
+        if (!schedule.getStartTime()
+                .isBefore(schedule.getEndTime())) {
 
             throw new RuntimeException(
                     "End time must be after start time"
@@ -239,9 +272,7 @@ public class ScheduleService {
         // -------------------------------------------------
 
         Schedule savedSchedule =
-                scheduleRepository.save(
-                        schedule
-                );
+                scheduleRepository.save(schedule);
 
         // -------------------------------------------------
         // ASSIGN TECHNICIAN TO WORK ORDER
@@ -251,19 +282,15 @@ public class ScheduleService {
                 schedule.getTechnicianId()
         );
 
-        if (
-                workOrder.getStatus() ==
-                        WorkOrder.Status.PENDING
-        ) {
+        if (workOrder.getStatus() ==
+                WorkOrder.Status.PENDING) {
 
             workOrder.setStatus(
                     WorkOrder.Status.ASSIGNED
             );
         }
 
-        workOrderRepository.save(
-                workOrder
-        );
+        workOrderRepository.save(workOrder);
 
         return savedSchedule;
     }
@@ -272,6 +299,7 @@ public class ScheduleService {
     // UPDATE SCHEDULE
     // =====================================================
 
+    @Transactional
     public Schedule updateSchedule(
             Long id,
             Schedule updatedSchedule) {
@@ -280,10 +308,8 @@ public class ScheduleService {
         // ONLY DISPATCHER / MANAGER
         // -------------------------------------------------
 
-        if (
-                !authorizationService.hasRole("DISPATCHER") &&
-                !authorizationService.hasRole("MANAGER")
-        ) {
+        if (!authorizationService.hasRole("DISPATCHER") &&
+            !authorizationService.hasRole("MANAGER")) {
 
             throw new AccessDeniedException(
                     "Only Dispatcher or Manager can update schedules"
@@ -299,18 +325,29 @@ public class ScheduleService {
                         .findById(id)
                         .orElseThrow(() ->
                                 new RuntimeException(
-                                        "Schedule not found with id: "
-                                                + id
+                                        "Schedule not found with id: " + id
                                 )
                         );
+
+        // -------------------------------------------------
+        // PROTECT COMPLETED / CANCELLED SCHEDULE
+        // -------------------------------------------------
+
+        if (existingSchedule.getStatus() ==
+                Schedule.Status.COMPLETED ||
+            existingSchedule.getStatus() ==
+                Schedule.Status.CANCELLED) {
+
+            throw new RuntimeException(
+                    "Completed or cancelled schedules cannot be edited"
+            );
+        }
 
         // -------------------------------------------------
         // VALIDATE WORK ORDER
         // -------------------------------------------------
 
-        if (
-                updatedSchedule.getWorkOrderId() == null
-        ) {
+        if (updatedSchedule.getWorkOrderId() == null) {
 
             throw new RuntimeException(
                     "Work Order is required"
@@ -320,8 +357,7 @@ public class ScheduleService {
         WorkOrder workOrder =
                 workOrderRepository
                         .findById(
-                                updatedSchedule
-                                        .getWorkOrderId()
+                                updatedSchedule.getWorkOrderId()
                         )
                         .orElseThrow(() ->
                                 new RuntimeException(
@@ -332,12 +368,38 @@ public class ScheduleService {
                         );
 
         // -------------------------------------------------
+        // WORK ORDER STATUS
+        // -------------------------------------------------
+
+        if (workOrder.getStatus() == WorkOrder.Status.COMPLETED ||
+            workOrder.getStatus() == WorkOrder.Status.CANCELLED) {
+
+            throw new RuntimeException(
+                    "Completed or cancelled work orders cannot be scheduled"
+            );
+        }
+
+        // -------------------------------------------------
+        // PREVENT MOVING TO ANOTHER ALREADY-SCHEDULED WO
+        // -------------------------------------------------
+
+        if (!existingSchedule.getWorkOrderId()
+                .equals(updatedSchedule.getWorkOrderId())) {
+
+            if (scheduleRepository.existsByWorkOrderId(
+                    updatedSchedule.getWorkOrderId())) {
+
+                throw new RuntimeException(
+                        "The selected work order already has a schedule"
+                );
+            }
+        }
+
+        // -------------------------------------------------
         // VALIDATE TECHNICIAN
         // -------------------------------------------------
 
-        if (
-                updatedSchedule.getTechnicianId() == null
-        ) {
+        if (updatedSchedule.getTechnicianId() == null) {
 
             throw new RuntimeException(
                     "Technician is required"
@@ -347,8 +409,7 @@ public class ScheduleService {
         Technician technician =
                 technicianRepository
                         .findById(
-                                updatedSchedule
-                                        .getTechnicianId()
+                                updatedSchedule.getTechnicianId()
                         )
                         .orElseThrow(() ->
                                 new RuntimeException(
@@ -362,10 +423,7 @@ public class ScheduleService {
         // DATE
         // -------------------------------------------------
 
-        if (
-                updatedSchedule.getScheduledDate()
-                        == null
-        ) {
+        if (updatedSchedule.getScheduledDate() == null) {
 
             throw new RuntimeException(
                     "Scheduled date is required"
@@ -376,22 +434,16 @@ public class ScheduleService {
         // TIME
         // -------------------------------------------------
 
-        if (
-                updatedSchedule.getStartTime() == null ||
-                updatedSchedule.getEndTime() == null
-        ) {
+        if (updatedSchedule.getStartTime() == null ||
+            updatedSchedule.getEndTime() == null) {
 
             throw new RuntimeException(
                     "Start time and end time are required"
             );
         }
 
-        if (
-                !updatedSchedule.getStartTime()
-                        .isBefore(
-                                updatedSchedule.getEndTime()
-                        )
-        ) {
+        if (!updatedSchedule.getStartTime()
+                .isBefore(updatedSchedule.getEndTime())) {
 
             throw new RuntimeException(
                     "End time must be after start time"
@@ -402,29 +454,17 @@ public class ScheduleService {
         // TECHNICIAN AVAILABILITY
         // -------------------------------------------------
 
-        /*
-         * Allow the technician who is already assigned
-         * to this schedule even if their status changed
-         * to BUSY because of this schedule.
-         */
-
         boolean technicianChanged =
                 !existingSchedule
                         .getTechnicianId()
                         .equals(
-                                updatedSchedule
-                                        .getTechnicianId()
+                                updatedSchedule.getTechnicianId()
                         );
 
-        if (
-                technicianChanged &&
-                (
-                        technician.getStatus() == null ||
-                        !"AVAILABLE".equalsIgnoreCase(
-                                technician.getStatus()
-                        )
-                )
-        ) {
+        if (technicianChanged &&
+            (technician.getStatus() == null ||
+             !"AVAILABLE".equalsIgnoreCase(
+                     technician.getStatus()))) {
 
             throw new RuntimeException(
                     "Technician "
@@ -440,14 +480,10 @@ public class ScheduleService {
         List<Schedule> overlappingSchedules =
                 scheduleRepository
                         .findByTechnicianIdAndScheduledDateAndStartTimeLessThanAndEndTimeGreaterThanAndIdNot(
-                                updatedSchedule
-                                        .getTechnicianId(),
-                                updatedSchedule
-                                        .getScheduledDate(),
-                                updatedSchedule
-                                        .getEndTime(),
-                                updatedSchedule
-                                        .getStartTime(),
+                                updatedSchedule.getTechnicianId(),
+                                updatedSchedule.getScheduledDate(),
+                                updatedSchedule.getEndTime(),
+                                updatedSchedule.getStartTime(),
                                 id
                         );
 
@@ -498,9 +534,7 @@ public class ScheduleService {
         // -------------------------------------------------
 
         Schedule savedSchedule =
-                scheduleRepository.save(
-                        existingSchedule
-                );
+                scheduleRepository.save(existingSchedule);
 
         // -------------------------------------------------
         // UPDATE WORK ORDER
@@ -510,19 +544,15 @@ public class ScheduleService {
                 updatedSchedule.getTechnicianId()
         );
 
-        if (
-                workOrder.getStatus() ==
-                        WorkOrder.Status.PENDING
-        ) {
+        if (workOrder.getStatus() ==
+                WorkOrder.Status.PENDING) {
 
             workOrder.setStatus(
                     WorkOrder.Status.ASSIGNED
             );
         }
 
-        workOrderRepository.save(
-                workOrder
-        );
+        workOrderRepository.save(workOrder);
 
         return savedSchedule;
     }
@@ -533,27 +563,37 @@ public class ScheduleService {
 
     public void deleteSchedule(Long id) {
 
-        if (
-                !authorizationService.hasRole("DISPATCHER") &&
-                !authorizationService.hasRole("MANAGER")
-        ) {
+        if (!authorizationService.hasRole("DISPATCHER") &&
+            !authorizationService.hasRole("MANAGER")) {
 
             throw new AccessDeniedException(
                     "Only Dispatcher or Manager can delete schedules"
             );
         }
 
-        if (
-                !scheduleRepository.existsById(id)
-        ) {
+        Schedule schedule =
+                scheduleRepository.findById(id)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Schedule not found with id: " + id
+                                )
+                        );
+
+        // -------------------------------------------------
+        // PROTECT ACTIVE / COMPLETED EXECUTION SCHEDULES
+        // -------------------------------------------------
+
+        if (schedule.getStatus() ==
+                Schedule.Status.IN_PROGRESS ||
+            schedule.getStatus() ==
+                Schedule.Status.COMPLETED) {
 
             throw new RuntimeException(
-                    "Schedule not found with id: "
-                            + id
+                    "A schedule that has started or completed cannot be deleted"
             );
         }
 
-        scheduleRepository.deleteById(id);
+        scheduleRepository.delete(schedule);
     }
 
     // =====================================================
@@ -570,22 +610,10 @@ public class ScheduleService {
             );
         }
 
-        // -------------------------------------------------
-        // TECHNICIAN CAN ONLY SEE THEIR OWN SCHEDULES
-        // -------------------------------------------------
+        if (authorizationService.hasRole("TECHNICIAN")) {
 
-        if (
-                authorizationService.hasRole(
-                        "TECHNICIAN"
-                )
-        ) {
-
-            if (
-                    !authorizationService
-                            .isCurrentTechnician(
-                                    technicianId
-                            )
-            ) {
+            if (!authorizationService.isCurrentTechnician(
+                    technicianId)) {
 
                 throw new AccessDeniedException(
                         "You are not allowed to access another technician's schedules"
@@ -593,28 +621,14 @@ public class ScheduleService {
             }
 
             return scheduleRepository
-                    .findByTechnicianId(
-                            technicianId
-                    );
+                    .findByTechnicianId(technicianId);
         }
 
-        // -------------------------------------------------
-        // DISPATCHER / MANAGER
-        // -------------------------------------------------
-
-        if (
-                authorizationService.hasRole(
-                        "DISPATCHER"
-                ) ||
-                authorizationService.hasRole(
-                        "MANAGER"
-                )
-        ) {
+        if (authorizationService.hasRole("DISPATCHER") ||
+            authorizationService.hasRole("MANAGER")) {
 
             return scheduleRepository
-                    .findByTechnicianId(
-                            technicianId
-                    );
+                    .findByTechnicianId(technicianId);
         }
 
         throw new AccessDeniedException(
@@ -636,10 +650,33 @@ public class ScheduleService {
             );
         }
 
-        return scheduleRepository
-                .findByWorkOrderId(
-                        workOrderId
-                );
+        if (authorizationService.hasRole("DISPATCHER") ||
+            authorizationService.hasRole("MANAGER")) {
+
+            return scheduleRepository
+                    .findByWorkOrderId(workOrderId);
+        }
+
+        if (authorizationService.hasRole("TECHNICIAN")) {
+
+            Long technicianId =
+                    authorizationService.getCurrentTechnicianId();
+
+            List<Schedule> schedules =
+                    scheduleRepository
+                            .findByWorkOrderId(workOrderId);
+
+            return schedules.stream()
+                    .filter(schedule ->
+                            schedule.getTechnicianId() != null &&
+                            schedule.getTechnicianId()
+                                    .equals(technicianId))
+                    .toList();
+        }
+
+        throw new AccessDeniedException(
+                "You don't have permission to access these schedules"
+        );
     }
 
     // =====================================================
@@ -656,10 +693,31 @@ public class ScheduleService {
             );
         }
 
-        return scheduleRepository
-                .findByScheduledDate(
-                        date
-                );
+        if (authorizationService.hasRole("DISPATCHER") ||
+            authorizationService.hasRole("MANAGER")) {
+
+            return scheduleRepository
+                    .findByScheduledDate(date);
+        }
+
+        if (authorizationService.hasRole("TECHNICIAN")) {
+
+            Long technicianId =
+                    authorizationService.getCurrentTechnicianId();
+
+            return scheduleRepository
+                    .findByScheduledDate(date)
+                    .stream()
+                    .filter(schedule ->
+                            schedule.getTechnicianId() != null &&
+                            schedule.getTechnicianId()
+                                    .equals(technicianId))
+                    .toList();
+        }
+
+        throw new AccessDeniedException(
+                "You don't have permission to access schedules"
+        );
     }
 
     // =====================================================
@@ -676,10 +734,30 @@ public class ScheduleService {
             );
         }
 
-        return scheduleRepository
-                .findByStatus(
-                        status
-                );
+        if (authorizationService.hasRole("DISPATCHER") ||
+            authorizationService.hasRole("MANAGER")) {
+
+            return scheduleRepository
+                    .findByStatus(status);
+        }
+
+        if (authorizationService.hasRole("TECHNICIAN")) {
+
+            Long technicianId =
+                    authorizationService.getCurrentTechnicianId();
+
+            return scheduleRepository
+                    .findByStatus(status)
+                    .stream()
+                    .filter(schedule ->
+                            schedule.getTechnicianId() != null &&
+                            schedule.getTechnicianId()
+                                    .equals(technicianId))
+                    .toList();
+        }
+
+        throw new AccessDeniedException(
+                "You don't have permission to access schedules"
+        );
     }
 }
-

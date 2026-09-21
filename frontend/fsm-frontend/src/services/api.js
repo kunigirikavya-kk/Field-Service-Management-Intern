@@ -105,6 +105,19 @@ export function getCustomers() {
 }
 
 
+// =====================================================
+// GET CURRENT LOGGED-IN CUSTOMER
+// =====================================================
+
+export function getCurrentCustomer() {
+
+    return request(
+        "/customers/me"
+    );
+
+}
+
+
 export function createCustomer(
     customer
 ) {
@@ -978,6 +991,78 @@ export function updateInventoryStock(
         {
             method:
                 "PUT"
+        }
+    );
+
+}
+
+
+// =====================================================
+// PART USAGE
+// =====================================================
+
+export function recordPartUsage(
+    partUsage
+) {
+
+    return request(
+        "/part-usage",
+        {
+            method:
+                "POST",
+
+            body:
+                JSON.stringify(
+                    partUsage
+                )
+        }
+    );
+
+}
+
+
+export function getPartUsageByWorkOrder(
+    workOrderId
+) {
+
+    return request(
+        `/part-usage/work-order/${workOrderId}`
+    );
+
+}
+
+
+export function getPartUsageByJobExecution(
+    jobExecutionId
+) {
+
+    return request(
+        `/part-usage/job-execution/${jobExecutionId}`
+    );
+
+}
+
+
+export function getPartUsageByTechnician(
+    technicianId
+) {
+
+    return request(
+        `/part-usage/technician/${technicianId}`
+    );
+
+}
+
+
+export function deletePartUsage(
+    id
+) {
+
+    return request(
+        `/part-usage/${id}`,
+        {
+            method:
+                "DELETE"
         }
     );
 

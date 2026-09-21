@@ -1,3 +1,4 @@
+
 import {
     useEffect,
     useState
@@ -13,6 +14,9 @@ import {
     getWorkOrdersByTechnician,
     getTechnicianByUserId,
     getJobPhotosByExecution,
+    getInventoryParts,
+    getPartUsageByJobExecution,
+    recordPartUsage,
     startJob,
     completeJob,
     cancelJobExecution,
@@ -41,8 +45,23 @@ function JobExecution() {
     const [workOrders, setWorkOrders] =
         useState([]);
 
+    const [inventoryParts, setInventoryParts] =
+        useState([]);
+
     const [jobPhotos, setJobPhotos] =
         useState({});
+
+    const [partUsages, setPartUsages] =
+        useState({});
+
+    const [selectedParts, setSelectedParts] =
+        useState({});
+
+    const [partQuantities, setPartQuantities] =
+        useState({});
+
+    const [recordingPartId, setRecordingPartId] =
+        useState(null);
 
     const [loading, setLoading] =
         useState(true);
@@ -159,7 +178,8 @@ function JobExecution() {
             const [
                 scheduleData,
                 executionData,
-                workOrderData
+                workOrderData,
+                inventoryData
             ] =
                 await Promise.all([
 
@@ -173,7 +193,9 @@ function JobExecution() {
 
                     getWorkOrdersByTechnician(
                         technicianId
-                    )
+                    ),
+
+                    getInventoryParts()
 
                 ]);
 
@@ -202,6 +224,14 @@ function JobExecution() {
                     : [];
 
 
+            const inventoryList =
+                Array.isArray(
+                    inventoryData
+                )
+                    ? inventoryData
+                    : [];
+
+
             setSchedules(
                 scheduleList
             );
@@ -214,6 +244,11 @@ function JobExecution() {
 
             setWorkOrders(
                 workOrderList
+            );
+
+
+            setInventoryParts(
+                inventoryList
             );
 
 
@@ -302,9 +337,84 @@ function JobExecution() {
                     photoMap
                 );
 
+
+                // =================================================
+                // LOAD PART USAGE BY EXECUTION
+                // =================================================
+
+                const partUsageResults =
+                    await Promise.all(
+                        executionIds.map(
+                            async (
+                                executionId
+                            ) => {
+
+                                try {
+
+                                    const usages =
+                                        await getPartUsageByJobExecution(
+                                            executionId
+                                        );
+
+
+                                    return {
+                                        executionId,
+
+                                        usages:
+                                            Array.isArray(
+                                                usages
+                                            )
+                                                ? usages
+                                                : []
+                                    };
+
+                                } catch (
+                                    usageError
+                                ) {
+
+                                    console.error(
+                                        `Failed to load part usage for execution ${executionId}:`,
+                                        usageError
+                                    );
+
+
+                                    return {
+                                        executionId,
+
+                                        usages: []
+                                    };
+
+                                }
+
+                            }
+                        )
+                    );
+
+
+                const usageMap = {};
+
+
+                partUsageResults.forEach(
+                    result => {
+
+                        usageMap[
+                            result.executionId
+                        ] =
+                            result.usages;
+
+                    }
+                );
+
+
+                setPartUsages(
+                    usageMap
+                );
+
             } else {
 
                 setJobPhotos({});
+
+                setPartUsages({});
 
             }
 
@@ -473,6 +583,27 @@ function JobExecution() {
 
 
     // =====================================================
+    // FIND INVENTORY PART
+    // =====================================================
+
+    function getInventoryPart(
+        partId
+    ) {
+
+        return inventoryParts.find(
+            part =>
+                Number(
+                    part.id
+                ) ===
+                Number(
+                    partId
+                )
+        );
+
+    }
+
+
+    // =====================================================
     // START JOB
     // =====================================================
 
@@ -580,6 +711,292 @@ function JobExecution() {
             );
 
         }
+
+    }
+
+
+    // =====================================================
+    // RECORD PART USAGE
+    // =====================================================
+
+    async function handleRecordPart(
+        execution
+    ) {
+
+        if (
+            !execution?.id
+        ) {
+
+            return;
+
+        }
+
+
+        const selectedPartId =
+            selectedParts[
+                execution.id
+            ];
+
+
+        const quantity =
+            Number(
+                partQuantities[
+                    execution.id
+                ]
+            );
+
+
+        if (!selectedPartId) {
+
+            alert(
+                "Please select an inventory part."
+            );
+
+            return;
+
+        }
+
+
+        if (
+            !quantity ||
+            quantity <= 0
+        ) {
+
+            alert(
+                "Please enter a valid quantity."
+            );
+
+            return;
+
+        }
+
+
+        const part =
+            getInventoryPart(
+                selectedPartId
+            );
+
+
+        if (!part) {
+
+            alert(
+                "Selected inventory part was not found."
+            );
+
+            return;
+
+        }
+
+
+        if (
+            quantity >
+            Number(
+                part.quantity || 0
+            )
+        ) {
+
+            alert(
+                `Insufficient stock.\n\nAvailable quantity: ${part.quantity}`
+            );
+
+            return;
+
+        }
+
+
+        if (
+            !execution.workOrderId
+        ) {
+
+            alert(
+                "Work order information is missing for this execution."
+            );
+
+            return;
+
+        }
+
+
+        try {
+
+            setRecordingPartId(
+                execution.id
+            );
+
+
+            const technicianId =
+                await getCurrentTechnicianId();
+
+
+            const usageData = {
+
+                workOrderId:
+                    execution.workOrderId,
+
+                jobExecutionId:
+                    execution.id,
+
+                technicianId:
+                    technicianId,
+
+                inventoryPartId:
+                    Number(
+                        selectedPartId
+                    ),
+
+                quantityUsed:
+                    quantity
+
+            };
+
+
+            console.log(
+                "RECORDING PART USAGE:",
+                usageData
+            );
+
+
+            const savedUsage =
+                await recordPartUsage(
+                    usageData
+                );
+
+
+            console.log(
+                "✅ PART USAGE SAVED:",
+                savedUsage
+            );
+
+
+            setPartUsages(
+                previous => ({
+
+                    ...previous,
+
+                    [execution.id]:
+                        [
+                            ...(previous[
+                                execution.id
+                            ] || []),
+
+                            savedUsage
+
+                        ]
+
+                })
+            );
+
+
+            // =================================================
+            // UPDATE LOCAL INVENTORY STOCK
+            // =================================================
+
+            setInventoryParts(
+                previous =>
+                    previous.map(
+                        item =>
+                            Number(
+                                item.id
+                            ) ===
+                            Number(
+                                selectedPartId
+                            )
+                                ? {
+                                    ...item,
+
+                                    quantity:
+                                        Number(
+                                            item.quantity || 0
+                                        ) -
+                                        quantity
+
+                                }
+                                : item
+                    )
+            );
+
+
+            // =================================================
+            // RESET FORM
+            // =================================================
+
+            setSelectedParts(
+                previous => ({
+
+                    ...previous,
+
+                    [execution.id]:
+                        ""
+
+                })
+            );
+
+
+            setPartQuantities(
+                previous => ({
+
+                    ...previous,
+
+                    [execution.id]:
+                        ""
+
+                })
+            );
+
+
+            alert(
+                "Part usage recorded successfully! 🔧"
+            );
+
+        } catch (err) {
+
+            console.error(
+                "Error recording part usage:",
+                err
+            );
+
+
+            if (
+                err.message?.includes(
+                    "HTTP 401"
+                )
+            ) {
+
+                logoutAndRedirect();
+
+                return;
+
+            }
+
+
+            alert(
+                `Unable to record part usage.\n\n${err.message}`
+            );
+
+        } finally {
+
+            setRecordingPartId(
+                null
+            );
+
+        }
+
+    }
+
+
+    // =====================================================
+    // DELETE / NOT USED FROM UI YET
+    // =====================================================
+
+    function getPartsForExecution(
+        execution
+    ) {
+
+        return (
+            partUsages[
+                execution.id
+            ] || []
+        );
 
     }
 
@@ -1072,6 +1489,30 @@ function JobExecution() {
         );
 
 
+    const totalPartsUsed =
+        Object.values(
+            partUsages
+        ).reduce(
+            (
+                total,
+                usages
+            ) =>
+                total +
+                usages.reduce(
+                    (
+                        sum,
+                        usage
+                    ) =>
+                        sum +
+                        Number(
+                            usage.quantityUsed || 0
+                        ),
+                    0
+                ),
+            0
+        );
+
+
     // =====================================================
     // LOADING
     // =====================================================
@@ -1226,6 +1667,29 @@ function JobExecution() {
 
                             <span>
                                 PHOTOS
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <div className="je-summary-card">
+
+                        <span className="je-summary-icon">
+                            ⚙
+                        </span>
+
+
+                        <div>
+
+                            <strong>
+                                {totalPartsUsed}
+                            </strong>
+
+
+                            <span>
+                                PARTS USED
                             </span>
 
                         </div>
@@ -1616,6 +2080,32 @@ function JobExecution() {
                                     );
 
 
+                                const executionParts =
+                                    getPartsForExecution(
+                                        execution
+                                    );
+
+
+                                const selectedPartId =
+                                    selectedParts[
+                                        execution.id
+                                    ] || "";
+
+
+                                const selectedPart =
+                                    getInventoryPart(
+                                        selectedPartId
+                                    );
+
+
+                                const selectedQuantity =
+                                    Number(
+                                        partQuantities[
+                                            execution.id
+                                        ] || 0
+                                    );
+
+
                                 return (
 
                                     <article
@@ -1762,6 +2252,386 @@ function JobExecution() {
                                         )}
 
 
+                                        {/* =================================================
+                                            PARTS USED
+                                        ================================================= */}
+
+                                        <div className="je-parts-section">
+
+                                            <div className="je-parts-header">
+
+                                                <div>
+
+                                                    <div className="je-parts-title">
+
+                                                        <span>
+                                                            ⚙
+                                                        </span>
+
+
+                                                        <strong>
+                                                            Parts Used
+                                                        </strong>
+
+
+                                                        <span className="je-parts-count">
+                                                            {
+                                                                executionParts.length
+                                                            }
+                                                        </span>
+
+                                                    </div>
+
+
+                                                    <p>
+                                                        Record spare parts consumed during this job.
+                                                    </p>
+
+                                                </div>
+
+                                            </div>
+
+
+                                            {/* =============================================
+                                                RECORD PART FORM
+                                            ============================================= */}
+
+                                            {status === "IN_PROGRESS" && (
+
+                                                <div className="je-parts-form">
+
+                                                    <div className="je-parts-field">
+
+                                                        <label>
+                                                            INVENTORY PART
+                                                        </label>
+
+
+                                                        <select
+                                                            value={
+                                                                selectedPartId
+                                                            }
+                                                            onChange={
+                                                                event =>
+                                                                    setSelectedParts(
+                                                                        previous => ({
+
+                                                                            ...previous,
+
+                                                                            [execution.id]:
+                                                                                event.target.value
+
+                                                                        })
+                                                                    )
+                                                            }
+                                                            disabled={
+                                                                recordingPartId ===
+                                                                execution.id
+                                                            }
+                                                        >
+
+                                                            <option value="">
+                                                                Select Part
+                                                            </option>
+
+
+                                                            {inventoryParts.map(
+                                                                part => (
+
+                                                                    <option
+                                                                        key={
+                                                                            part.id
+                                                                        }
+                                                                        value={
+                                                                            part.id
+                                                                        }
+                                                                        disabled={
+                                                                            Number(
+                                                                                part.quantity || 0
+                                                                            ) <=
+                                                                            0
+                                                                        }
+                                                                    >
+
+                                                                        {
+                                                                            part.partName
+                                                                        }
+                                                                        {" — "}
+                                                                        {
+                                                                            part.partNumber
+                                                                        }
+                                                                        {" — Stock: "}
+                                                                        {
+                                                                            part.quantity
+                                                                        }
+
+                                                                    </option>
+
+                                                                )
+                                                            )}
+
+                                                        </select>
+
+                                                    </div>
+
+
+                                                    <div className="je-parts-field">
+
+                                                        <label>
+                                                            QUANTITY
+                                                        </label>
+
+
+                                                        <input
+                                                            type="number"
+                                                            min="1"
+                                                            max={
+                                                                selectedPart?.quantity ||
+                                                                1
+                                                            }
+                                                            value={
+                                                                partQuantities[
+                                                                    execution.id
+                                                                ] || ""
+                                                            }
+                                                            onChange={
+                                                                event =>
+                                                                    setPartQuantities(
+                                                                        previous => ({
+
+                                                                            ...previous,
+
+                                                                            [execution.id]:
+                                                                                event.target.value
+
+                                                                        })
+                                                                    )
+                                                            }
+                                                            placeholder="Qty"
+                                                            disabled={
+                                                                recordingPartId ===
+                                                                execution.id
+                                                            }
+                                                        />
+
+                                                    </div>
+
+
+                                                    <div className="je-parts-stock">
+
+                                                        <span>
+                                                            AVAILABLE
+                                                        </span>
+
+
+                                                        <strong>
+                                                            {
+                                                                selectedPart
+                                                                    ? selectedPart.quantity
+                                                                    : "-"
+                                                            }
+                                                        </strong>
+
+                                                    </div>
+
+
+                                                    <div className="je-parts-cost">
+
+                                                        <span>
+                                                            EST. COST
+                                                        </span>
+
+
+                                                        <strong>
+                                                            ₹
+                                                            {
+                                                                selectedPart &&
+                                                                selectedQuantity
+                                                                    ? (
+                                                                        Number(
+                                                                            selectedPart.unitPrice || 0
+                                                                        ) *
+                                                                        selectedQuantity
+                                                                    ).toFixed(
+                                                                        2
+                                                                    )
+                                                                    : "0.00"
+                                                            }
+                                                        </strong>
+
+                                                    </div>
+
+
+                                                    <button
+                                                        type="button"
+                                                        className="je-record-part-btn"
+                                                        onClick={() =>
+                                                            handleRecordPart(
+                                                                execution
+                                                            )
+                                                        }
+                                                        disabled={
+                                                            recordingPartId ===
+                                                            execution.id ||
+                                                            !selectedPartId ||
+                                                            !selectedQuantity ||
+                                                            selectedQuantity <= 0 ||
+                                                            (
+                                                                selectedPart &&
+                                                                selectedQuantity >
+                                                                Number(
+                                                                    selectedPart.quantity || 0
+                                                                )
+                                                            )
+                                                        }
+                                                    >
+
+                                                        {
+                                                            recordingPartId ===
+                                                            execution.id
+                                                                ? "Recording..."
+                                                                : "Record Part"
+                                                        }
+
+                                                    </button>
+
+                                                </div>
+
+                                            )}
+
+
+                                            {/* =============================================
+                                                USED PARTS LIST
+                                            ============================================= */}
+
+                                            {executionParts.length === 0 ? (
+
+                                                <div className="je-no-parts">
+
+                                                    <div>
+                                                        ⚙
+                                                    </div>
+
+
+                                                    <span>
+                                                        No parts recorded for this job yet.
+                                                    </span>
+
+                                                </div>
+
+                                            ) : (
+
+                                                <div className="je-parts-list">
+
+                                                    {executionParts.map(
+                                                        usage => {
+
+                                                            const part =
+                                                                getInventoryPart(
+                                                                    usage.inventoryPartId
+                                                                );
+
+
+                                                            return (
+
+                                                                <div
+                                                                    className="je-part-row"
+                                                                    key={
+                                                                        usage.id
+                                                                    }
+                                                                >
+
+                                                                    <div className="je-part-main">
+
+                                                                        <strong>
+                                                                            {
+                                                                                part?.partName ||
+                                                                                `Part #${usage.inventoryPartId}`
+                                                                            }
+                                                                        </strong>
+
+
+                                                                        <span>
+                                                                            {
+                                                                                part?.partNumber ||
+                                                                                "Inventory Part"
+                                                                            }
+                                                                        </span>
+
+                                                                    </div>
+
+
+                                                                    <div className="je-part-qty">
+
+                                                                        <span>
+                                                                            QTY
+                                                                        </span>
+
+
+                                                                        <strong>
+                                                                            {
+                                                                                usage.quantityUsed
+                                                                            }
+                                                                        </strong>
+
+                                                                    </div>
+
+
+                                                                    <div className="je-part-price">
+
+                                                                        <span>
+                                                                            UNIT PRICE
+                                                                        </span>
+
+
+                                                                        <strong>
+                                                                            ₹
+                                                                            {
+                                                                                Number(
+                                                                                    usage.unitPrice || 0
+                                                                                ).toFixed(
+                                                                                    2
+                                                                                )
+                                                                            }
+                                                                        </strong>
+
+                                                                    </div>
+
+
+                                                                    <div className="je-part-total">
+
+                                                                        <span>
+                                                                            TOTAL
+                                                                        </span>
+
+
+                                                                        <strong>
+                                                                            ₹
+                                                                            {
+                                                                                Number(
+                                                                                    usage.totalCost || 0
+                                                                                ).toFixed(
+                                                                                    2
+                                                                                )
+                                                                            }
+                                                                        </strong>
+
+                                                                    </div>
+
+                                                                </div>
+
+                                                            );
+
+                                                        }
+                                                    )}
+
+                                                </div>
+
+                                            )}
+
+                                        </div>
+
+
                                         {execution.partsUsed && (
 
                                             <div className="je-notes">
@@ -1774,7 +2644,7 @@ function JobExecution() {
                                                 <div>
 
                                                     <strong>
-                                                        Parts Used
+                                                        Parts Notes
                                                     </strong>
 
 
@@ -2024,6 +2894,8 @@ function JobExecution() {
                                                     }
                                                     disabled={
                                                         uploadingPhotoId ===
+                                                        execution.id ||
+                                                        recordingPartId ===
                                                         execution.id
                                                     }
                                                 >
@@ -2042,6 +2914,8 @@ function JobExecution() {
                                                     }
                                                     disabled={
                                                         uploadingPhotoId ===
+                                                        execution.id ||
+                                                        recordingPartId ===
                                                         execution.id
                                                     }
                                                 >
@@ -2149,3 +3023,4 @@ function JobExecution() {
 
 
 export default JobExecution;
+

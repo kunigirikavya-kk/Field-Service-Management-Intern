@@ -38,6 +38,18 @@ public class CustomerController {
     }
 
     // =====================================================
+    // GET CURRENT LOGGED-IN CUSTOMER
+    // =====================================================
+
+    @GetMapping("/me")
+    public ResponseEntity<Customer> getCurrentCustomer() {
+
+        return ResponseEntity.ok(
+                customerService.getCurrentCustomer()
+        );
+    }
+
+    // =====================================================
     // GET CUSTOMER BY ID
     // =====================================================
 

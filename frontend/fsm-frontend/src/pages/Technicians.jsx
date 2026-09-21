@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Star, Wrench } from "lucide-react";
 import {
     createTechnician,
     getTechnicians
@@ -105,12 +106,18 @@ function Technicians() {
             <div className="technician-header">
 
                 <div>
-                    <h1>Technician Management</h1>
+                    <div className="inventory-inspired-title-row">
+                        <div className="inventory-inspired-icon"><Wrench size={25} strokeWidth={1.8} aria-hidden /></div>
+                        <div>
+                            <span className="inventory-inspired-eyebrow">TECHNICIANS • FIELDSYNC</span>
+                            <h1>Technician Management</h1>
 
-                    <p>
-                        Manage technicians and their
-                        professional information
-                    </p>
+                            <p>
+                                Manage technicians and their
+                                professional information
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
                 <div className="technician-count">
@@ -358,14 +365,7 @@ function Technicians() {
 
                                     <div className="technician-top">
 
-                                        <div>
-
-                                            <span className="employee-code">
-
-                                                {technician.employeeCode ||
-                                                    "N/A"}
-
-                                            </span>
+                                        <div className="technician-identity">
 
                                             <h3>
 
@@ -374,6 +374,13 @@ function Technicians() {
                                                     "Unnamed Technician"}
 
                                             </h3>
+
+                                            <span className="employee-code">
+
+                                                {technician.employeeCode ||
+                                                    "N/A"}
+
+                                            </span>
 
                                         </div>
 
@@ -420,7 +427,7 @@ function Technicians() {
                                         <strong>
                                             Rating:
                                         </strong>{" "}
-                                        ⭐{" "}
+                                        <Star size={15} strokeWidth={1.8} fill="currentColor" aria-hidden />{" "}
                                         {technician.rating ??
                                             "0.00"}
                                     </p>

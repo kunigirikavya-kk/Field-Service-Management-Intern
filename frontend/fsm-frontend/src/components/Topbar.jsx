@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import { Bell, ChevronDown, LogOut, Menu, Search, UserRound } from "lucide-react";
 import "./Topbar.css";
 
 function Topbar({ onLogout, onMenuToggle }) {
@@ -48,11 +49,7 @@ function Topbar({ onLogout, onMenuToggle }) {
 
       <div className="topbar-left">
         <button className="hamburger" onClick={onMenuToggle} type="button">
-          <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" viewBox="0 0 24 24">
-            <line x1="3" y1="6" x2="21" y2="6"/>
-            <line x1="3" y1="12" x2="21" y2="12"/>
-            <line x1="3" y1="18" x2="21" y2="18"/>
-          </svg>
+          <Menu size={22} strokeWidth={1.8} aria-hidden />
         </button>
         <div>
           <h1 className="topbar-title">{pageTitle}</h1>
@@ -64,14 +61,14 @@ function Topbar({ onLogout, onMenuToggle }) {
 
         {/* Search */}
         <div className="topbar-search">
-          <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <Search size={16} strokeWidth={1.8} aria-hidden />
           <input type="text" placeholder="Search..." />
         </div>
 
         {/* Notifications */}
         <div className="topbar-dropdown" ref={notifRef}>
           <button className="topbar-icon-btn" onClick={() => { setShowNotif(!showNotif); setShowProfile(false); }} type="button">
-            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <Bell size={20} strokeWidth={1.8} aria-hidden />
             <span className="notif-dot"></span>
           </button>
           {showNotif && (
@@ -90,7 +87,7 @@ function Topbar({ onLogout, onMenuToggle }) {
               <strong>{userName}</strong>
               <small>{userRole}</small>
             </div>
-            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+            <ChevronDown size={16} strokeWidth={1.8} aria-hidden />
           </button>
           {showProfile && (
             <div className="dropdown-menu dropdown-profile">
@@ -99,11 +96,11 @@ function Topbar({ onLogout, onMenuToggle }) {
                 <small>{user.email || userRole}</small>
               </div>
               <button className="dropdown-item" onClick={() => { alert("Profile page coming soon."); setShowProfile(false); }}>
-                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <UserRound size={16} strokeWidth={1.8} aria-hidden />
                 Profile
               </button>
               <button className="dropdown-item danger" onClick={() => { setShowProfile(false); onLogout(); }}>
-                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                <LogOut size={16} strokeWidth={1.8} aria-hidden />
                 Logout
               </button>
             </div>

@@ -1,13 +1,14 @@
 package com.fsm.security;
 
+import com.fsm.entity.Customer;
 import com.fsm.entity.User;
 import com.fsm.entity.Technician;
+import com.fsm.repository.CustomerRepository;
 import com.fsm.repository.UserRepository;
 import com.fsm.repository.TechnicianRepository;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-
 import org.springframework.stereotype.Service;
 
 @Service
@@ -15,17 +16,20 @@ public class AuthorizationService {
 
     private final UserRepository userRepository;
     private final TechnicianRepository technicianRepository;
+    private final CustomerRepository customerRepository;
 
     public AuthorizationService(
             UserRepository userRepository,
-            TechnicianRepository technicianRepository
+            TechnicianRepository technicianRepository,
+            CustomerRepository customerRepository
     ) {
         this.userRepository = userRepository;
         this.technicianRepository = technicianRepository;
+        this.customerRepository = customerRepository;
     }
 
     // =====================================================
-    // CURRENT USER
+    // CURRENT AUTHENTICATED USER
     // =====================================================
 
     public User getCurrentUser() {
@@ -38,7 +42,9 @@ public class AuthorizationService {
         if (
                 authentication == null ||
                 !authentication.isAuthenticated() ||
-                "anonymousUser".equals(authentication.getPrincipal())
+                "anonymousUser".equals(
+                        authentication.getPrincipal()
+                )
         ) {
             throw new RuntimeException(
                     "Authentication required"
@@ -72,31 +78,71 @@ public class AuthorizationService {
 
     public Long getCurrentTechnicianId() {
 
-    User currentUser = getCurrentUser();
+        User currentUser =
+                getCurrentUser();
 
-    if (
-            currentUser.getRole() == null ||
-            !currentUser.getRole()
-                    .name()
-                    .equalsIgnoreCase("TECHNICIAN")
-    ) {
-        throw new RuntimeException(
-                "Current user is not a technician"
-        );
+        if (
+                currentUser.getRole() == null ||
+                !currentUser.getRole()
+                        .name()
+                        .equalsIgnoreCase("TECHNICIAN")
+        ) {
+
+            throw new RuntimeException(
+                    "Current user is not a technician"
+            );
+        }
+
+        Technician technician =
+                technicianRepository
+                        .findByUserId(
+                                currentUser.getId()
+                        )
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Technician profile not found for user id: "
+                                                + currentUser.getId()
+                                )
+                        );
+
+        return technician.getId();
     }
 
-    Technician technician =
-            technicianRepository
-                    .findByUserId(currentUser.getId())
-                    .orElseThrow(() ->
-                            new RuntimeException(
-                                    "Technician profile not found for user id: "
-                                            + currentUser.getId()
-                            )
-                    );
+    // =====================================================
+    // CURRENT CUSTOMER ID
+    // =====================================================
 
-    return technician.getId();
-}
+    public Long getCurrentCustomerId() {
+
+        User currentUser =
+                getCurrentUser();
+
+        if (
+                currentUser.getRole() == null ||
+                !currentUser.getRole()
+                        .name()
+                        .equalsIgnoreCase("CUSTOMER")
+        ) {
+
+            throw new RuntimeException(
+                    "Current user is not a customer"
+            );
+        }
+
+        Customer customer =
+                customerRepository
+                        .findByUserId(
+                                currentUser.getId()
+                        )
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Customer profile not found for user id: "
+                                                + currentUser.getId()
+                                )
+                        );
+
+        return customer.getId();
+    }
 
     // =====================================================
     // ROLE CHECK
@@ -141,7 +187,7 @@ public class AuthorizationService {
             return false;
         }
 
-        return getCurrentUserId()
+        return getCurrentCustomerId()
                 .equals(customerId);
     }
 

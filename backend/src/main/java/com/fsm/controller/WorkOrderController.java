@@ -217,6 +217,11 @@ public class WorkOrderController {
                 request.getSiteId()
         );
 
+        /*
+         * This may be null during CREATE.
+         * WorkOrderService generates the actual
+         * unique order number.
+         */
         workOrder.setOrderNumber(
                 request.getOrderNumber()
         );

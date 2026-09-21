@@ -19,7 +19,11 @@ function DashboardLayout() {
   return (
     <div className="app">
 
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Sidebar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        onLogout={handleLogout}
+      />
 
       <div
         className={`sidebar-overlay ${sidebarOpen ? "active" : ""}`}

@@ -1,6 +1,8 @@
 package com.fsm.service;
 
+import com.fsm.entity.Site;
 import com.fsm.entity.WorkOrder;
+import com.fsm.repository.SiteRepository;
 import com.fsm.repository.WorkOrderRepository;
 import com.fsm.security.AuthorizationService;
 
@@ -10,28 +12,30 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class WorkOrderService {
 
     private final WorkOrderRepository workOrderRepository;
+    private final SiteRepository siteRepository;
     private final AuthorizationService authorizationService;
 
     public WorkOrderService(
             WorkOrderRepository workOrderRepository,
+            SiteRepository siteRepository,
             AuthorizationService authorizationService) {
 
         this.workOrderRepository =
                 workOrderRepository;
 
+        this.siteRepository =
+                siteRepository;
+
         this.authorizationService =
                 authorizationService;
     }
-
-    // =====================================================
-    // GET ALL WORK ORDERS
-    // DISPATCHER / MANAGER ONLY
-    // =====================================================
 
     public List<WorkOrder> getAllWorkOrders() {
 
@@ -39,7 +43,6 @@ public class WorkOrderService {
                 authorizationService.hasRole("DISPATCHER") ||
                 authorizationService.hasRole("MANAGER")
         ) {
-
             return workOrderRepository.findAll();
         }
 
@@ -47,10 +50,6 @@ public class WorkOrderService {
                 "Only Dispatcher or Manager can access all work orders"
         );
     }
-
-    // =====================================================
-    // GET WORK ORDER BY ID
-    // =====================================================
 
     public WorkOrder getWorkOrderById(Long id) {
 
@@ -64,21 +63,12 @@ public class WorkOrderService {
                                 )
                         );
 
-        // =================================================
-        // DISPATCHER / MANAGER
-        // =================================================
-
         if (
                 authorizationService.hasRole("DISPATCHER") ||
                 authorizationService.hasRole("MANAGER")
         ) {
-
             return workOrder;
         }
-
-        // =================================================
-        // TECHNICIAN
-        // =================================================
 
         if (authorizationService.hasRole("TECHNICIAN")) {
 
@@ -91,7 +81,6 @@ public class WorkOrderService {
                     workOrder.getTechnicianId()
                             .equals(currentTechnicianId)
             ) {
-
                 return workOrder;
             }
 
@@ -100,22 +89,17 @@ public class WorkOrderService {
             );
         }
 
-        // =================================================
-        // CUSTOMER
-        // =================================================
-
         if (authorizationService.hasRole("CUSTOMER")) {
 
             Long currentCustomerId =
                     authorizationService
-                            .getCurrentUserId();
+                            .getCurrentCustomerId();
 
             if (
                     workOrder.getCustomerId() != null &&
                     workOrder.getCustomerId()
                             .equals(currentCustomerId)
             ) {
-
                 return workOrder;
             }
 
@@ -129,11 +113,6 @@ public class WorkOrderService {
         );
     }
 
-    // =====================================================
-    // CREATE WORK ORDER
-    // DISPATCHER / MANAGER ONLY
-    // =====================================================
-
     public WorkOrder createWorkOrder(
             WorkOrder workOrder) {
 
@@ -141,15 +120,10 @@ public class WorkOrderService {
                 !authorizationService.hasRole("DISPATCHER") &&
                 !authorizationService.hasRole("MANAGER")
         ) {
-
             throw new AccessDeniedException(
                     "Only Dispatcher or Manager can create work orders"
             );
         }
-
-        // =================================================
-        // SERVICE REQUEST
-        // =================================================
 
         if (workOrder.getServiceRequestId() == null) {
 
@@ -158,20 +132,12 @@ public class WorkOrderService {
             );
         }
 
-        // =================================================
-        // CUSTOMER
-        // =================================================
-
         if (workOrder.getCustomerId() == null) {
 
             throw new RuntimeException(
                     "Customer ID is required"
             );
         }
-
-        // =================================================
-        // SITE
-        // =================================================
 
         if (workOrder.getSiteId() == null) {
 
@@ -180,23 +146,27 @@ public class WorkOrderService {
             );
         }
 
-        // =================================================
-        // ORDER NUMBER
-        // =================================================
+        /*
+         * =====================================================
+         * SITE / CUSTOMER VALIDATION
+         * =====================================================
+         *
+         * A work order's site must belong to the same customer.
+         */
 
-        if (
-                workOrder.getOrderNumber() == null ||
-                workOrder.getOrderNumber().isBlank()
-        ) {
+        validateSiteBelongsToCustomer(
+                workOrder.getSiteId(),
+                workOrder.getCustomerId()
+        );
 
-            throw new RuntimeException(
-                    "Order number is required"
-            );
-        }
 
-        // =================================================
-        // TITLE
-        // =================================================
+        String orderNumber =
+                generateUniqueOrderNumber();
+
+        workOrder.setOrderNumber(
+                orderNumber
+        );
+
 
         if (
                 workOrder.getTitle() == null ||
@@ -208,52 +178,163 @@ public class WorkOrderService {
             );
         }
 
-        // =================================================
-        // DEFAULT STATUS
-        // =================================================
 
         if (workOrder.getStatus() == null) {
 
             workOrder.setStatus(
                     WorkOrder.Status.PENDING
             );
+
         }
 
-        // =================================================
-        // DEFAULT PRIORITY
-        // =================================================
 
         if (workOrder.getPriority() == null) {
 
             workOrder.setPriority(
                     com.fsm.entity.Priority.MEDIUM
             );
+
         }
 
-        // =================================================
-        // DEFAULT TOTAL COST
-        // =================================================
 
         if (workOrder.getTotalCost() == null) {
 
             workOrder.setTotalCost(
                     BigDecimal.ZERO
             );
+
         }
 
-        // =================================================
-        // SAVE
-        // =================================================
+
+        if (workOrder.getCreatedAt() == null) {
+
+            workOrder.setCreatedAt(
+                    LocalDateTime.now()
+            );
+
+        }
+
 
         return workOrderRepository.save(
                 workOrder
         );
     }
 
-    // =====================================================
-    // UPDATE WORK ORDER
-    // DISPATCHER / MANAGER ONLY
-    // =====================================================
+    private void validateSiteBelongsToCustomer(
+            Long siteId,
+            Long customerId) {
+
+        Site site =
+                siteRepository
+                        .findById(siteId)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Site not found with id: "
+                                                + siteId
+                                )
+                        );
+
+
+        if (
+                site.getCustomerId() == null ||
+                !site.getCustomerId()
+                        .equals(customerId)
+        ) {
+
+            throw new AccessDeniedException(
+                    "The selected site does not belong to the selected customer"
+            );
+
+        }
+
+    }
+
+    private String generateUniqueOrderNumber() {
+
+        List<WorkOrder> existingWorkOrders =
+                workOrderRepository.findAll();
+
+        int highestNumber = 0;
+
+        Pattern pattern =
+                Pattern.compile("^WO-(\\d+)$");
+
+        for (
+                WorkOrder existingWorkOrder :
+                existingWorkOrders
+        ) {
+
+            String existingOrderNumber =
+                    existingWorkOrder.getOrderNumber();
+
+            if (
+                    existingOrderNumber == null ||
+                    existingOrderNumber.isBlank()
+            ) {
+                continue;
+            }
+
+
+            Matcher matcher =
+                    pattern.matcher(
+                            existingOrderNumber.trim()
+                    );
+
+
+            if (matcher.matches()) {
+
+                try {
+
+                    int number =
+                            Integer.parseInt(
+                                    matcher.group(1)
+                            );
+
+
+                    if (number > highestNumber) {
+
+                        highestNumber =
+                                number;
+
+                    }
+
+                } catch (
+                        NumberFormatException ignored
+                ) {
+                }
+
+            }
+
+        }
+
+
+        int nextNumber =
+                Math.max(
+                        highestNumber + 1,
+                        1000
+                );
+
+
+        String orderNumber;
+
+
+        do {
+
+            orderNumber =
+                    "WO-" + nextNumber;
+
+            nextNumber++;
+
+        } while (
+                workOrderRepository
+                        .existsByOrderNumber(
+                                orderNumber
+                        )
+        );
+
+
+        return orderNumber;
+    }
 
     public WorkOrder updateWorkOrder(
             Long id,
@@ -267,14 +348,13 @@ public class WorkOrderService {
             throw new AccessDeniedException(
                     "Only Dispatcher or Manager can update work orders"
             );
+
         }
+
 
         WorkOrder workOrder =
                 getWorkOrderById(id);
 
-        // =================================================
-        // COMPLETED / CANCELLED CHECK
-        // =================================================
 
         if (
                 workOrder.getStatus() ==
@@ -286,11 +366,43 @@ public class WorkOrderService {
             throw new RuntimeException(
                     "Completed or cancelled work orders cannot be edited"
             );
+
         }
 
-        // =================================================
-        // UPDATE FIELDS
-        // =================================================
+
+        if (
+                workOrderDetails.getCustomerId() == null
+        ) {
+
+            throw new RuntimeException(
+                    "Customer ID is required"
+            );
+
+        }
+
+
+        if (
+                workOrderDetails.getSiteId() == null
+        ) {
+
+            throw new RuntimeException(
+                    "Site ID is required"
+            );
+
+        }
+
+
+        /*
+         * =====================================================
+         * SITE / CUSTOMER VALIDATION
+         * =====================================================
+         */
+
+        validateSiteBelongsToCustomer(
+                workOrderDetails.getSiteId(),
+                workOrderDetails.getCustomerId()
+        );
+
 
         workOrder.setServiceRequestId(
                 workOrderDetails.getServiceRequestId()
@@ -316,9 +428,46 @@ public class WorkOrderService {
                 workOrderDetails.getPriority()
         );
 
-        workOrder.setOrderNumber(
-                workOrderDetails.getOrderNumber()
-        );
+
+        if (
+                workOrderDetails.getOrderNumber() != null &&
+                !workOrderDetails
+                        .getOrderNumber()
+                        .isBlank() &&
+                !workOrderDetails
+                        .getOrderNumber()
+                        .equals(
+                                workOrder.getOrderNumber()
+                        )
+        ) {
+
+            String requestedOrderNumber =
+                    workOrderDetails
+                            .getOrderNumber()
+                            .trim();
+
+
+            if (
+                    workOrderRepository
+                            .existsByOrderNumber(
+                                    requestedOrderNumber
+                            )
+            ) {
+
+                throw new RuntimeException(
+                        "Work order number already exists: "
+                                + requestedOrderNumber
+                );
+
+            }
+
+
+            workOrder.setOrderNumber(
+                    requestedOrderNumber
+            );
+
+        }
+
 
         workOrder.setDescription(
                 workOrderDetails.getDescription()
@@ -340,19 +489,11 @@ public class WorkOrderService {
                 workOrderDetails.getTotalCost()
         );
 
-        // =================================================
-        // SAVE
-        // =================================================
 
         return workOrderRepository.save(
                 workOrder
         );
     }
-
-    // =====================================================
-    // ASSIGN TECHNICIAN
-    // DISPATCHER / MANAGER ONLY
-    // =====================================================
 
     public WorkOrder assignTechnician(
             Long id,
@@ -366,10 +507,13 @@ public class WorkOrderService {
             throw new AccessDeniedException(
                     "Only Dispatcher or Manager can assign technicians"
             );
+
         }
+
 
         WorkOrder workOrder =
                 getWorkOrderById(id);
+
 
         if (
                 workOrder.getStatus() ==
@@ -381,32 +525,33 @@ public class WorkOrderService {
             throw new RuntimeException(
                     "Cannot assign a completed or cancelled work order"
             );
+
         }
+
 
         if (technicianId == null) {
 
             throw new RuntimeException(
                     "Technician ID is required"
             );
+
         }
+
 
         workOrder.setTechnicianId(
                 technicianId
         );
 
+
         workOrder.setStatus(
                 WorkOrder.Status.ASSIGNED
         );
+
 
         return workOrderRepository.save(
                 workOrder
         );
     }
-
-    // =====================================================
-    // UPDATE STATUS
-    // TECHNICIAN / DISPATCHER / MANAGER
-    // =====================================================
 
     public WorkOrder updateStatus(
             Long id,
@@ -417,7 +562,9 @@ public class WorkOrderService {
             throw new RuntimeException(
                     "Status is required"
             );
+
         }
+
 
         WorkOrder workOrder =
                 workOrderRepository
@@ -429,15 +576,13 @@ public class WorkOrderService {
                                 )
                         );
 
-        // =================================================
-        // TECHNICIAN
-        // =================================================
 
         if (authorizationService.hasRole("TECHNICIAN")) {
 
             Long currentTechnicianId =
                     authorizationService
                             .getCurrentTechnicianId();
+
 
             if (
                     workOrder.getTechnicianId() == null ||
@@ -448,11 +593,9 @@ public class WorkOrderService {
                 throw new AccessDeniedException(
                         "You are not allowed to update this work order"
                 );
+
             }
 
-            // ---------------------------------------------
-            // TECHNICIAN STATUS RULES
-            // ---------------------------------------------
 
             if (
                     status != WorkOrder.Status.IN_PROGRESS &&
@@ -462,23 +605,20 @@ public class WorkOrderService {
                 throw new AccessDeniedException(
                         "Technicians can only move their jobs to IN_PROGRESS or COMPLETED"
                 );
+
             }
+
         }
 
-        // =================================================
-        // CUSTOMER
-        // =================================================
 
         if (authorizationService.hasRole("CUSTOMER")) {
 
             throw new AccessDeniedException(
                     "Customers cannot update work order status"
             );
+
         }
 
-        // =================================================
-        // COMPLETED / CANCELLED CHECK
-        // =================================================
 
         if (
                 workOrder.getStatus() ==
@@ -490,19 +630,14 @@ public class WorkOrderService {
             throw new RuntimeException(
                     "Completed or cancelled work orders cannot change status"
             );
+
         }
 
-        // =================================================
-        // UPDATE STATUS
-        // =================================================
 
         workOrder.setStatus(
                 status
         );
 
-        // =================================================
-        // COMPLETED DATE
-        // =================================================
 
         if (
                 status ==
@@ -512,20 +647,14 @@ public class WorkOrderService {
             workOrder.setCompletedDate(
                     LocalDateTime.now()
             );
+
         }
 
-        // =================================================
-        // SAVE
-        // =================================================
 
         return workOrderRepository.save(
                 workOrder
         );
     }
-
-    // =====================================================
-    // CUSTOMER WORK ORDERS
-    // =====================================================
 
     public List<WorkOrder> getWorkOrdersByCustomer(
             Long customerId) {
@@ -535,35 +664,33 @@ public class WorkOrderService {
             throw new RuntimeException(
                     "Customer ID is required"
             );
+
         }
 
-        // =================================================
-        // CUSTOMER → ONLY THEIR OWN
-        // =================================================
 
         if (authorizationService.hasRole("CUSTOMER")) {
 
             Long currentCustomerId =
                     authorizationService
-                            .getCurrentUserId();
+                            .getCurrentCustomerId();
 
-            if (
-                    !currentCustomerId
-                            .equals(customerId)
-            ) {
+
+            if (!currentCustomerId.equals(customerId)) {
 
                 throw new AccessDeniedException(
                         "You are not allowed to access another customer's work orders"
                 );
+
             }
 
+
             return workOrderRepository
-                    .findByCustomerId(customerId);
+                    .findByCustomerId(
+                            customerId
+                    );
+
         }
 
-        // =================================================
-        // DISPATCHER / MANAGER
-        // =================================================
 
         if (
                 authorizationService.hasRole("DISPATCHER") ||
@@ -571,17 +698,17 @@ public class WorkOrderService {
         ) {
 
             return workOrderRepository
-                    .findByCustomerId(customerId);
+                    .findByCustomerId(
+                            customerId
+                    );
+
         }
+
 
         throw new AccessDeniedException(
                 "You don't have permission to access these work orders"
         );
     }
-
-    // =====================================================
-    // TECHNICIAN WORK ORDERS
-    // =====================================================
 
     public List<WorkOrder> getWorkOrdersByTechnician(
             Long technicianId) {
@@ -591,11 +718,9 @@ public class WorkOrderService {
             throw new RuntimeException(
                     "Technician ID is required"
             );
+
         }
 
-        // =================================================
-        // TECHNICIAN → ONLY THEIR OWN
-        // =================================================
 
         if (authorizationService.hasRole("TECHNICIAN")) {
 
@@ -609,17 +734,17 @@ public class WorkOrderService {
                 throw new AccessDeniedException(
                         "You are not allowed to access another technician's work orders"
                 );
+
             }
+
 
             return workOrderRepository
                     .findByTechnicianId(
                             technicianId
                     );
+
         }
 
-        // =================================================
-        // DISPATCHER / MANAGER
-        // =================================================
 
         if (
                 authorizationService.hasRole("DISPATCHER") ||
@@ -630,17 +755,14 @@ public class WorkOrderService {
                     .findByTechnicianId(
                             technicianId
                     );
+
         }
+
 
         throw new AccessDeniedException(
                 "You don't have permission to access these work orders"
         );
     }
-
-    // =====================================================
-    // STATUS WORK ORDERS
-    // DISPATCHER / MANAGER
-    // =====================================================
 
     public List<WorkOrder> getWorkOrdersByStatus(
             WorkOrder.Status status) {
@@ -650,7 +772,9 @@ public class WorkOrderService {
             throw new RuntimeException(
                     "Status is required"
             );
+
         }
+
 
         if (
                 authorizationService.hasRole("DISPATCHER") ||
@@ -658,8 +782,12 @@ public class WorkOrderService {
         ) {
 
             return workOrderRepository
-                    .findByStatus(status);
+                    .findByStatus(
+                            status
+                    );
+
         }
+
 
         throw new AccessDeniedException(
                 "Only Dispatcher or Manager can access work orders by status"

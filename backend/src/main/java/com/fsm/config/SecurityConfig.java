@@ -1,7 +1,5 @@
-
 package com.fsm.config;
 
-import java.io.IOException;
 import java.util.List;
 
 import org.springframework.context.annotation.Bean;
@@ -14,7 +12,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
-import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -28,38 +25,22 @@ import jakarta.servlet.http.HttpServletResponse;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    // =====================================================
-    // SECURITY FILTER CHAIN
-    // =====================================================
-
     @Bean
     public SecurityFilterChain securityFilterChain(
-            HttpSecurity http
+            HttpSecurity http,
+            JwtAuthenticationConverter jwtAuthenticationConverter
     ) throws Exception {
 
         http
-
-            // =================================================
-            // CORS
-            // =================================================
-
             .cors(cors ->
                     cors.configurationSource(
                             corsConfigurationSource()
                     )
             )
 
-            // =================================================
-            // CSRF
-            // =================================================
-
             .csrf(csrf ->
                     csrf.disable()
             )
-
-            // =================================================
-            // SESSION
-            // =================================================
 
             .sessionManagement(session ->
                     session.sessionCreationPolicy(
@@ -67,12 +48,7 @@ public class SecurityConfig {
                     )
             )
 
-            // =================================================
-            // EXCEPTION HANDLING
-            // =================================================
-
             .exceptionHandling(exception ->
-
                     exception
                             .authenticationEntryPoint(
                                     (request, response, authException) -> {
@@ -121,328 +97,393 @@ public class SecurityConfig {
                             )
             )
 
-            // =================================================
-            // AUTHORIZATION
-            // =================================================
-
             .authorizeHttpRequests(auth -> auth
 
-                    // =================================================
+                    // =====================================================
                     // PUBLIC ENDPOINTS
-                    // =================================================
+                    // =====================================================
 
                     .requestMatchers(
-                            "/api/auth/**"
-                    ).permitAll()
+                            "/api/auth/**",
+                            "/api/users/login",
+                            "/api/users/register"
+                    )
+                    .permitAll()
 
                     .requestMatchers(
                             "/api/health"
-                    ).permitAll()
+                    )
+                    .permitAll()
 
 
-                    // =================================================
+                    // =====================================================
                     // CUSTOMERS
-                    // =================================================
+                    // =====================================================
 
-                    /*
-                     * IMPORTANT:
-                     *
-                     * CUSTOMER users must NOT be able to access
-                     * the general customer-management endpoint.
-                     *
-                     * Only DISPATCHER and MANAGER can:
-                     *
-                     * GET /api/customers
-                     * GET /api/customers/{id}
-                     */
+                    .requestMatchers(
+                            HttpMethod.GET,
+                            "/api/customers/me"
+                    )
+                    .hasRole("CUSTOMER")
 
                     .requestMatchers(
                             HttpMethod.GET,
                             "/api/customers",
                             "/api/customers/**"
-                    ).hasAnyRole(
+                    )
+                    .hasAnyRole(
                             "DISPATCHER",
                             "MANAGER"
                     )
-
-
-                    /*
-                     * Create customers.
-                     */
 
                     .requestMatchers(
                             HttpMethod.POST,
                             "/api/customers",
                             "/api/customers/**"
-                    ).hasAnyRole(
+                    )
+                    .hasAnyRole(
                             "DISPATCHER",
                             "MANAGER"
                     )
-
-
-                    /*
-                     * Update customers.
-                     */
 
                     .requestMatchers(
                             HttpMethod.PUT,
                             "/api/customers",
                             "/api/customers/**"
-                    ).hasAnyRole(
+                    )
+                    .hasAnyRole(
                             "DISPATCHER",
                             "MANAGER"
                     )
-
-
-                    /*
-                     * Delete customers.
-                     */
 
                     .requestMatchers(
                             HttpMethod.DELETE,
                             "/api/customers",
                             "/api/customers/**"
-                    ).hasRole(
-                            "MANAGER"
                     )
+                    .hasRole("MANAGER")
 
 
-                    // =================================================
+                    // =====================================================
                     // SITES
-                    // =================================================
-
-                    .requestMatchers(
-                            HttpMethod.GET,
-                            "/api/sites",
-                            "/api/sites/**"
-                    ).hasAnyRole(
-                            "CUSTOMER",
-                            "DISPATCHER",
-                            "MANAGER",
-                            "TECHNICIAN"
-                    )
-
-                    .requestMatchers(
-                            HttpMethod.POST,
-                            "/api/sites",
-                            "/api/sites/**"
-                    ).hasAnyRole(
-                            "DISPATCHER",
-                            "MANAGER"
-                    )
-
-                    .requestMatchers(
-                            HttpMethod.PUT,
-                            "/api/sites",
-                            "/api/sites/**"
-                    ).hasAnyRole(
-                            "DISPATCHER",
-                            "MANAGER"
-                    )
-
-                    .requestMatchers(
-                            HttpMethod.DELETE,
-                            "/api/sites",
-                            "/api/sites/**"
-                    ).hasRole(
-                            "MANAGER"
-                    )
-
-
-                    // =================================================
-                    // SERVICE REQUESTS
-                    // =================================================
+                    // =====================================================
 
                     /*
-                     * Dispatcher and Manager can see all requests.
-                     */
-
-                    .requestMatchers(
-                            HttpMethod.GET,
-                            "/api/service-requests",
-                            "/api/service-requests/**"
-                    ).hasAnyRole(
-                            "DISPATCHER",
-                            "MANAGER"
-                    )
-
-
-                    /*
-                     * Customer can create a service request.
+                     * Get ALL sites.
                      *
-                     * IMPORTANT:
-                     * Your ServiceRequestService should eventually
-                     * validate that the customerId belongs to the
-                     * authenticated CUSTOMER.
+                     * Customers must NOT access the complete site list.
+                     * Technicians, Dispatchers and Managers may access it.
                      */
-
-                    .requestMatchers(
-                            HttpMethod.POST,
-                            "/api/service-requests",
-                            "/api/service-requests/**"
-                    ).hasAnyRole(
-                            "CUSTOMER",
-                            "DISPATCHER",
-                            "MANAGER"
-                    )
-
-
-                    // =================================================
-                    // WORK ORDERS
-                    // =================================================
-
                     .requestMatchers(
                             HttpMethod.GET,
-                            "/api/work-orders",
-                            "/api/work-orders/**"
-                    ).hasAnyRole(
-                            "CUSTOMER",
-                            "TECHNICIAN",
-                            "DISPATCHER",
-                            "MANAGER"
+                            "/api/sites"
                     )
-
-                    .requestMatchers(
-                            HttpMethod.POST,
-                            "/api/work-orders",
-                            "/api/work-orders/**"
-                    ).hasAnyRole(
-                            "DISPATCHER",
-                            "MANAGER"
-                    )
-
-                    .requestMatchers(
-                            HttpMethod.PUT,
-                            "/api/work-orders",
-                            "/api/work-orders/**"
-                    ).hasAnyRole(
-                            "TECHNICIAN",
-                            "DISPATCHER",
-                            "MANAGER"
-                    )
-
-
-                    // =================================================
-                    // TECHNICIANS
-                    // =================================================
-
-                    .requestMatchers(
-                            HttpMethod.GET,
-                            "/api/technicians",
-                            "/api/technicians/**"
-                    ).hasAnyRole(
-                            "TECHNICIAN",
-                            "DISPATCHER",
-                            "MANAGER"
-                    )
-
-                    .requestMatchers(
-                            HttpMethod.POST,
-                            "/api/technicians",
-                            "/api/technicians/**"
-                    ).hasAnyRole(
-                            "MANAGER"
-                    )
-
-                    .requestMatchers(
-                            HttpMethod.PUT,
-                            "/api/technicians",
-                            "/api/technicians/**"
-                    ).hasRole(
-                            "MANAGER"
-                    )
-
-                    .requestMatchers(
-                            HttpMethod.DELETE,
-                            "/api/technicians",
-                            "/api/technicians/**"
-                    ).hasRole(
-                            "MANAGER"
-                    )
-
-
-                    // =================================================
-                    // SCHEDULES
-                    // =================================================
-
-                    .requestMatchers(
-                            HttpMethod.GET,
-                            "/api/schedules",
-                            "/api/schedules/**"
-                    ).hasAnyRole(
-                            "TECHNICIAN",
-                            "DISPATCHER",
-                            "MANAGER"
-                    )
-
-                    .requestMatchers(
-                            HttpMethod.POST,
-                            "/api/schedules",
-                            "/api/schedules/**"
-                    ).hasAnyRole(
-                            "DISPATCHER",
-                            "MANAGER"
-                    )
-
-                    .requestMatchers(
-                            HttpMethod.PUT,
-                            "/api/schedules",
-                            "/api/schedules/**"
-                    ).hasAnyRole(
+                    .hasAnyRole(
                             "DISPATCHER",
                             "MANAGER",
                             "TECHNICIAN"
                     )
 
-
-                    // =================================================
-                    // INVENTORY
-                    // =================================================
-
+                    /*
+                     * Get customer-specific sites.
+                     *
+                     * SiteService performs the ownership check for
+                     * CUSTOMER requests.
+                     */
                     .requestMatchers(
                             HttpMethod.GET,
-                            "/api/inventory",
-                            "/api/inventory/**"
-                    ).hasAnyRole(
-                            "TECHNICIAN",
+                            "/api/sites/customer/*"
+                    )
+                    .hasAnyRole(
+                            "CUSTOMER",
+                            "DISPATCHER",
+                            "MANAGER",
+                            "TECHNICIAN"
+                    )
+
+                    /*
+                     * Get a site by ID.
+                     *
+                     * SiteService performs customer ownership checks.
+                     */
+                    .requestMatchers(
+                            HttpMethod.GET,
+                            "/api/sites/*"
+                    )
+                    .hasAnyRole(
+                            "CUSTOMER",
+                            "DISPATCHER",
+                            "MANAGER",
+                            "TECHNICIAN"
+                    )
+
+                    .requestMatchers(
+                            HttpMethod.POST,
+                            "/api/sites",
+                            "/api/sites/**"
+                    )
+                    .hasAnyRole(
                             "DISPATCHER",
                             "MANAGER"
                     )
 
                     .requestMatchers(
-                            HttpMethod.POST,
-                            "/api/inventory",
-                            "/api/inventory/**"
-                    ).hasRole(
-                            "MANAGER"
-                    )
-
-                    .requestMatchers(
                             HttpMethod.PUT,
-                            "/api/inventory",
-                            "/api/inventory/**"
-                    ).hasRole(
+                            "/api/sites",
+                            "/api/sites/**"
+                    )
+                    .hasAnyRole(
+                            "DISPATCHER",
                             "MANAGER"
                     )
 
                     .requestMatchers(
                             HttpMethod.DELETE,
-                            "/api/inventory",
-                            "/api/inventory/**"
-                    ).hasRole(
+                            "/api/sites",
+                            "/api/sites/**"
+                    )
+                    .hasRole("MANAGER")
+
+
+                    // =====================================================
+                    // SERVICE REQUESTS
+                    // =====================================================
+
+                    /*
+                     * Customer can view an individual service request.
+                     *
+                     * ServiceRequestService performs the ownership
+                     * check so a customer can only view their own
+                     * request.
+                     */
+                    .requestMatchers(
+                            HttpMethod.GET,
+                            "/api/service-requests/*"
+                    )
+                    .hasAnyRole(
+                            "CUSTOMER",
+                            "DISPATCHER",
+                            "MANAGER"
+                    )
+
+                    /*
+                     * Get all service requests.
+                     *
+                     * Customers and Technicians must NOT access
+                     * the complete service-request list.
+                     */
+                    .requestMatchers(
+                            HttpMethod.GET,
+                            "/api/service-requests"
+                    )
+                    .hasAnyRole(
+                            "DISPATCHER",
+                            "MANAGER"
+                    )
+
+                    /*
+                     * Create service requests.
+                     *
+                     * Customers can create their own requests.
+                     * ServiceRequestService verifies customer ownership.
+                     */
+                    .requestMatchers(
+                            HttpMethod.POST,
+                            "/api/service-requests",
+                            "/api/service-requests/**"
+                    )
+                    .hasAnyRole(
+                            "CUSTOMER",
+                            "DISPATCHER",
                             "MANAGER"
                     )
 
 
-                    // =================================================
-                    // INVOICES / BILLING
-                    // =================================================
+                    // =====================================================
+                    // WORK ORDERS
+                    // =====================================================
+
+                    .requestMatchers(
+                            HttpMethod.GET,
+                            "/api/work-orders",
+                            "/api/work-orders/**"
+                    )
+                    .hasAnyRole(
+                            "CUSTOMER",
+                            "TECHNICIAN",
+                            "DISPATCHER",
+                            "MANAGER"
+                    )
+
+                    .requestMatchers(
+                            HttpMethod.POST,
+                            "/api/work-orders"
+                    )
+                    .hasAnyRole(
+                            "DISPATCHER",
+                            "MANAGER"
+                    )
+
+                    .requestMatchers(
+                            HttpMethod.POST,
+                            "/api/work-orders/*/assign"
+                    )
+                    .hasAnyRole(
+                            "DISPATCHER",
+                            "MANAGER"
+                    )
+
+                    .requestMatchers(
+                            HttpMethod.POST,
+                            "/api/work-orders/*/status"
+                    )
+                    .hasAnyRole(
+                            "TECHNICIAN",
+                            "DISPATCHER",
+                            "MANAGER"
+                    )
+
+                    .requestMatchers(
+                            HttpMethod.POST,
+                            "/api/work-orders/**"
+                    )
+                    .hasAnyRole(
+                            "DISPATCHER",
+                            "MANAGER"
+                    )
+
+                    .requestMatchers(
+                            HttpMethod.PUT,
+                            "/api/work-orders",
+                            "/api/work-orders/**"
+                    )
+                    .hasAnyRole(
+                            "TECHNICIAN",
+                            "DISPATCHER",
+                            "MANAGER"
+                    )
+
+
+                    // =====================================================
+                    // TECHNICIANS
+                    // =====================================================
+
+                    .requestMatchers(
+                            HttpMethod.GET,
+                            "/api/technicians",
+                            "/api/technicians/**"
+                    )
+                    .hasAnyRole(
+                            "TECHNICIAN",
+                            "DISPATCHER",
+                            "MANAGER"
+                    )
+
+                    .requestMatchers(
+                            HttpMethod.POST,
+                            "/api/technicians",
+                            "/api/technicians/**"
+                    )
+                    .hasRole("MANAGER")
+
+                    .requestMatchers(
+                            HttpMethod.PUT,
+                            "/api/technicians",
+                            "/api/technicians/**"
+                    )
+                    .hasRole("MANAGER")
+
+                    .requestMatchers(
+                            HttpMethod.DELETE,
+                            "/api/technicians",
+                            "/api/technicians/**"
+                    )
+                    .hasRole("MANAGER")
+
+
+                    // =====================================================
+                    // SCHEDULES
+                    // =====================================================
+
+                    .requestMatchers(
+                            HttpMethod.GET,
+                            "/api/schedules",
+                            "/api/schedules/**"
+                    )
+                    .hasAnyRole(
+                            "TECHNICIAN",
+                            "DISPATCHER",
+                            "MANAGER"
+                    )
+
+                    .requestMatchers(
+                            HttpMethod.POST,
+                            "/api/schedules",
+                            "/api/schedules/**"
+                    )
+                    .hasAnyRole(
+                            "DISPATCHER",
+                            "MANAGER"
+                    )
+
+                    .requestMatchers(
+                            HttpMethod.PUT,
+                            "/api/schedules",
+                            "/api/schedules/**"
+                    )
+                    .hasAnyRole(
+                            "DISPATCHER",
+                            "MANAGER"
+                    )
+
+
+                    // =====================================================
+                    // INVENTORY
+                    // =====================================================
+
+                    .requestMatchers(
+                            HttpMethod.GET,
+                            "/api/inventory",
+                            "/api/inventory/**"
+                    )
+                    .hasAnyRole(
+                            "TECHNICIAN",
+                            "DISPATCHER",
+                            "MANAGER"
+                    )
+
+                    .requestMatchers(
+                            HttpMethod.POST,
+                            "/api/inventory",
+                            "/api/inventory/**"
+                    )
+                    .hasRole("MANAGER")
+
+                    .requestMatchers(
+                            HttpMethod.PUT,
+                            "/api/inventory",
+                            "/api/inventory/**"
+                    )
+                    .hasRole("MANAGER")
+
+                    .requestMatchers(
+                            HttpMethod.DELETE,
+                            "/api/inventory",
+                            "/api/inventory/**"
+                    )
+                    .hasRole("MANAGER")
+
+
+                    // =====================================================
+                    // INVOICES
+                    // =====================================================
 
                     .requestMatchers(
                             HttpMethod.GET,
                             "/api/invoices",
                             "/api/invoices/**"
-                    ).hasAnyRole(
+                    )
+                    .hasAnyRole(
                             "DISPATCHER",
                             "MANAGER"
                     )
@@ -451,7 +492,8 @@ public class SecurityConfig {
                             HttpMethod.POST,
                             "/api/invoices",
                             "/api/invoices/**"
-                    ).hasAnyRole(
+                    )
+                    .hasAnyRole(
                             "DISPATCHER",
                             "MANAGER"
                     )
@@ -460,32 +502,35 @@ public class SecurityConfig {
                             HttpMethod.PUT,
                             "/api/invoices",
                             "/api/invoices/**"
-                    ).hasAnyRole(
+                    )
+                    .hasAnyRole(
                             "DISPATCHER",
                             "MANAGER"
                     )
 
 
-                    // =================================================
+                    // =====================================================
                     // JOB EXECUTION
-                    // =================================================
+                    // =====================================================
 
                     .requestMatchers(
-                            "/api/job-execution/**"
-                    ).hasAnyRole(
+                            "/api/job-executions/**"
+                    )
+                    .hasAnyRole(
                             "TECHNICIAN",
                             "DISPATCHER",
                             "MANAGER"
                     )
 
 
-                    // =================================================
+                    // =====================================================
                     // NOTIFICATIONS
-                    // =================================================
+                    // =====================================================
 
                     .requestMatchers(
                             "/api/notifications/**"
-                    ).hasAnyRole(
+                    )
+                    .hasAnyRole(
                             "CUSTOMER",
                             "TECHNICIAN",
                             "DISPATCHER",
@@ -493,35 +538,30 @@ public class SecurityConfig {
                     )
 
 
-                    // =================================================
+                    // =====================================================
                     // REPORTS
-                    // =================================================
+                    // =====================================================
 
                     .requestMatchers(
                             "/api/reports/**"
-                    ).hasRole(
-                            "MANAGER"
                     )
+                    .hasRole("MANAGER")
 
 
-                    // =================================================
+                    // =====================================================
                     // EVERYTHING ELSE
-                    // =================================================
+                    // =====================================================
 
-                    .anyRequest().authenticated()
+                    .anyRequest()
+                    .authenticated()
             )
 
-            // =================================================
-            // JWT RESOURCE SERVER
-            // =================================================
-
             .oauth2ResourceServer(oauth2 ->
-                    oauth2
-                            .jwt(jwt ->
-                                    jwt.jwtAuthenticationConverter(
-                                            jwtAuthenticationConverter()
-                                    )
+                    oauth2.jwt(jwt ->
+                            jwt.jwtAuthenticationConverter(
+                                    jwtAuthenticationConverter
                             )
+                    )
             );
 
         return http.build();
@@ -529,50 +569,7 @@ public class SecurityConfig {
 
 
     // =====================================================
-    // JWT AUTHENTICATION CONVERTER
-    // =====================================================
-
-    @Bean
-    public JwtAuthenticationConverter jwtAuthenticationConverter() {
-
-        JwtGrantedAuthoritiesConverter authoritiesConverter =
-                new JwtGrantedAuthoritiesConverter();
-
-        /*
-         * Our JWT contains:
-         *
-         * "role": "DISPATCHER"
-         *
-         * Spring Security expects:
-         *
-         * ROLE_DISPATCHER
-         *
-         * Therefore we convert the "role" claim into a
-         * Spring Security authority.
-         */
-
-        authoritiesConverter.setAuthoritiesClaimName(
-                "role"
-        );
-
-        authoritiesConverter.setAuthorityPrefix(
-                "ROLE_"
-        );
-
-
-        JwtAuthenticationConverter converter =
-                new JwtAuthenticationConverter();
-
-        converter.setJwtGrantedAuthoritiesConverter(
-                authoritiesConverter
-        );
-
-        return converter;
-    }
-
-
-    // =====================================================
-    // CORS CONFIGURATION
+    // CORS
     // =====================================================
 
     @Bean
@@ -612,10 +609,7 @@ public class SecurityConfig {
                 )
         );
 
-        configuration.setAllowCredentials(
-                true
-        );
-
+        configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
@@ -628,4 +622,3 @@ public class SecurityConfig {
         return source;
     }
 }
-

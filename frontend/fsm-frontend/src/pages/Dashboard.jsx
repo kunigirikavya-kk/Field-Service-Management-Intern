@@ -1,9 +1,9 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import {
   getCustomers,
+  getCurrentCustomer,
   getTechnicians,
   getServiceRequests,
   getWorkOrders,
@@ -47,7 +47,10 @@ function Dashboard() {
 
 
   const userRole =
-    String(currentUser?.role || "CUSTOMER").toUpperCase();
+    String(
+      currentUser?.role || "CUSTOMER"
+    ).toUpperCase();
+
 
   const userId =
     currentUser?.id;
@@ -58,16 +61,33 @@ function Dashboard() {
   // =====================================================
 
   const [customers, setCustomers] = useState([]);
-  const [technicians, setTechnicians] = useState([]);
-  const [serviceRequests, setServiceRequests] = useState([]);
-  const [workOrders, setWorkOrders] = useState([]);
-  const [schedules, setSchedules] = useState([]);
-  const [inventoryParts, setInventoryParts] = useState([]);
-  const [invoices, setInvoices] = useState([]);
 
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState("");
+  const [technicians, setTechnicians] =
+    useState([]);
+
+  const [serviceRequests, setServiceRequests] =
+    useState([]);
+
+  const [workOrders, setWorkOrders] =
+    useState([]);
+
+  const [schedules, setSchedules] =
+    useState([]);
+
+  const [inventoryParts, setInventoryParts] =
+    useState([]);
+
+  const [invoices, setInvoices] =
+    useState([]);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [refreshing, setRefreshing] =
+    useState(false);
+
+  const [error, setError] =
+    useState("");
 
 
   // =====================================================
@@ -97,7 +117,9 @@ function Dashboard() {
       if (userRole === "CUSTOMER") {
 
         /*
-         * Customer is NOT allowed to call:
+         * CUSTOMER SECURITY
+         *
+         * Customer must NOT request:
          *
          * GET /customers
          * GET /service-requests
@@ -106,131 +128,218 @@ function Dashboard() {
          * GET /inventory
          * GET /invoices
          *
-         * So we only request the customer's own work orders.
+         * The logged-in user's ID is NOT necessarily
+         * the Customer table ID.
+         *
+         * Example:
+         *
+         * User ID     = 20
+         * Customer ID = 16
+         *
+         * Therefore we first call:
+         *
+         * GET /api/customers/me
+         *
+         * The backend identifies the customer using
+         * the authenticated JWT.
+         *
+         * Then we call:
+         *
+         * GET /api/work-orders/customer/16
+         *
+         * instead of:
+         *
+         * GET /api/work-orders/customer/20
          */
+
 
         if (userId) {
 
+          // ---------------------------------------------
+          // Get logged-in customer's profile
+          // ---------------------------------------------
+
+          const customer =
+            await getCurrentCustomer();
+
+
+          console.log(
+            "👤 LOGGED-IN CUSTOMER:",
+            customer
+          );
+
+
+          // ---------------------------------------------
+          // Get actual Customer table ID
+          // ---------------------------------------------
+
+          const customerId =
+            customer?.id;
+
+
+          if (!customerId) {
+
+            throw new Error(
+              "Customer profile not found for the logged-in user."
+            );
+
+          }
+
+
+          console.log(
+            "👤 CUSTOMER ID:",
+            customerId
+          );
+
+
+          // ---------------------------------------------
+          // Get ONLY this customer's work orders
+          // ---------------------------------------------
+
           const wo =
-            await getWorkOrdersByCustomer(userId);
+            await getWorkOrdersByCustomer(
+              customerId
+            );
+
+
+          console.log(
+            "📋 CUSTOMER WORK ORDERS:",
+            wo
+          );
+
 
           setWorkOrders(
-            Array.isArray(wo) ? wo : []
+            Array.isArray(wo)
+              ? wo
+              : []
           );
 
         }
 
+
         setLoading(false);
+
         setRefreshing(false);
 
         return;
+
       }
 
 
-// =====================================================
-// TECHNICIAN
-// =====================================================
+      // =================================================
+      // TECHNICIAN
+      // =================================================
 
-if (userRole === "TECHNICIAN") {
+      if (userRole === "TECHNICIAN") {
 
-  /*
-   * The logged-in user's ID is NOT the same as the
-   * Technician table ID.
-   *
-   * Example:
-   *
-   * User ID       = 13
-   * Technician ID = 1
-   *
-   * First get the technician record using the user ID,
-   * then use technician.id for technician-specific APIs.
-   */
-
-  if (userId) {
-
-    // ---------------------------------------------
-    // Get technician record for logged-in user
-    // ---------------------------------------------
-
-    const technician =
-      await getTechnicianByUserId(userId);
-
-    console.log(
-      "👨‍🔧 LOGGED-IN TECHNICIAN:",
-      technician
-    );
+        /*
+         * The logged-in user's ID is NOT the same as
+         * the Technician table ID.
+         *
+         * Example:
+         *
+         * User ID       = 13
+         * Technician ID = 1
+         *
+         * First get the technician record using the
+         * logged-in User ID.
+         *
+         * Then use technician.id for technician-specific
+         * APIs.
+         */
 
 
-    const technicianId =
-      technician?.id;
+        if (userId) {
+
+          // ---------------------------------------------
+          // Get technician record
+          // ---------------------------------------------
+
+          const technician =
+            await getTechnicianByUserId(
+              userId
+            );
 
 
-    if (!technicianId) {
-
-      throw new Error(
-        "Technician record not found for the logged-in user."
-      );
-
-    }
+          console.log(
+            "👨‍🔧 LOGGED-IN TECHNICIAN:",
+            technician
+          );
 
 
-    console.log(
-      "👨‍🔧 TECHNICIAN ID:",
-      technicianId
-    );
+          const technicianId =
+            technician?.id;
 
 
-    // ---------------------------------------------
-    // Load technician-specific data
-    // ---------------------------------------------
+          if (!technicianId) {
 
-    const [
-      wo,
-      sch,
-      inv
-    ] = await Promise.all([
+            throw new Error(
+              "Technician record not found for the logged-in user."
+            );
 
-      getWorkOrdersByTechnician(
-        technicianId
-      ),
-
-      getSchedulesByTechnician(
-        technicianId
-      ),
-
-      getInventoryParts()
-
-    ]);
+          }
 
 
-    setWorkOrders(
-      Array.isArray(wo)
-        ? wo
-        : []
-    );
+          console.log(
+            "👨‍🔧 TECHNICIAN ID:",
+            technicianId
+          );
 
 
-    setSchedules(
-      Array.isArray(sch)
-        ? sch
-        : []
-    );
+          // ---------------------------------------------
+          // Load technician-specific data
+          // ---------------------------------------------
+
+          const [
+            wo,
+            sch,
+            inv
+          ] = await Promise.all([
+
+            getWorkOrdersByTechnician(
+              technicianId
+            ),
+
+            getSchedulesByTechnician(
+              technicianId
+            ),
+
+            getInventoryParts()
+
+          ]);
 
 
-    setInventoryParts(
-      Array.isArray(inv)
-        ? inv
-        : []
-    );
-
-  }
+          setWorkOrders(
+            Array.isArray(wo)
+              ? wo
+              : []
+          );
 
 
-  setLoading(false);
-  setRefreshing(false);
+          setSchedules(
+            Array.isArray(sch)
+              ? sch
+              : []
+          );
 
-  return;
-}
+
+          setInventoryParts(
+            Array.isArray(inv)
+              ? inv
+              : []
+          );
+
+        }
+
+
+        setLoading(false);
+
+        setRefreshing(false);
+
+        return;
+
+      }
+
 
       // =================================================
       // DISPATCHER
@@ -250,6 +359,7 @@ if (userRole === "TECHNICIAN") {
          * Invoices
          */
 
+
         const [
           cD,
           tD,
@@ -278,37 +388,60 @@ if (userRole === "TECHNICIAN") {
 
 
         setCustomers(
-          Array.isArray(cD) ? cD : []
+          Array.isArray(cD)
+            ? cD
+            : []
         );
+
 
         setTechnicians(
-          Array.isArray(tD) ? tD : []
+          Array.isArray(tD)
+            ? tD
+            : []
         );
+
 
         setServiceRequests(
-          Array.isArray(srD) ? srD : []
+          Array.isArray(srD)
+            ? srD
+            : []
         );
+
 
         setWorkOrders(
-          Array.isArray(woD) ? woD : []
+          Array.isArray(woD)
+            ? woD
+            : []
         );
+
 
         setSchedules(
-          Array.isArray(schD) ? schD : []
+          Array.isArray(schD)
+            ? schD
+            : []
         );
+
 
         setInventoryParts(
-          Array.isArray(invD) ? invD : []
+          Array.isArray(invD)
+            ? invD
+            : []
         );
+
 
         setInvoices(
-          Array.isArray(invoiceD) ? invoiceD : []
+          Array.isArray(invoiceD)
+            ? invoiceD
+            : []
         );
 
+
         setLoading(false);
+
         setRefreshing(false);
 
         return;
+
       }
 
 
@@ -322,6 +455,7 @@ if (userRole === "TECHNICIAN") {
          * Manager has full dashboard access.
          */
 
+
         const [
           cD,
           tD,
@@ -350,37 +484,60 @@ if (userRole === "TECHNICIAN") {
 
 
         setCustomers(
-          Array.isArray(cD) ? cD : []
+          Array.isArray(cD)
+            ? cD
+            : []
         );
+
 
         setTechnicians(
-          Array.isArray(tD) ? tD : []
+          Array.isArray(tD)
+            ? tD
+            : []
         );
+
 
         setServiceRequests(
-          Array.isArray(srD) ? srD : []
+          Array.isArray(srD)
+            ? srD
+            : []
         );
+
 
         setWorkOrders(
-          Array.isArray(woD) ? woD : []
+          Array.isArray(woD)
+            ? woD
+            : []
         );
+
 
         setSchedules(
-          Array.isArray(schD) ? schD : []
+          Array.isArray(schD)
+            ? schD
+            : []
         );
+
 
         setInventoryParts(
-          Array.isArray(invD) ? invD : []
+          Array.isArray(invD)
+            ? invD
+            : []
         );
+
 
         setInvoices(
-          Array.isArray(invoiceD) ? invoiceD : []
+          Array.isArray(invoiceD)
+            ? invoiceD
+            : []
         );
 
+
         setLoading(false);
+
         setRefreshing(false);
 
         return;
+
       }
 
 
@@ -399,6 +556,7 @@ if (userRole === "TECHNICIAN") {
         err
       );
 
+
       setError(
         "Unable to load dashboard data. Please try again."
       );
@@ -406,6 +564,7 @@ if (userRole === "TECHNICIAN") {
     } finally {
 
       setLoading(false);
+
       setRefreshing(false);
 
     }
@@ -429,6 +588,7 @@ if (userRole === "TECHNICIAN") {
           t.status || ""
         ).toUpperCase();
 
+
       return (
         status === "ACTIVE" ||
         status === "AVAILABLE" ||
@@ -445,6 +605,7 @@ if (userRole === "TECHNICIAN") {
         String(
           w.status || ""
         ).toUpperCase();
+
 
       return (
         status !== "COMPLETED" &&
@@ -483,6 +644,7 @@ if (userRole === "TECHNICIAN") {
           i.status || ""
         ).toUpperCase();
 
+
       return (
         status === "UNPAID" ||
         status === "OVERDUE"
@@ -502,12 +664,14 @@ if (userRole === "TECHNICIAN") {
           0
         );
 
+
       const reorder =
         Number(
           p.reorderLevel ??
           p.minimumStock ??
           0
         );
+
 
       return (
         reorder > 0 &&
@@ -535,6 +699,7 @@ if (userRole === "TECHNICIAN") {
           s.scheduledDate ||
           s.date ||
           s.startDate;
+
 
         return (
           date &&
@@ -569,6 +734,7 @@ if (userRole === "TECHNICIAN") {
           w.status || ""
         ).toUpperCase();
 
+
       return (
         status !== "COMPLETED" &&
         status !== "CANCELLED"
@@ -596,6 +762,7 @@ if (userRole === "TECHNICIAN") {
         String(
           w.status || ""
         ).toUpperCase();
+
 
       return (
         status === "ASSIGNED" ||
@@ -625,10 +792,12 @@ if (userRole === "TECHNICIAN") {
           o.priority || ""
         ).toUpperCase();
 
+
       const status =
         String(
           o.status || ""
         ).toUpperCase();
+
 
       return (
         (
@@ -650,6 +819,7 @@ if (userRole === "TECHNICIAN") {
         r.assignedTechnicianId ??
         r.technician?.id;
 
+
       return (
         technicianId === null ||
         technicianId === undefined
@@ -665,6 +835,7 @@ if (userRole === "TECHNICIAN") {
         String(
           t.status || ""
         ).toUpperCase();
+
 
       return (
         status === "AVAILABLE" ||
@@ -683,6 +854,7 @@ if (userRole === "TECHNICIAN") {
           t.status || ""
         ).toUpperCase();
 
+
       return (
         status === "BUSY" ||
         status === "ON_JOB" ||
@@ -699,6 +871,7 @@ if (userRole === "TECHNICIAN") {
         String(
           t.status || ""
         ).toUpperCase();
+
 
       return (
         status === "OFFLINE" ||
@@ -783,8 +956,10 @@ if (userRole === "TECHNICIAN") {
         status || ""
       ).toUpperCase();
 
+
     if (s === "COMPLETED")
       return "badge-success";
+
 
     if (
       s === "IN_PROGRESS" ||
@@ -792,20 +967,24 @@ if (userRole === "TECHNICIAN") {
     )
       return "badge-info";
 
+
     if (
       s === "PENDING" ||
       s === "SCHEDULED"
     )
       return "badge-warning";
 
+
     if (s === "CANCELLED")
       return "badge-danger";
+
 
     if (
       s === "NEW" ||
       s === "OPEN"
     )
       return "badge-primary";
+
 
     return "badge-info";
 
@@ -832,6 +1011,7 @@ if (userRole === "TECHNICIAN") {
         t.status || "ACTIVE"
       ).toUpperCase();
 
+
     if (
       status === "BUSY" ||
       status === "ON_JOB" ||
@@ -839,14 +1019,17 @@ if (userRole === "TECHNICIAN") {
     )
       return "busy";
 
+
     if (status === "SCHEDULED")
       return "scheduled";
+
 
     if (
       status === "OFFLINE" ||
       status === "INACTIVE"
     )
       return "offline";
+
 
     return "available";
 
@@ -860,14 +1043,17 @@ if (userRole === "TECHNICIAN") {
         t.status || "ACTIVE"
       ).toUpperCase();
 
+
     if (
       status === "ON_JOB" ||
       status === "IN_PROGRESS"
     )
       return "On Job";
 
+
     if (status === "ACTIVE")
       return "Available";
+
 
     return status.replace(
       /_/g,
@@ -929,6 +1115,7 @@ if (userRole === "TECHNICIAN") {
 
           </div>
 
+
           <div className="dash-header-actions">
 
             <button
@@ -940,6 +1127,7 @@ if (userRole === "TECHNICIAN") {
                 ? "Refreshing..."
                 : "Refresh"}
             </button>
+
 
             <button
               className="btn btn-primary"
@@ -1037,6 +1225,7 @@ if (userRole === "TECHNICIAN") {
 
             </div>
 
+
             <button
               className="btn btn-sm btn-outline"
               onClick={() =>
@@ -1086,6 +1275,7 @@ if (userRole === "TECHNICIAN") {
                       }
                     </strong>
 
+
                     <span>
                       {
                         order.description ||
@@ -1094,6 +1284,7 @@ if (userRole === "TECHNICIAN") {
                     </span>
 
                   </div>
+
 
                   <span
                     className={`badge ${getStatusBadge(
@@ -1133,6 +1324,7 @@ if (userRole === "TECHNICIAN") {
             </p>
 
           </div>
+
 
           <button
             className="btn btn-primary"
@@ -1177,6 +1369,7 @@ if (userRole === "TECHNICIAN") {
             </p>
 
           </div>
+
 
           <button
             className="btn btn-outline"
@@ -1286,6 +1479,7 @@ if (userRole === "TECHNICIAN") {
 
               </div>
 
+
               <button
                 className="btn btn-sm btn-outline"
                 onClick={() =>
@@ -1335,6 +1529,7 @@ if (userRole === "TECHNICIAN") {
                         }
                       </strong>
 
+
                       <span>
                         {
                           order.description ||
@@ -1343,6 +1538,7 @@ if (userRole === "TECHNICIAN") {
                       </span>
 
                     </div>
+
 
                     <span
                       className={`badge ${getStatusBadge(
@@ -1384,6 +1580,7 @@ if (userRole === "TECHNICIAN") {
                 </p>
 
               </div>
+
 
               <button
                 className="btn btn-sm btn-outline"
@@ -1430,7 +1627,9 @@ if (userRole === "TECHNICIAN") {
 
                       </div>
 
+
                       <div className="dash-activity-dot"></div>
+
 
                       <div className="dash-activity-info">
 
@@ -1441,6 +1640,7 @@ if (userRole === "TECHNICIAN") {
                             "Scheduled Service"
                           }
                         </strong>
+
 
                         <p>
                           {
@@ -1481,6 +1681,7 @@ if (userRole === "TECHNICIAN") {
 
           </div>
 
+
           <div className="dash-quick-btns">
 
             <button
@@ -1492,6 +1693,7 @@ if (userRole === "TECHNICIAN") {
               Work Orders
             </button>
 
+
             <button
               className="btn btn-outline"
               onClick={() =>
@@ -1501,6 +1703,7 @@ if (userRole === "TECHNICIAN") {
               Schedule
             </button>
 
+
             <button
               className="btn btn-outline"
               onClick={() =>
@@ -1509,6 +1712,7 @@ if (userRole === "TECHNICIAN") {
             >
               Inventory
             </button>
+
 
             <button
               className="btn btn-outline"
@@ -1547,6 +1751,7 @@ if (userRole === "TECHNICIAN") {
               ? "Manager Dashboard"
               : "Dispatcher Dashboard"}
           </h1>
+
 
           <p>
             Everything your field team needs to stay on top of today's operations.
@@ -1721,6 +1926,7 @@ if (userRole === "TECHNICIAN") {
               ⚠
             </div>
 
+
             <div className="dash-action-body">
 
               <strong>
@@ -1746,6 +1952,7 @@ if (userRole === "TECHNICIAN") {
             <div className="dash-action-icon">
               ₹
             </div>
+
 
             <div className="dash-action-body">
 
@@ -1773,6 +1980,7 @@ if (userRole === "TECHNICIAN") {
               📦
             </div>
 
+
             <div className="dash-action-body">
 
               <strong>
@@ -1798,6 +2006,7 @@ if (userRole === "TECHNICIAN") {
             <div className="dash-action-icon">
               ✉
             </div>
+
 
             <div className="dash-action-body">
 
@@ -1841,6 +2050,7 @@ if (userRole === "TECHNICIAN") {
               </p>
 
             </div>
+
 
             <button
               className="btn btn-sm btn-outline"
@@ -1894,7 +2104,9 @@ if (userRole === "TECHNICIAN") {
 
                     </div>
 
+
                     <div className="dash-activity-dot"></div>
+
 
                     <div className="dash-activity-info">
 
@@ -1905,6 +2117,7 @@ if (userRole === "TECHNICIAN") {
                           "Scheduled Service"
                         }
                       </strong>
+
 
                       <p>
                         {
@@ -1946,6 +2159,7 @@ if (userRole === "TECHNICIAN") {
               </p>
 
             </div>
+
 
             <button
               className="btn btn-sm btn-outline"
@@ -2038,6 +2252,7 @@ if (userRole === "TECHNICIAN") {
                       technician
                     );
 
+
                   return (
 
                     <div
@@ -2063,6 +2278,7 @@ if (userRole === "TECHNICIAN") {
                             technician
                           )}
                         </strong>
+
 
                         <span>
                           {
@@ -2194,6 +2410,7 @@ if (userRole === "TECHNICIAN") {
                         }
                       </strong>
 
+
                       <span>
                         {
                           request.description ||
@@ -2292,6 +2509,7 @@ if (userRole === "TECHNICIAN") {
                           )}`
                         }
                       </strong>
+
 
                       <span>
                         {
@@ -2414,4 +2632,3 @@ if (userRole === "TECHNICIAN") {
 
 
 export default Dashboard;
-

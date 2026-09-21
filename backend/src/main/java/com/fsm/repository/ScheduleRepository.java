@@ -1,4 +1,3 @@
-
 package com.fsm.repository;
 
 import com.fsm.entity.Schedule;
@@ -31,6 +30,14 @@ public interface ScheduleRepository
     );
 
     // =====================================================
+    // CHECK WHETHER A WORK ORDER ALREADY HAS A SCHEDULE
+    // =====================================================
+
+    boolean existsByWorkOrderId(
+            Long workOrderId
+    );
+
+    // =====================================================
     // FIND BY DATE
     // =====================================================
 
@@ -50,7 +57,8 @@ public interface ScheduleRepository
     // CHECK TECHNICIAN SCHEDULE OVERLAP
     // =====================================================
 
-    List<Schedule> findByTechnicianIdAndScheduledDateAndStartTimeLessThanAndEndTimeGreaterThan(
+    List<Schedule>
+    findByTechnicianIdAndScheduledDateAndStartTimeLessThanAndEndTimeGreaterThan(
             Long technicianId,
             LocalDate scheduledDate,
             LocalTime endTime,
@@ -61,7 +69,8 @@ public interface ScheduleRepository
     // CHECK TECHNICIAN SCHEDULE OVERLAP DURING UPDATE
     // =====================================================
 
-    List<Schedule> findByTechnicianIdAndScheduledDateAndStartTimeLessThanAndEndTimeGreaterThanAndIdNot(
+    List<Schedule>
+    findByTechnicianIdAndScheduledDateAndStartTimeLessThanAndEndTimeGreaterThanAndIdNot(
             Long technicianId,
             LocalDate scheduledDate,
             LocalTime endTime,
@@ -69,4 +78,3 @@ public interface ScheduleRepository
             Long id
     );
 }
-

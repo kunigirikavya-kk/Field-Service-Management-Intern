@@ -3,8 +3,10 @@ package com.fsm.service;
 import com.fsm.dto.LoginRequest;
 import com.fsm.dto.LoginResponse;
 import com.fsm.dto.RegisterRequest;
+import com.fsm.entity.Customer;
 import com.fsm.entity.Role;
 import com.fsm.entity.User;
+import com.fsm.repository.CustomerRepository;
 import com.fsm.repository.UserRepository;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -17,6 +19,8 @@ public class UserService {
 
     private final UserRepository userRepository;
 
+    private final CustomerRepository customerRepository;
+
     private final BCryptPasswordEncoder passwordEncoder;
 
     private final JwtService jwtService;
@@ -28,10 +32,13 @@ public class UserService {
 
     public UserService(
             UserRepository userRepository,
+            CustomerRepository customerRepository,
             JwtService jwtService
     ) {
 
         this.userRepository = userRepository;
+
+        this.customerRepository = customerRepository;
 
         this.jwtService = jwtService;
 
@@ -214,10 +221,69 @@ public class UserService {
 
 
         // =================================================
-        // SAVE USER
+        // SAVE USER FIRST
+        // =================================================
+        //
+        // We must save the User before creating the
+        // Customer profile because the generated User ID
+        // is required for customers.user_id.
+        //
+
+        User savedUser =
+                userRepository.save(user);
+
+
+        // =================================================
+        // CREATE CUSTOMER PROFILE
+        // =================================================
+        //
+        // Every publicly registered CUSTOMER gets a
+        // corresponding Customer record.
+        //
+        // This links:
+        //
+        // customers.user_id -> users.id
+        //
+        // The customer registration form currently does not
+        // collect company/address information, so those
+        // fields remain null until they are provided later.
+        //
+
+        Customer customer = new Customer();
+
+
+        customer.setUserId(
+                savedUser.getId()
+        );
+
+
+        customer.setContactPerson(
+                savedUser.getFullName()
+        );
+
+
+        customer.setEmail(
+                savedUser.getEmail()
+        );
+
+
+        customer.setPhone(
+                savedUser.getPhone()
+        );
+
+
+        // =================================================
+        // SAVE CUSTOMER PROFILE
         // =================================================
 
-        return userRepository.save(user);
+        customerRepository.save(customer);
+
+
+        // =================================================
+        // RETURN SAVED USER
+        // =================================================
+
+        return savedUser;
     }
 
 

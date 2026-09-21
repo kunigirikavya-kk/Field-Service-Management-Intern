@@ -1,5 +1,3 @@
-
-
 import { useEffect, useState } from "react";
 
 import {
@@ -10,8 +8,12 @@ import {
     getServiceRequests,
     getTechnicians,
     getTechnicianByUserId,
+    getCurrentCustomer,
     getSites,
-    assignTechnician
+    createSite,
+    assignTechnician,
+    getInventoryParts,
+    getPartUsageByWorkOrder
 } from "../services/api";
 
 import "./WorkOrders.css";
@@ -84,10 +86,22 @@ function WorkOrders() {
     const [sites, setSites] =
         useState([]);
 
+    const [siteNames, setSiteNames] =
+        useState({});
+
+    const [inventoryParts, setInventoryParts] =
+        useState([]);
+
+    const [partUsages, setPartUsages] =
+        useState({});
+
     const [loading, setLoading] =
         useState(true);
 
     const [saving, setSaving] =
+        useState(false);
+
+    const [savingSite, setSavingSite] =
         useState(false);
 
     const [assigningId, setAssigningId] =
@@ -95,6 +109,9 @@ function WorkOrders() {
 
     const [selectedTechnicians, setSelectedTechnicians] =
         useState({});
+
+    const [showNewSiteForm, setShowNewSiteForm] =
+        useState(false);
 
 
     // =====================================================
@@ -107,7 +124,6 @@ function WorkOrders() {
         technicianId: "",
         customerId: "",
         siteId: "",
-        orderNumber: "",
         title: "",
         priority: "MEDIUM",
         description: "",
@@ -121,12 +137,31 @@ function WorkOrders() {
 
 
     // =====================================================
+    // NEW SITE FORM
+    // =====================================================
+
+    const [newSite, setNewSite] = useState({
+
+        siteName: "",
+        contactPerson: "",
+        contactPhone: "",
+        address: "",
+        city: "",
+        state: "",
+        zipCode: ""
+
+    });
+
+
+    // =====================================================
     // LOAD WORK ORDERS
     // =====================================================
 
     const loadWorkOrders = async () => {
 
         try {
+
+            setLoading(true);
 
             let data;
 
@@ -144,6 +179,12 @@ function WorkOrders() {
                     );
 
                 }
+
+
+                console.log(
+                    "🔥 WORK ORDERS - LOGGED-IN USER ID:",
+                    userId
+                );
 
 
                 const technician =
@@ -177,12 +218,25 @@ function WorkOrders() {
                 );
 
 
+                console.log(
+                    "🔥 FINAL TECHNICIAN ID BEFORE WORK ORDER API:",
+                    technicianId
+                );
+
+
+                console.log(
+                    "🔥 CALLING WORK ORDERS API WITH TECHNICIAN ID:",
+                    technicianId
+                );
+
+
                 data =
                     await getWorkOrdersByTechnician(
                         technicianId
                     );
 
             }
+
 
             // ---------------------------------------------
             // CUSTOMER
@@ -199,12 +253,42 @@ function WorkOrders() {
                 }
 
 
+                /*
+                 * IMPORTANT:
+                 *
+                 * fieldsyncUser.id is the USER ID.
+                 *
+                 * Work orders use CUSTOMER ID.
+                 *
+                 * Therefore fetch /customers/me first.
+                 */
+
+                const customer =
+                    await getCurrentCustomer();
+
+
+                if (!customer?.id) {
+
+                    throw new Error(
+                        "Customer profile not found."
+                    );
+
+                }
+
+
+                console.log(
+                    "👤 LOGGED-IN CUSTOMER:",
+                    customer
+                );
+
+
                 data =
                     await getWorkOrdersByCustomer(
-                        userId
+                        customer.id
                     );
 
             }
+
 
             // ---------------------------------------------
             // DISPATCHER / MANAGER
@@ -218,11 +302,296 @@ function WorkOrders() {
             }
 
 
-            setWorkOrders(
+            // =================================================
+            // NORMALIZE WORK ORDER RESPONSE
+            // =================================================
+
+            const workOrderList =
                 Array.isArray(data)
                     ? data
-                    : []
+                    : Array.isArray(data?.content)
+                        ? data.content
+                        : Array.isArray(data?.data)
+                            ? data.data
+                            : [];
+
+
+            console.log(
+                "📋 Work Orders:",
+                workOrderList
             );
+
+
+            setWorkOrders(
+                workOrderList
+            );
+
+
+            // =================================================
+            // LOAD SITE NAMES
+            // =================================================
+
+            const customerIds =
+                [
+                    ...new Set(
+                        workOrderList
+                            .map(
+                                order =>
+                                    order.customerId
+                            )
+                            .filter(
+                                id =>
+                                    id !== null &&
+                                    id !== undefined
+                            )
+                    )
+                ];
+
+
+            const siteMap = {};
+
+
+            await Promise.all(
+                customerIds.map(
+                    async customerId => {
+
+                        try {
+
+                            const siteData =
+                                await getSites(
+                                    customerId
+                                );
+
+
+                            const siteList =
+                                Array.isArray(siteData)
+                                    ? siteData
+                                    : Array.isArray(siteData?.content)
+                                        ? siteData.content
+                                        : Array.isArray(siteData?.data)
+                                            ? siteData.data
+                                            : [];
+
+
+                            siteList.forEach(
+                                site => {
+
+                                    if (site?.id) {
+
+                                        siteMap[
+                                            site.id
+                                        ] =
+                                            site.siteName ||
+                                            site.name ||
+                                            site.address ||
+                                            `Site ${site.id}`;
+
+                                    }
+
+                                }
+                            );
+
+                        } catch (siteError) {
+
+                            console.error(
+                                `Failed to load sites for customer ${customerId}:`,
+                                siteError
+                            );
+
+                        }
+
+                    }
+                )
+            );
+
+
+            setSiteNames(
+                siteMap
+            );
+
+
+            // =================================================
+            // LOAD INVENTORY PARTS
+            // =================================================
+
+            const canViewInventory =
+                isTechnician ||
+                canManageWorkOrders;
+
+
+            if (!canViewInventory) {
+
+                console.log(
+                    "🔒 Inventory loading skipped for CUSTOMER."
+                );
+
+
+                setInventoryParts([]);
+
+            } else {
+
+                try {
+
+                    const inventoryData =
+                        await getInventoryParts();
+
+
+                    const inventoryList =
+                        Array.isArray(inventoryData)
+                            ? inventoryData
+                            : Array.isArray(inventoryData?.content)
+                                ? inventoryData.content
+                                : Array.isArray(inventoryData?.data)
+                                    ? inventoryData.data
+                                    : [];
+
+
+                    console.log(
+                        "🔧 Inventory Parts:",
+                        inventoryList
+                    );
+
+
+                    setInventoryParts(
+                        inventoryList
+                    );
+
+                } catch (inventoryError) {
+
+                    console.error(
+                        "Failed to load inventory parts:",
+                        inventoryError
+                    );
+
+
+                    setInventoryParts([]);
+
+                }
+
+            }
+
+
+            // =================================================
+            // LOAD PART USAGE BY WORK ORDER
+            // =================================================
+
+            const usageResults =
+                await Promise.all(
+                    workOrderList.map(
+                        async order => {
+
+                            try {
+
+                                const usages =
+                                    await getPartUsageByWorkOrder(
+                                        order.id
+                                    );
+
+
+                                return {
+
+                                    workOrderId:
+                                        order.id,
+
+                                    usages:
+                                        Array.isArray(usages)
+                                            ? usages
+                                            : []
+
+                                };
+
+                            } catch (usageError) {
+
+                                console.error(
+                                    `Failed to load part usage for work order ${order.id}:`,
+                                    usageError
+                                );
+
+
+                                return {
+
+                                    workOrderId:
+                                        order.id,
+
+                                    usages: []
+
+                                };
+
+                            }
+
+                        }
+                    )
+                );
+
+
+            const usageMap = {};
+
+
+            usageResults.forEach(
+                result => {
+
+                    usageMap[
+                        result.workOrderId
+                    ] =
+                        result.usages;
+
+                }
+            );
+
+
+            console.log(
+                "🔧 Part Usage:",
+                usageMap
+            );
+
+
+            setPartUsages(
+                usageMap
+            );
+
+
+            // =================================================
+            // INITIALIZE TECHNICIAN DROPDOWN
+            // =================================================
+
+            const technicianSelections = {};
+
+
+            workOrderList.forEach(
+                order => {
+
+                    const assignedTechnicianId =
+                        order.technicianId ??
+                        order.technician?.id ??
+                        order.technician?.technicianId ??
+                        "";
+
+
+                    if (assignedTechnicianId) {
+
+                        technicianSelections[
+                            order.id
+                        ] =
+                            String(
+                                assignedTechnicianId
+                            );
+
+                    }
+
+                }
+            );
+
+
+            console.log(
+                "👨‍🔧 Current Technician Selections:",
+                technicianSelections
+            );
+
+
+            setSelectedTechnicians(
+                technicianSelections
+            );
+
 
         } catch (error) {
 
@@ -230,6 +599,7 @@ function WorkOrders() {
                 "Failed to load work orders:",
                 error
             );
+
 
             alert(
                 "Failed to load work orders.\n\n" +
@@ -250,9 +620,6 @@ function WorkOrders() {
     // =====================================================
 
     const loadServiceRequests = async () => {
-
-        // Technicians and customers must not load
-        // the global service-request list.
 
         if (
             isTechnician ||
@@ -291,6 +658,7 @@ function WorkOrders() {
                 error
             );
 
+
             setServiceRequests([]);
 
         }
@@ -303,9 +671,6 @@ function WorkOrders() {
     // =====================================================
 
     const loadTechnicians = async () => {
-
-        // Technicians and customers must not load
-        // the global technician list.
 
         if (
             isTechnician ||
@@ -344,6 +709,7 @@ function WorkOrders() {
                 error
             );
 
+
             setTechnicians([]);
 
         }
@@ -355,43 +721,123 @@ function WorkOrders() {
     // LOAD SITES
     // =====================================================
 
-    const loadSites = async (customerId) => {
+    const loadSites = async (
+        customerId
+    ) => {
 
         if (!customerId) {
 
             setSites([]);
 
-            return;
+            return [];
 
         }
 
 
         try {
 
+            console.log(
+                "🏢 Loading sites for Customer:",
+                customerId
+            );
+
+
             const data =
-                await getSites(customerId);
+                await getSites(
+                    customerId
+                );
 
 
             console.log(
-                "Sites:",
+                "🏢 Sites returned from API:",
                 data
             );
 
 
-            setSites(
+            const siteList =
                 Array.isArray(data)
                     ? data
-                    : []
+                    : Array.isArray(data?.content)
+                        ? data.content
+                        : Array.isArray(data?.data)
+                            ? data.data
+                            : [];
+
+
+            const customerSites =
+                siteList.filter(
+                    site => {
+
+                        const siteCustomerId =
+                            site.customerId ??
+                            site.customer?.id ??
+                            site.customer?.userId;
+
+
+                        return (
+                            String(
+                                siteCustomerId
+                            ) ===
+                            String(
+                                customerId
+                            )
+                        );
+
+                    }
+                );
+
+
+            console.log(
+                "🏢 Customer Sites:",
+                customerSites
             );
+
+
+            setSites(
+                customerSites
+            );
+
+
+            const siteMap = {};
+
+
+            customerSites.forEach(
+                site => {
+
+                    siteMap[
+                        site.id
+                    ] =
+                        site.siteName ||
+                        site.name ||
+                        site.address ||
+                        `Site ${site.id}`;
+
+                }
+            );
+
+
+            setSiteNames(
+                previous => ({
+                    ...previous,
+                    ...siteMap
+                })
+            );
+
+
+            return customerSites;
 
         } catch (error) {
 
             console.error(
-                "Failed to load sites:",
+                "Failed to load sites for customer:",
+                customerId,
                 error
             );
 
+
             setSites([]);
+
+            return [];
 
         }
 
@@ -416,7 +862,9 @@ function WorkOrders() {
     // =====================================================
 
     const handleServiceRequestChange =
-        async (event) => {
+        async (
+            event
+        ) => {
 
             const serviceRequestId =
                 event.target.value;
@@ -424,25 +872,7 @@ function WorkOrders() {
 
             if (!serviceRequestId) {
 
-                setForm({
-
-                    serviceRequestId: "",
-                    technicianId: "",
-                    customerId: "",
-                    siteId: "",
-                    orderNumber: "",
-                    title: "",
-                    priority: "MEDIUM",
-                    description: "",
-                    status: "PENDING",
-                    scheduledDate: "",
-                    completedDate: "",
-                    totalCost: "",
-                    serviceLocation: ""
-
-                });
-
-                setSites([]);
+                resetForm();
 
                 return;
 
@@ -452,8 +882,12 @@ function WorkOrders() {
             const selectedRequest =
                 serviceRequests.find(
                     request =>
-                        String(request.id) ===
-                        String(serviceRequestId)
+                        String(
+                            request.id
+                        ) ===
+                        String(
+                            serviceRequestId
+                        )
                 );
 
 
@@ -464,10 +898,24 @@ function WorkOrders() {
             }
 
 
+            console.log(
+                "📋 Selected Service Request:",
+                selectedRequest
+            );
+
+
+            const customerId =
+                selectedRequest.customerId ??
+                selectedRequest.customer?.id ??
+                "";
+
+
             let scheduledDate = "";
 
 
-            if (selectedRequest.preferredDate) {
+            if (
+                selectedRequest.preferredDate
+            ) {
 
                 scheduledDate =
                     `${selectedRequest.preferredDate}T09:00`;
@@ -480,14 +928,14 @@ function WorkOrders() {
                 serviceRequestId:
                     selectedRequest.id,
 
-                technicianId: "",
+                technicianId:
+                    "",
 
                 customerId:
-                    selectedRequest.customerId || "",
+                    customerId,
 
-                siteId: "",
-
-                orderNumber: "",
+                siteId:
+                    "",
 
                 title:
                     selectedRequest.title ||
@@ -502,13 +950,17 @@ function WorkOrders() {
                     selectedRequest.description ||
                     "",
 
-                status: "PENDING",
+                status:
+                    "PENDING",
 
-                scheduledDate,
+                scheduledDate:
+                    scheduledDate,
 
-                completedDate: "",
+                completedDate:
+                    "",
 
-                totalCost: "",
+                totalCost:
+                    "",
 
                 serviceLocation:
                     selectedRequest.serviceLocation ||
@@ -517,11 +969,53 @@ function WorkOrders() {
             });
 
 
-            if (selectedRequest.customerId) {
+            setShowNewSiteForm(false);
 
-                await loadSites(
-                    selectedRequest.customerId
-                );
+
+            if (customerId) {
+
+                const customerSites =
+                    await loadSites(
+                        customerId
+                    );
+
+
+                if (
+                    selectedRequest.siteId
+                ) {
+
+                    const matchingSite =
+                        customerSites.find(
+                            site =>
+                                String(
+                                    site.id
+                                ) ===
+                                String(
+                                    selectedRequest.siteId
+                                )
+                        );
+
+
+                    if (matchingSite) {
+
+                        setForm(
+                            previous => ({
+
+                                ...previous,
+
+                                siteId:
+                                    matchingSite.id
+
+                            })
+                        );
+
+                    }
+
+                }
+
+            } else {
+
+                setSites([]);
 
             }
 
@@ -532,7 +1026,9 @@ function WorkOrders() {
     // HANDLE NORMAL INPUT
     // =====================================================
 
-    const handleChange = (event) => {
+    const handleChange = (
+        event
+    ) => {
 
         const {
             name,
@@ -540,12 +1036,325 @@ function WorkOrders() {
         } = event.target;
 
 
-        setForm(previous => ({
+        setForm(
+            previous => ({
 
-            ...previous,
-            [name]: value
+                ...previous,
 
-        }));
+                [name]:
+                    value
+
+            })
+        );
+
+    };
+
+
+    // =====================================================
+    // HANDLE SITE SELECT
+    // =====================================================
+
+    const handleSiteChange = (
+        event
+    ) => {
+
+        const value =
+            event.target.value;
+
+
+        if (
+            value === "__NEW_SITE__"
+        ) {
+
+            setShowNewSiteForm(
+                true
+            );
+
+
+            setForm(
+                previous => ({
+
+                    ...previous,
+
+                    siteId: ""
+
+                })
+            );
+
+
+            setNewSite({
+
+                siteName: "",
+                contactPerson: "",
+                contactPhone: "",
+                address:
+                    form.serviceLocation || "",
+                city: "",
+                state: "",
+                zipCode: ""
+
+            });
+
+
+            return;
+
+        }
+
+
+        setShowNewSiteForm(
+            false
+        );
+
+
+        setForm(
+            previous => ({
+
+                ...previous,
+
+                siteId:
+                    value
+
+            })
+        );
+
+    };
+
+
+    // =====================================================
+    // HANDLE NEW SITE INPUT
+    // =====================================================
+
+    const handleNewSiteChange = (
+        event
+    ) => {
+
+        const {
+            name,
+            value
+        } = event.target;
+
+
+        setNewSite(
+            previous => ({
+
+                ...previous,
+
+                [name]:
+                    value
+
+            })
+        );
+
+    };
+
+
+    // =====================================================
+    // CREATE NEW SITE
+    // =====================================================
+
+    const handleCreateNewSite = async (
+        event
+    ) => {
+
+        event.preventDefault();
+
+
+        if (!form.customerId) {
+
+            alert(
+                "Please select a Service Request first."
+            );
+
+            return;
+
+        }
+
+
+        if (
+            !newSite.siteName.trim()
+        ) {
+
+            alert(
+                "Site name is required."
+            );
+
+            return;
+
+        }
+
+
+        setSavingSite(true);
+
+
+        try {
+
+            const sitePayload = {
+
+                siteName:
+                    newSite.siteName.trim(),
+
+                contactPerson:
+                    newSite.contactPerson.trim(),
+
+                contactPhone:
+                    newSite.contactPhone.trim(),
+
+                address:
+                    newSite.address.trim(),
+
+                city:
+                    newSite.city.trim(),
+
+                state:
+                    newSite.state.trim(),
+
+                zipCode:
+                    newSite.zipCode.trim()
+
+            };
+
+
+            console.log(
+                "🏢 Creating New Site:",
+                {
+                    customerId:
+                        form.customerId,
+                    site:
+                        sitePayload
+                }
+            );
+
+
+            const createdSite =
+                await createSite(
+                    Number(
+                        form.customerId
+                    ),
+                    sitePayload
+                );
+
+
+            console.log(
+                "🏢 Created Site:",
+                createdSite
+            );
+
+
+            if (!createdSite?.id) {
+
+                throw new Error(
+                    "Site was created but no site ID was returned."
+                );
+
+            }
+
+
+            const siteDisplayName =
+                createdSite.siteName ||
+                createdSite.name ||
+                createdSite.address ||
+                `Site ${createdSite.id}`;
+
+
+            setSites(
+                previous => [
+
+                    ...previous,
+                    createdSite
+
+                ]
+            );
+
+
+            setSiteNames(
+                previous => ({
+
+                    ...previous,
+
+                    [createdSite.id]:
+                        siteDisplayName
+
+                })
+            );
+
+
+            setForm(
+                previous => ({
+
+                    ...previous,
+
+                    siteId:
+                        createdSite.id
+
+                })
+            );
+
+
+            setShowNewSiteForm(
+                false
+            );
+
+
+            alert(
+                "New site created successfully! 🏢"
+            );
+
+
+        } catch (error) {
+
+            console.error(
+                "Failed to create new site:",
+                error
+            );
+
+
+            alert(
+                "Failed to create new site.\n\n" +
+                error.message
+            );
+
+        } finally {
+
+            setSavingSite(false);
+
+        }
+
+    };
+
+
+    // =====================================================
+    // CANCEL NEW SITE
+    // =====================================================
+
+    const handleCancelNewSite = () => {
+
+        setShowNewSiteForm(
+            false
+        );
+
+
+        setNewSite({
+
+            siteName: "",
+            contactPerson: "",
+            contactPhone: "",
+            address: "",
+            city: "",
+            state: "",
+            zipCode: ""
+
+        });
+
+
+        setForm(
+            previous => ({
+
+                ...previous,
+
+                siteId: ""
+
+            })
+        );
 
     };
 
@@ -562,7 +1371,6 @@ function WorkOrders() {
             technicianId: "",
             customerId: "",
             siteId: "",
-            orderNumber: "",
             title: "",
             priority: "MEDIUM",
             description: "",
@@ -574,7 +1382,25 @@ function WorkOrders() {
 
         });
 
+
         setSites([]);
+
+        setShowNewSiteForm(
+            false
+        );
+
+
+        setNewSite({
+
+            siteName: "",
+            contactPerson: "",
+            contactPhone: "",
+            address: "",
+            city: "",
+            state: "",
+            zipCode: ""
+
+        });
 
     };
 
@@ -583,7 +1409,9 @@ function WorkOrders() {
     // CREATE WORK ORDER
     // =====================================================
 
-    const handleSubmit = async (event) => {
+    const handleSubmit = async (
+        event
+    ) => {
 
         event.preventDefault();
 
@@ -624,7 +1452,7 @@ function WorkOrders() {
         if (!form.siteId) {
 
             alert(
-                "Please select a site."
+                "Please select an existing site or create a new site."
             );
 
             return;
@@ -640,21 +1468,26 @@ function WorkOrders() {
             const workOrder = {
 
                 serviceRequestId:
-                    Number(form.serviceRequestId),
+                    Number(
+                        form.serviceRequestId
+                    ),
 
                 technicianId:
                     form.technicianId
-                        ? Number(form.technicianId)
+                        ? Number(
+                            form.technicianId
+                        )
                         : null,
 
                 customerId:
-                    Number(form.customerId),
+                    Number(
+                        form.customerId
+                    ),
 
                 siteId:
-                    Number(form.siteId),
-
-                orderNumber:
-                    form.orderNumber,
+                    Number(
+                        form.siteId
+                    ),
 
                 title:
                     form.title,
@@ -680,7 +1513,9 @@ function WorkOrders() {
 
                 totalCost:
                     form.totalCost
-                        ? Number(form.totalCost)
+                        ? Number(
+                            form.totalCost
+                        )
                         : 0
 
             };
@@ -731,7 +1566,7 @@ function WorkOrders() {
 
 
     // =====================================================
-    // ASSIGN TECHNICIAN
+    // ASSIGN / REASSIGN TECHNICIAN
     // =====================================================
 
     const handleAssignTechnician = async (
@@ -750,7 +1585,9 @@ function WorkOrders() {
 
 
         const technicianId =
-            selectedTechnicians[workOrderId];
+            selectedTechnicians[
+                workOrderId
+            ];
 
 
         if (!technicianId) {
@@ -764,7 +1601,9 @@ function WorkOrders() {
         }
 
 
-        setAssigningId(workOrderId);
+        setAssigningId(
+            workOrderId
+        );
 
 
         try {
@@ -780,7 +1619,9 @@ function WorkOrders() {
 
             await assignTechnician(
                 workOrderId,
-                Number(technicianId)
+                Number(
+                    technicianId
+                )
             );
 
 
@@ -797,7 +1638,10 @@ function WorkOrders() {
 
                     ...previous,
 
-                    [workOrderId]: ""
+                    [workOrderId]:
+                        String(
+                            technicianId
+                        )
 
                 })
             );
@@ -818,7 +1662,9 @@ function WorkOrders() {
 
         } finally {
 
-            setAssigningId(null);
+            setAssigningId(
+                null
+            );
 
         }
 
@@ -843,8 +1689,12 @@ function WorkOrders() {
         const technician =
             technicians.find(
                 item =>
-                    String(item.id) ===
-                    String(technicianId)
+                    String(
+                        item.id
+                    ) ===
+                    String(
+                        technicianId
+                    )
             );
 
 
@@ -866,12 +1716,130 @@ function WorkOrders() {
 
 
     // =====================================================
+    // SITE NAME
+    // =====================================================
+
+    const getSiteName = (
+        order
+    ) => {
+
+        if (!order?.siteId) {
+
+            return "No site";
+
+        }
+
+
+        if (
+            siteNames[
+                order.siteId
+            ]
+        ) {
+
+            return siteNames[
+                order.siteId
+            ];
+
+        }
+
+
+        if (
+            order.site?.siteName
+        ) {
+
+            return order.site.siteName;
+
+        }
+
+
+        if (
+            order.site?.name
+        ) {
+
+            return order.site.name;
+
+        }
+
+
+        return `Site ${order.siteId}`;
+
+    };
+
+
+    // =====================================================
+    // INVENTORY PART
+    // =====================================================
+
+    const getInventoryPart = (
+        partId
+    ) => {
+
+        return inventoryParts.find(
+            part =>
+                Number(
+                    part.id
+                ) ===
+                Number(
+                    partId
+                )
+        );
+
+    };
+
+
+    // =====================================================
+    // PARTS FOR WORK ORDER
+    // =====================================================
+
+    const getPartsForWorkOrder = (
+        workOrderId
+    ) => {
+
+        return (
+            partUsages[
+                workOrderId
+            ] || []
+        );
+
+    };
+
+
+    // =====================================================
+    // PARTS TOTAL
+    // =====================================================
+
+    const getPartsTotal = (
+        workOrderId
+    ) => {
+
+        return getPartsForWorkOrder(
+            workOrderId
+        ).reduce(
+            (
+                total,
+                usage
+            ) =>
+                total +
+                Number(
+                    usage.totalCost || 0
+                ),
+            0
+        );
+
+    };
+
+
+    // =====================================================
     // STATUS CLASS
     // =====================================================
 
-    const statusClass = (status) => {
+    const statusClass = (
+        status
+    ) => {
 
-        switch (status) {
+        switch (
+            status
+        ) {
 
             case "COMPLETED":
                 return "status-completed";
@@ -897,9 +1865,13 @@ function WorkOrders() {
     // PRIORITY CLASS
     // =====================================================
 
-    const priorityClass = (priority) => {
+    const priorityClass = (
+        priority
+    ) => {
 
-        switch (priority) {
+        switch (
+            priority
+        ) {
 
             case "URGENT":
                 return "priority-urgent";
@@ -922,7 +1894,9 @@ function WorkOrders() {
     // FORMAT DATE
     // =====================================================
 
-    const formatDate = (date) => {
+    const formatDate = (
+        date
+    ) => {
 
         if (!date) {
 
@@ -955,19 +1929,25 @@ function WorkOrders() {
 
                 <div>
 
-                    <h1>
-                        Work Orders
-                    </h1>
+                    <div className="inventory-inspired-title-row">
+                        <div className="inventory-inspired-icon">▣</div>
+                        <div>
+                            <span className="inventory-inspired-eyebrow">OPERATIONS • FIELDSYNC</span>
+                            <h1>
+                                Work Orders
+                            </h1>
 
-                    <p>
+                            <p>
 
-                        {isTechnician
-                            ? "View work orders assigned to you"
-                            : isCustomer
-                                ? "View your work orders"
-                                : "Create and manage field service work orders"}
+                                {isTechnician
+                                    ? "View work orders assigned to you"
+                                    : isCustomer
+                                        ? "View your work orders"
+                                        : "Create and manage field service work orders"}
 
-                    </p>
+                            </p>
+                        </div>
+                    </div>
 
                 </div>
 
@@ -1001,7 +1981,9 @@ function WorkOrders() {
 
 
                     <form
-                        onSubmit={handleSubmit}
+                        onSubmit={
+                            handleSubmit
+                        }
                     >
 
                         <div className="form-grid">
@@ -1029,6 +2011,7 @@ function WorkOrders() {
                                     <option value="">
                                         Select Service Request
                                     </option>
+
 
                                     {serviceRequests.map(
                                         request => (
@@ -1082,6 +2065,10 @@ function WorkOrders() {
                                     readOnly
                                 />
 
+                                <span className="field-hint">
+                                    Automatically selected from the service request
+                                </span>
+
                             </div>
 
 
@@ -1090,7 +2077,7 @@ function WorkOrders() {
                             <div className="form-group">
 
                                 <label>
-                                    Site
+                                    Service Site
                                 </label>
 
                                 <select
@@ -1099,7 +2086,7 @@ function WorkOrders() {
                                         form.siteId
                                     }
                                     onChange={
-                                        handleChange
+                                        handleSiteChange
                                     }
                                     required
                                     disabled={
@@ -1108,8 +2095,15 @@ function WorkOrders() {
                                 >
 
                                     <option value="">
-                                        Select Site
+
+                                        {
+                                            form.customerId
+                                                ? "Select Existing Site"
+                                                : "Select Service Request First"
+                                        }
+
                                     </option>
+
 
                                     {sites.map(
                                         site => (
@@ -1126,6 +2120,7 @@ function WorkOrders() {
                                                 {
                                                     site.siteName ||
                                                     site.name ||
+                                                    site.address ||
                                                     `Site ${site.id}`
                                                 }
 
@@ -1134,9 +2129,272 @@ function WorkOrders() {
                                         )
                                     )}
 
+
+                                    {form.customerId && (
+
+                                        <option value="__NEW_SITE__">
+
+                                            ➕ Create New Site
+
+                                        </option>
+
+                                    )}
+
                                 </select>
 
+
+                                {form.customerId && (
+
+                                    <span className="field-hint">
+
+                                        Select an existing customer site or create a new one.
+
+                                    </span>
+
+                                )}
+
                             </div>
+
+
+                            {/* NEW SITE PANEL */}
+
+                            {showNewSiteForm && (
+
+                                <div className="new-site-panel full-width">
+
+                                    <div className="new-site-header">
+
+                                        <div>
+
+                                            <h3>
+                                                Create New Service Site
+                                            </h3>
+
+                                            <p>
+                                                This site will be linked to Customer {form.customerId}.
+                                            </p>
+
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            className="close-site-btn"
+                                            onClick={
+                                                handleCancelNewSite
+                                            }
+                                        >
+                                            ×
+                                        </button>
+
+                                    </div>
+
+
+                                    <div className="new-site-grid">
+
+
+                                        {/* SITE NAME */}
+
+                                        <div className="form-group">
+
+                                            <label>
+                                                Site Name *
+                                            </label>
+
+                                            <input
+                                                type="text"
+                                                name="siteName"
+                                                value={
+                                                    newSite.siteName
+                                                }
+                                                onChange={
+                                                    handleNewSiteChange
+                                                }
+                                                placeholder="Hyderabad Main Office"
+                                                maxLength="255"
+                                                required
+                                            />
+
+                                        </div>
+
+
+                                        {/* CONTACT PERSON */}
+
+                                        <div className="form-group">
+
+                                            <label>
+                                                Contact Person
+                                            </label>
+
+                                            <input
+                                                type="text"
+                                                name="contactPerson"
+                                                value={
+                                                    newSite.contactPerson
+                                                }
+                                                onChange={
+                                                    handleNewSiteChange
+                                                }
+                                                placeholder="Site Contact Person"
+                                            />
+
+                                        </div>
+
+
+                                        {/* CONTACT PHONE */}
+
+                                        <div className="form-group">
+
+                                            <label>
+                                                Contact Phone
+                                            </label>
+
+                                            <input
+                                                type="text"
+                                                name="contactPhone"
+                                                value={
+                                                    newSite.contactPhone
+                                                }
+                                                onChange={
+                                                    handleNewSiteChange
+                                                }
+                                                placeholder="9876543210"
+                                            />
+
+                                        </div>
+
+
+                                        {/* ADDRESS */}
+
+                                        <div className="form-group">
+
+                                            <label>
+                                                Address
+                                            </label>
+
+                                            <input
+                                                type="text"
+                                                name="address"
+                                                value={
+                                                    newSite.address
+                                                }
+                                                onChange={
+                                                    handleNewSiteChange
+                                                }
+                                                placeholder="Hitech City, Hyderabad"
+                                            />
+
+                                        </div>
+
+
+                                        {/* CITY */}
+
+                                        <div className="form-group">
+
+                                            <label>
+                                                City
+                                            </label>
+
+                                            <input
+                                                type="text"
+                                                name="city"
+                                                value={
+                                                    newSite.city
+                                                }
+                                                onChange={
+                                                    handleNewSiteChange
+                                                }
+                                                placeholder="Hyderabad"
+                                            />
+
+                                        </div>
+
+
+                                        {/* STATE */}
+
+                                        <div className="form-group">
+
+                                            <label>
+                                                State
+                                            </label>
+
+                                            <input
+                                                type="text"
+                                                name="state"
+                                                value={
+                                                    newSite.state
+                                                }
+                                                onChange={
+                                                    handleNewSiteChange
+                                                }
+                                                placeholder="Telangana"
+                                            />
+
+                                        </div>
+
+
+                                        {/* ZIP CODE */}
+
+                                        <div className="form-group">
+
+                                            <label>
+                                                ZIP Code
+                                            </label>
+
+                                            <input
+                                                type="text"
+                                                name="zipCode"
+                                                value={
+                                                    newSite.zipCode
+                                                }
+                                                onChange={
+                                                    handleNewSiteChange
+                                                }
+                                                placeholder="500081"
+                                            />
+
+                                        </div>
+
+                                    </div>
+
+
+                                    <div className="new-site-actions">
+
+                                        <button
+                                            type="button"
+                                            className="cancel-site-btn"
+                                            onClick={
+                                                handleCancelNewSite
+                                            }
+                                            disabled={
+                                                savingSite
+                                            }
+                                        >
+                                            Cancel
+                                        </button>
+
+
+                                        <button
+                                            type="button"
+                                            className="save-site-btn"
+                                            onClick={
+                                                handleCreateNewSite
+                                            }
+                                            disabled={
+                                                savingSite
+                                            }
+                                        >
+
+                                            {savingSite
+                                                ? "Saving Site..."
+                                                : "✓ Save Site & Continue"}
+
+                                        </button>
+
+                                    </div>
+
+                                </div>
+
+                            )}
 
 
                             {/* TECHNICIAN */}
@@ -1160,6 +2418,7 @@ function WorkOrders() {
                                     <option value="">
                                         Unassigned
                                     </option>
+
 
                                     {technicians.map(
                                         technician => (
@@ -1186,29 +2445,6 @@ function WorkOrders() {
                                     )}
 
                                 </select>
-
-                            </div>
-
-
-                            {/* ORDER NUMBER */}
-
-                            <div className="form-group">
-
-                                <label>
-                                    Order Number
-                                </label>
-
-                                <input
-                                    name="orderNumber"
-                                    placeholder="WO-1004"
-                                    value={
-                                        form.orderNumber
-                                    }
-                                    onChange={
-                                        handleChange
-                                    }
-                                    required
-                                />
 
                             </div>
 
@@ -1414,7 +2650,9 @@ function WorkOrders() {
                                 type="submit"
                                 className="add-work-order-btn"
                                 disabled={
-                                    saving
+                                    saving ||
+                                    savingSite ||
+                                    showNewSiteForm
                                 }
                             >
 
@@ -1442,11 +2680,13 @@ function WorkOrders() {
                     <div>
 
                         <h2>
+
                             {isTechnician
                                 ? "My Assigned Work Orders"
                                 : isCustomer
                                     ? "My Work Orders"
                                     : "Work Orders"}
+
                         </h2>
 
                         <p>
@@ -1499,7 +2739,26 @@ function WorkOrders() {
 
                                 const isAssigned =
                                     Boolean(
-                                        order.technicianId
+                                        order.technicianId ||
+                                        order.technician?.id
+                                    );
+
+
+                                const currentTechnicianId =
+                                    order.technicianId ??
+                                    order.technician?.id ??
+                                    "";
+
+
+                                const orderParts =
+                                    getPartsForWorkOrder(
+                                        order.id
+                                    );
+
+
+                                const partsTotal =
+                                    getPartsTotal(
+                                        order.id
                                     );
 
 
@@ -1580,15 +2839,23 @@ function WorkOrders() {
                                             </p>
 
 
-                                            <p>
+                                            <p className="site-detail">
 
                                                 <strong>
                                                     Site:
                                                 </strong>{" "}
 
-                                                {
-                                                    order.siteId
-                                                }
+                                                <span className="site-name-display">
+
+                                                    🏢{" "}
+
+                                                    {
+                                                        getSiteName(
+                                                            order
+                                                        )
+                                                    }
+
+                                                </span>
 
                                             </p>
 
@@ -1601,7 +2868,7 @@ function WorkOrders() {
 
                                                 {
                                                     getTechnicianName(
-                                                        order.technicianId
+                                                        currentTechnicianId
                                                     )
                                                 }
 
@@ -1676,7 +2943,171 @@ function WorkOrders() {
                                             )}
 
 
-                                            {/* ASSIGN TECHNICIAN */}
+                                            {/* =================================================
+                                                PARTS USED
+                                            ================================================= */}
+
+                                            <div className="work-order-parts-section">
+
+                                                <div className="work-order-parts-header">
+
+                                                    <strong>
+                                                        🔧 Parts Used
+                                                    </strong>
+
+
+                                                    <span>
+                                                        {
+                                                            orderParts.length
+                                                        }
+                                                    </span>
+
+                                                </div>
+
+
+                                                {orderParts.length === 0 ? (
+
+                                                    <div className="work-order-no-parts">
+
+                                                        No parts recorded for this work order.
+
+                                                    </div>
+
+                                                ) : (
+
+                                                    <div className="work-order-parts-list">
+
+                                                        {orderParts.map(
+                                                            usage => {
+
+                                                                const part =
+                                                                    getInventoryPart(
+                                                                        usage.inventoryPartId
+                                                                    );
+
+
+                                                                return (
+
+                                                                    <div
+                                                                        className="work-order-part-row"
+                                                                        key={
+                                                                            usage.id
+                                                                        }
+                                                                    >
+
+                                                                        <div className="work-order-part-info">
+
+                                                                            <strong>
+
+                                                                                {
+                                                                                    part?.partName ||
+                                                                                    `Part #${usage.inventoryPartId}`
+                                                                                }
+
+                                                                            </strong>
+
+
+                                                                            <span>
+
+                                                                                {
+                                                                                    part?.partNumber ||
+                                                                                    "Inventory Part"
+                                                                                }
+
+                                                                            </span>
+
+                                                                        </div>
+
+
+                                                                        <div className="work-order-part-value">
+
+                                                                            <small>
+                                                                                QTY
+                                                                            </small>
+
+
+                                                                            <strong>
+                                                                                {
+                                                                                    usage.quantityUsed
+                                                                                }
+                                                                            </strong>
+
+                                                                        </div>
+
+
+                                                                        <div className="work-order-part-value">
+
+                                                                            <small>
+                                                                                UNIT PRICE
+                                                                            </small>
+
+
+                                                                            <strong>
+                                                                                ₹
+                                                                                {
+                                                                                    Number(
+                                                                                        usage.unitPrice || 0
+                                                                                    ).toFixed(2)
+                                                                                }
+                                                                            </strong>
+
+                                                                        </div>
+
+
+                                                                        <div className="work-order-part-value">
+
+                                                                            <small>
+                                                                                TOTAL
+                                                                            </small>
+
+
+                                                                            <strong>
+                                                                                ₹
+                                                                                {
+                                                                                    Number(
+                                                                                        usage.totalCost || 0
+                                                                                    ).toFixed(2)
+                                                                                }
+                                                                            </strong>
+
+                                                                        </div>
+
+                                                                    </div>
+
+                                                                );
+
+                                                            }
+                                                        )}
+
+
+                                                        <div className="work-order-parts-total">
+
+                                                            <span>
+                                                                Total Parts Cost
+                                                            </span>
+
+
+                                                            <strong>
+                                                                ₹
+                                                                {
+                                                                    partsTotal.toFixed(
+                                                                        2
+                                                                    )
+                                                                }
+                                                            </strong>
+
+                                                        </div>
+
+                                                    </div>
+
+                                                )}
+
+                                            </div>
+
+
+                                            {/* =================================================
+                                                ASSIGN / REASSIGN TECHNICIAN
+                                            ================================================= */}
 
                                             {canManageWorkOrders && (
 
@@ -1697,7 +3128,14 @@ function WorkOrders() {
                                                             value={
                                                                 selectedTechnicians[
                                                                     order.id
-                                                                ] || ""
+                                                                ] ??
+                                                                (
+                                                                    currentTechnicianId
+                                                                        ? String(
+                                                                            currentTechnicianId
+                                                                        )
+                                                                        : ""
+                                                                )
                                                             }
                                                             onChange={
                                                                 event =>
@@ -1719,7 +3157,9 @@ function WorkOrders() {
                                                         >
 
                                                             <option value="">
+
                                                                 Select Technician
+
                                                             </option>
 
 
@@ -1806,4 +3246,3 @@ function WorkOrders() {
 
 
 export default WorkOrders;
-

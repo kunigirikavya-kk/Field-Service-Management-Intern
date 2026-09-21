@@ -38,7 +38,7 @@
         radial-gradient(circle at 8% 12%, rgba(211, 155, 56, 0.09), transparent 23%),
         radial-gradient(circle at 92% 30%, rgba(196, 91, 60, 0.08), transparent 25%),
         var(--reports-cream);
-    font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+    font-family: inherit;
 }
 
 /* Header */

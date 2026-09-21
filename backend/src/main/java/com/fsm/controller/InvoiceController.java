@@ -2,6 +2,8 @@ package com.fsm.controller;
 
 import com.fsm.entity.Invoice;
 import com.fsm.service.InvoiceService;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,28 +16,27 @@ public class InvoiceController {
 
     private final InvoiceService invoiceService;
 
-
     public InvoiceController(
             InvoiceService invoiceService) {
 
         this.invoiceService = invoiceService;
     }
 
-
-    // -----------------------------------------
+    // =========================================================
     // GET ALL
-    // -----------------------------------------
+    // =========================================================
 
     @GetMapping
-    public List<Invoice> getAllInvoices() {
+    public ResponseEntity<List<Invoice>> getAllInvoices() {
 
-        return invoiceService.getAllInvoices();
+        return ResponseEntity.ok(
+                invoiceService.getAllInvoices()
+        );
     }
 
-
-    // -----------------------------------------
+    // =========================================================
     // GET BY ID
-    // -----------------------------------------
+    // =========================================================
 
     @GetMapping("/{id}")
     public ResponseEntity<Invoice> getInvoiceById(
@@ -46,24 +47,24 @@ public class InvoiceController {
         );
     }
 
-
-    // -----------------------------------------
+    // =========================================================
     // CREATE
-    // -----------------------------------------
+    // =========================================================
 
     @PostMapping
     public ResponseEntity<Invoice> createInvoice(
             @RequestBody Invoice invoice) {
 
-        return ResponseEntity.ok(
-                invoiceService.createInvoice(invoice)
-        );
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(
+                        invoiceService.createInvoice(invoice)
+                );
     }
 
-
-    // -----------------------------------------
+    // =========================================================
     // UPDATE
-    // -----------------------------------------
+    // =========================================================
 
     @PutMapping("/{id}")
     public ResponseEntity<Invoice> updateInvoice(
@@ -78,10 +79,9 @@ public class InvoiceController {
         );
     }
 
-
-    // -----------------------------------------
+    // =========================================================
     // MARK PAID
-    // -----------------------------------------
+    // =========================================================
 
     @PutMapping("/{id}/pay")
     public ResponseEntity<Invoice> markAsPaid(
@@ -92,10 +92,9 @@ public class InvoiceController {
         );
     }
 
-
-    // -----------------------------------------
+    // =========================================================
     // CANCEL
-    // -----------------------------------------
+    // =========================================================
 
     @PutMapping("/{id}/cancel")
     public ResponseEntity<Invoice> cancelInvoice(
@@ -106,10 +105,9 @@ public class InvoiceController {
         );
     }
 
-
-    // -----------------------------------------
+    // =========================================================
     // DELETE
-    // -----------------------------------------
+    // =========================================================
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteInvoice(
@@ -117,49 +115,53 @@ public class InvoiceController {
 
         invoiceService.deleteInvoice(id);
 
-        return ResponseEntity.noContent()
+        return ResponseEntity
+                .noContent()
                 .build();
     }
 
-
-    // -----------------------------------------
+    // =========================================================
     // CUSTOMER INVOICES
-    // -----------------------------------------
+    // =========================================================
 
     @GetMapping("/customer/{customerId}")
-    public List<Invoice> getByCustomer(
+    public ResponseEntity<List<Invoice>> getByCustomer(
             @PathVariable Long customerId) {
 
-        return invoiceService.getByCustomer(
-                customerId
+        return ResponseEntity.ok(
+                invoiceService.getByCustomer(
+                        customerId
+                )
         );
     }
 
-
-    // -----------------------------------------
+    // =========================================================
     // WORK ORDER INVOICES
-    // -----------------------------------------
+    // =========================================================
 
     @GetMapping("/work-order/{workOrderId}")
-    public List<Invoice> getByWorkOrder(
+    public ResponseEntity<List<Invoice>> getByWorkOrder(
             @PathVariable Long workOrderId) {
 
-        return invoiceService.getByWorkOrder(
-                workOrderId
+        return ResponseEntity.ok(
+                invoiceService.getByWorkOrder(
+                        workOrderId
+                )
         );
     }
 
-
-    // -----------------------------------------
+    // =========================================================
     // STATUS
-    // -----------------------------------------
+    // =========================================================
 
     @GetMapping("/status/{status}")
-    public List<Invoice> getByStatus(
+    public ResponseEntity<List<Invoice>> getByStatus(
             @PathVariable Invoice.Status status) {
 
-        return invoiceService.getByStatus(
-                status
+        return ResponseEntity.ok(
+                invoiceService.getByStatus(
+                        status
+                )
         );
     }
 }

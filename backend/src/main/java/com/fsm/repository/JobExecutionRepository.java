@@ -1,6 +1,7 @@
 package com.fsm.repository;
 
 import com.fsm.entity.JobExecution;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -11,11 +12,44 @@ import java.util.Optional;
 public interface JobExecutionRepository
         extends JpaRepository<JobExecution, Long> {
 
-    Optional<JobExecution> findByScheduleId(Long scheduleId);
+    // =====================================================
+    // FIND BY SCHEDULE
+    // =====================================================
 
-    List<JobExecution> findByTechnicianId(Long technicianId);
+    Optional<JobExecution> findByScheduleId(
+            Long scheduleId
+    );
 
-    List<JobExecution> findByWorkOrderId(Long workOrderId);
+    // =====================================================
+    // FIND BY TECHNICIAN
+    // =====================================================
 
-    List<JobExecution> findByStatus(JobExecution.Status status);
+    List<JobExecution> findByTechnicianId(
+            Long technicianId
+    );
+
+    // =====================================================
+    // FIND BY WORK ORDER
+    // =====================================================
+
+    List<JobExecution> findByWorkOrderId(
+            Long workOrderId
+    );
+
+    // =====================================================
+    // FIND BY STATUS
+    // =====================================================
+
+    List<JobExecution> findByStatus(
+            JobExecution.Status status
+    );
+
+    // =====================================================
+    // CHECK EXISTING EXECUTION FOR WORK ORDER
+    // =====================================================
+
+    boolean existsByWorkOrderIdAndStatus(
+            Long workOrderId,
+            JobExecution.Status status
+    );
 }

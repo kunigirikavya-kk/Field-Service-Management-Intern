@@ -112,13 +112,16 @@
 }
 
 .technician-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    width: 100%;
 }
 
 .technician-item {
-    display: flex;
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr);
+    align-items: start;
     gap: 18px;
     border: 1px solid #e5e7eb;
     border-radius: 12px;
@@ -144,6 +147,7 @@
 
 .technician-top {
     display: flex;
+    align-items: center;
     justify-content: space-between;
     gap: 15px;
     margin-bottom: 15px;
@@ -151,12 +155,24 @@
 
 .technician-top h3 {
     margin: 5px 0 0;
+    color: var(--text-primary, #20263d);
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.technician-identity {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    min-width: 0;
 }
 
 .employee-code {
     font-size: 12px;
-    font-weight: 700;
-    color: #6366f1;
+    font-weight: 600;
+    color: var(--text-secondary, #717687);
+    letter-spacing: .04em;
 }
 
 .status-badge {
@@ -184,8 +200,19 @@
 }
 
 .technician-info p {
-    margin: 9px 0;
-    color: #4b5563;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    width: 100%;
+    margin: 12px 0 0;
+    color: var(--text-secondary, #4b5563);
+    line-height: 1.5;
+}
+
+.technician-info p strong {
+    flex: 0 0 auto;
+    color: var(--text-primary, #374151);
+    font-weight: 700;
 }
 
 .loading,

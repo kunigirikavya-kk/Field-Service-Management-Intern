@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 
 import {
@@ -58,34 +57,75 @@ function Billing() {
 
             setLoading(true);
 
-            const [invoiceData, workOrderData] =
-                await Promise.all([
-                    getInvoices(),
-                    getWorkOrders()
-                ]);
+            // =================================================
+            // LOAD INVOICES INDEPENDENTLY
+            // =================================================
 
-            setInvoices(
-                Array.isArray(invoiceData)
-                    ? invoiceData
-                    : []
-            );
+            try {
 
-            setWorkOrders(
-                Array.isArray(workOrderData)
-                    ? workOrderData
-                    : []
-            );
+                const invoiceData = await getInvoices();
+
+                setInvoices(
+                    Array.isArray(invoiceData)
+                        ? invoiceData
+                        : []
+                );
+
+            } catch (error) {
+
+                console.error(
+                    "Failed to load invoices:",
+                    error
+                );
+
+                setInvoices([]);
+
+                showToast(
+                    "error",
+                    "Unable to load invoices. Please try again."
+                );
+            }
+
+
+            // =================================================
+            // LOAD WORK ORDERS INDEPENDENTLY
+            // =================================================
+
+            try {
+
+                const workOrderData = await getWorkOrders();
+
+                console.log(
+                    "BILLING WORK ORDERS:",
+                    workOrderData
+                );
+
+                setWorkOrders(
+                    Array.isArray(workOrderData)
+                        ? workOrderData
+                        : []
+                );
+
+            } catch (error) {
+
+                console.error(
+                    "Failed to load work orders:",
+                    error
+                );
+
+                setWorkOrders([]);
+
+                showToast(
+                    "warning",
+                    "Work orders could not be loaded. Invoice ledger is still available."
+                );
+            }
 
         } catch (error) {
 
             console.error(
                 "Failed to load billing data:",
                 error
-            );
-
-            showToast(
-                "error",
-                "Unable to load billing data. Please try again."
             );
 
         } finally {
@@ -164,6 +204,26 @@ function Billing() {
                     ? String(selectedWorkOrder.totalCost)
                     : ""
         }));
+    }
+
+
+    // =====================================================
+    // GET WORK ORDER NUMBER
+    // =====================================================
+
+    function getWorkOrderNumber(workOrderId) {
+
+        const workOrder =
+            workOrders.find(
+                wo =>
+                    Number(wo.id) ===
+                    Number(workOrderId)
+            );
+
+        return (
+            workOrder?.orderNumber ||
+            `WO-${String(workOrderId).padStart(4, "0")}`
+        );
     }
 
 
@@ -258,14 +318,14 @@ function Billing() {
 
             await createInvoice(invoice);
 
-clearForm();
+            clearForm();
 
-await loadBillingData();
+            await loadBillingData();
 
-showToast(
-    "success",
-    "Invoice created successfully."
-);
+            showToast(
+                "success",
+                "Invoice created successfully."
+            );
 
         } catch (error) {
 
@@ -1289,12 +1349,8 @@ showToast(
 
                                                 <span className="work-order-chip">
 
-                                                    WO-
-                                                    {String(
+                                                    {getWorkOrderNumber(
                                                         invoice.workOrderId
-                                                    ).padStart(
-                                                        4,
-                                                        "0"
                                                     )}
 
                                                 </span>
@@ -1623,13 +1679,11 @@ showToast(
                                     </span>
 
                                     <strong>
-                                        WO-
-                                        {String(
-                                            selectedInvoice.workOrderId
-                                        ).padStart(
-                                            4,
-                                            "0"
-                                        )}
+                                        {
+                                            getWorkOrderNumber(
+                                                selectedInvoice.workOrderId
+                                            )
+                                        }
                                     </strong>
 
                                 </div>
@@ -1820,4 +1874,3 @@ showToast(
 
 
 export default Billing;
-

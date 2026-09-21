@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ChartNoAxesCombined, FileText, Package, Receipt } from "lucide-react";
 
 import {
     getWorkOrders,
@@ -63,37 +64,85 @@ function Reports() {
             }
 
 
-            const [
-                workOrderData,
-                invoiceData,
-                inventoryData
-            ] = await Promise.all([
-                getWorkOrders(),
-                getInvoices(),
-                getInventoryParts()
-            ]);
+            // =====================================================
+            // LOAD WORK ORDERS
+            // =====================================================
+
+            try {
+
+                const workOrderData =
+                    await getWorkOrders();
+
+                setWorkOrders(
+                    Array.isArray(workOrderData)
+                        ? workOrderData
+                        : []
+                );
+
+            } catch (error) {
+
+                console.error(
+                    "Failed to load work orders for reports:",
+                    error
+                );
+
+                setWorkOrders([]);
+
+            }
 
 
-            setWorkOrders(
-                Array.isArray(workOrderData)
-                    ? workOrderData
-                    : []
-            );
+            // =====================================================
+            // LOAD INVOICES
+            // =====================================================
+
+            try {
+
+                const invoiceData =
+                    await getInvoices();
+
+                setInvoices(
+                    Array.isArray(invoiceData)
+                        ? invoiceData
+                        : []
+                );
+
+            } catch (error) {
+
+                console.error(
+                    "Failed to load invoices for reports:",
+                    error
+                );
+
+                setInvoices([]);
+
+            }
 
 
-            setInvoices(
-                Array.isArray(invoiceData)
-                    ? invoiceData
-                    : []
-            );
+            // =====================================================
+            // LOAD INVENTORY
+            // =====================================================
 
+            try {
 
-            setInventory(
-                Array.isArray(inventoryData)
-                    ? inventoryData
-                    : []
-            );
+                const inventoryData =
+                    await getInventoryParts();
 
+                setInventory(
+                    Array.isArray(inventoryData)
+                        ? inventoryData
+                        : []
+                );
+
+            } catch (error) {
+
+                console.error(
+                    "Failed to load inventory for reports:",
+                    error
+                );
+
+                setInventory([]);
+
+            }
 
         } catch (error) {
 
@@ -380,8 +429,18 @@ function Reports() {
         invoices.length;
 
 
+    // Cancelled invoices are excluded from active
+    // financial calculations.
+
+    const activeInvoices =
+        invoices.filter(invoice =>
+            normalizeStatus(invoice.status) !==
+            "CANCELLED"
+        );
+
+
     const totalInvoiceValue =
-        invoices.reduce(
+        activeInvoices.reduce(
             (sum, invoice) =>
                 sum +
                 (
@@ -739,7 +798,7 @@ function Reports() {
                     <div className="reports-title-row">
 
                         <div className="reports-title-icon">
-                            📊
+                            <ChartNoAxesCombined size={25} strokeWidth={1.8} aria-hidden />
                         </div>
 
                         <div>
@@ -975,7 +1034,7 @@ function Reports() {
                 <div className="kpi-card">
 
                     <div className="kpi-icon orange">
-                        🧾
+                        <Receipt size={18} strokeWidth={1.8} aria-hidden />
                     </div>
 
                     <div>
@@ -1017,7 +1076,7 @@ function Reports() {
                 <div className="kpi-card">
 
                     <div className="kpi-icon blue">
-                        📦
+                        <Package size={18} strokeWidth={1.8} aria-hidden />
                     </div>
 
                     <div>
@@ -1365,7 +1424,7 @@ function Reports() {
                         </div>
 
                         <span className="inventory-chart-icon">
-                            📦
+                            <Package size={18} strokeWidth={1.8} aria-hidden />
                         </span>
 
                     </div>
@@ -1830,7 +1889,7 @@ function Reports() {
                     <div className="reports-empty">
 
                         <span>
-                            🧾
+                            <FileText size={18} strokeWidth={1.8} aria-hidden />
                         </span>
 
                         <p>
@@ -2341,7 +2400,7 @@ function Reports() {
                 <div>
 
                     <span>
-                        📊
+                        <ChartNoAxesCombined size={18} strokeWidth={1.8} aria-hidden />
                     </span>
 
                     <div>

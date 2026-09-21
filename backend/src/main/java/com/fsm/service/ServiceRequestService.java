@@ -7,7 +7,9 @@ import com.fsm.entity.Customer;
 import com.fsm.entity.ServiceRequest;
 import com.fsm.repository.CustomerRepository;
 import com.fsm.repository.ServiceRequestRepository;
+import com.fsm.security.AuthorizationService;
 
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -18,13 +20,16 @@ public class ServiceRequestService {
 
     private final ServiceRequestRepository serviceRequestRepository;
     private final CustomerRepository customerRepository;
+    private final AuthorizationService authorizationService;
 
     public ServiceRequestService(
             ServiceRequestRepository serviceRequestRepository,
-            CustomerRepository customerRepository) {
+            CustomerRepository customerRepository,
+            AuthorizationService authorizationService) {
 
         this.serviceRequestRepository = serviceRequestRepository;
         this.customerRepository = customerRepository;
+        this.authorizationService = authorizationService;
     }
 
     // =====================================================
@@ -42,12 +47,48 @@ public class ServiceRequestService {
 
     public ServiceRequest getServiceRequestById(Long id) {
 
-        return serviceRequestRepository.findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "Service request not found with id: " + id
-                        )
+        ServiceRequest serviceRequest =
+                serviceRequestRepository
+                        .findById(id)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Service request not found with id: "
+                                                + id
+                                )
+                        );
+
+        /*
+         * =================================================
+         * CUSTOMER OWNERSHIP SECURITY
+         * =================================================
+         *
+         * Dispatcher and Manager can view any service
+         * request.
+         *
+         * Customer can view ONLY their own service
+         * requests.
+         *
+         * Technician cannot reach this method because
+         * SecurityConfig blocks the request.
+         */
+
+        if (authorizationService.hasRole("CUSTOMER")) {
+
+            Long loggedInCustomerId =
+                    authorizationService
+                            .getCurrentCustomerId();
+
+            if (!loggedInCustomerId.equals(
+                    serviceRequest.getCustomerId()
+            )) {
+
+                throw new AccessDeniedException(
+                        "Customers can view only their own service requests."
                 );
+            }
+        }
+
+        return serviceRequest;
     }
 
     // =====================================================
@@ -70,13 +111,26 @@ public class ServiceRequestService {
         }
 
         /*
-         * IMPORTANT:
+         * =================================================
+         * CUSTOMER OWNERSHIP SECURITY
+         * =================================================
          *
-         * service_requests.customer_id is a FOREIGN KEY
-         * referencing customers.id.
+         * CUSTOMER users are allowed to create service
+         * requests only for their own customer account.
          *
-         * Therefore, the final customerId used below must
-         * always be an actual customers.id.
+         * We must NEVER trust customerId supplied by the
+         * frontend because a user could manually change it.
+         *
+         * Example:
+         *
+         * Logged-in customer = 17
+         * Request customerId = 16
+         *
+         * Result:
+         * 403 Forbidden
+         *
+         * DISPATCHER and MANAGER are allowed to create
+         * requests for other customers.
          */
 
         Long requestedCustomerId =
@@ -91,16 +145,18 @@ public class ServiceRequestService {
 
         if (customer != null) {
 
-            // The supplied ID is already customers.id
+            /*
+             * The supplied ID is already customers.id.
+             */
             actualCustomerId = customer.getId();
 
         } else {
 
             /*
              * Sometimes the frontend may send users.id.
-             * In that case, find the customer using user_id.
+             * In that case, find the corresponding customer
+             * using user_id.
              */
-
             customer =
                     customerRepository
                             .findByUserId(requestedCustomerId)
@@ -115,6 +171,24 @@ public class ServiceRequestService {
                             );
 
             actualCustomerId = customer.getId();
+        }
+
+        // =================================================
+        // ENFORCE CUSTOMER OWNERSHIP
+        // =================================================
+
+        if (authorizationService.hasRole("CUSTOMER")) {
+
+            Long loggedInCustomerId =
+                    authorizationService.getCurrentCustomerId();
+
+            if (!loggedInCustomerId.equals(actualCustomerId)) {
+
+                throw new AccessDeniedException(
+                        "Customers can create service requests " +
+                        "only for their own customer account."
+                );
+            }
         }
 
         // =================================================

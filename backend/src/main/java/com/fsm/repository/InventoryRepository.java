@@ -11,4 +11,11 @@ public interface InventoryRepository
         extends JpaRepository<InventoryPart, Long> {
 
     Optional<InventoryPart> findByPartNumber(String partNumber);
+
+    boolean existsByPartNumber(String partNumber);
+
+    boolean existsByPartNumberAndIdNot(
+            String partNumber,
+            Long id
+    );
 }

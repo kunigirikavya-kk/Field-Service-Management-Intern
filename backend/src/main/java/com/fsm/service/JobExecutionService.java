@@ -1,13 +1,16 @@
 package com.fsm.service;
 
 import com.fsm.entity.JobExecution;
+import com.fsm.entity.Schedule;
 import com.fsm.entity.WorkOrder;
 import com.fsm.repository.JobExecutionRepository;
+import com.fsm.repository.ScheduleRepository;
 import com.fsm.repository.WorkOrderRepository;
 import com.fsm.security.AuthorizationService;
 
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -16,535 +19,908 @@ import java.util.Optional;
 @Service
 public class JobExecutionService {
 
+    private final JobExecutionRepository jobExecutionRepository;
+    private final WorkOrderRepository workOrderRepository;
+    private final ScheduleRepository scheduleRepository;
+    private final AuthorizationService authorizationService;
 
-private final JobExecutionRepository jobExecutionRepository;
-private final WorkOrderRepository workOrderRepository;
-private final AuthorizationService authorizationService;
+    public JobExecutionService(
+            JobExecutionRepository jobExecutionRepository,
+            WorkOrderRepository workOrderRepository,
+            ScheduleRepository scheduleRepository,
+            AuthorizationService authorizationService) {
 
-// =====================================================
-// CONSTRUCTOR
-// =====================================================
+        this.jobExecutionRepository = jobExecutionRepository;
+        this.workOrderRepository = workOrderRepository;
+        this.scheduleRepository = scheduleRepository;
+        this.authorizationService = authorizationService;
+    }
 
-public JobExecutionService(
-        JobExecutionRepository jobExecutionRepository,
-        WorkOrderRepository workOrderRepository,
-        AuthorizationService authorizationService) {
+    // =====================================================
+    // GET ALL EXECUTIONS
+    // =====================================================
 
-    this.jobExecutionRepository =
-            jobExecutionRepository;
+    public List<JobExecution> getAllExecutions() {
 
-    this.workOrderRepository =
-            workOrderRepository;
+        if (authorizationService.hasRole("TECHNICIAN")) {
 
-    this.authorizationService =
-            authorizationService;
-}
+            Long technicianId =
+                    authorizationService.getCurrentTechnicianId();
 
-// =====================================================
-// GET ALL EXECUTIONS
-// =====================================================
+            return jobExecutionRepository
+                    .findByTechnicianId(technicianId);
+        }
 
-public List<JobExecution> getAllExecutions() {
+        if (authorizationService.hasRole("DISPATCHER") ||
+            authorizationService.hasRole("MANAGER")) {
 
-    // Technician should only access their own jobs
-    if (authorizationService.hasRole("TECHNICIAN")) {
+            return jobExecutionRepository.findAll();
+        }
 
-        Long technicianId =
-                authorizationService
-                        .getCurrentTechnicianId();
+        throw new AccessDeniedException(
+                "You don't have permission to access job executions"
+        );
+    }
 
-        return jobExecutionRepository
-                .findByTechnicianId(
-                        technicianId
+    // =====================================================
+    // GET EXECUTION BY ID
+    // =====================================================
+
+    public Optional<JobExecution> getExecutionById(Long id) {
+
+        if (id == null) {
+            throw new RuntimeException(
+                    "Job execution ID is required"
+            );
+        }
+
+        JobExecution execution =
+                jobExecutionRepository.findById(id)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Job execution not found with id: "
+                                                + id
+                                )
+                        );
+
+        // -------------------------------------------------
+        // DISPATCHER / MANAGER
+        // -------------------------------------------------
+
+        if (authorizationService.hasRole("DISPATCHER") ||
+            authorizationService.hasRole("MANAGER")) {
+
+            return Optional.of(execution);
+        }
+
+        // -------------------------------------------------
+        // TECHNICIAN
+        // -------------------------------------------------
+
+        if (authorizationService.hasRole("TECHNICIAN")) {
+
+            if (authorizationService.isCurrentTechnician(
+                    execution.getTechnicianId())) {
+
+                return Optional.of(execution);
+            }
+
+            throw new AccessDeniedException(
+                    "You are not allowed to access another technician's job"
+            );
+        }
+
+        throw new AccessDeniedException(
+                "You don't have permission to access this job execution"
+        );
+    }
+
+    // =====================================================
+    // GET BY SCHEDULE
+    // =====================================================
+
+    public Optional<JobExecution> getByScheduleId(
+            Long scheduleId) {
+
+        if (scheduleId == null) {
+            throw new RuntimeException(
+                    "Schedule ID is required"
+            );
+        }
+
+        JobExecution execution =
+                jobExecutionRepository
+                        .findByScheduleId(scheduleId)
+                        .orElse(null);
+
+        if (execution == null) {
+            return Optional.empty();
+        }
+
+        if (authorizationService.hasRole("DISPATCHER") ||
+            authorizationService.hasRole("MANAGER")) {
+
+            return Optional.of(execution);
+        }
+
+        if (authorizationService.hasRole("TECHNICIAN")) {
+
+            if (authorizationService.isCurrentTechnician(
+                    execution.getTechnicianId())) {
+
+                return Optional.of(execution);
+            }
+
+            throw new AccessDeniedException(
+                    "You are not allowed to access another technician's job"
+            );
+        }
+
+        throw new AccessDeniedException(
+                "You don't have permission to access this job execution"
+        );
+    }
+
+    // =====================================================
+    // START JOB
+    // =====================================================
+
+    @Transactional
+    public JobExecution startJob(
+            JobExecution execution) {
+
+        // -------------------------------------------------
+        // REQUIRED FIELDS
+        // -------------------------------------------------
+
+        if (execution.getScheduleId() == null) {
+
+            throw new RuntimeException(
+                    "Schedule ID is required"
+            );
+        }
+
+        if (execution.getWorkOrderId() == null) {
+
+            throw new RuntimeException(
+                    "Work Order ID is required"
+            );
+        }
+
+        if (execution.getTechnicianId() == null) {
+
+            throw new RuntimeException(
+                    "Technician ID is required"
+            );
+        }
+
+        // -------------------------------------------------
+        // TECHNICIAN AUTHORIZATION
+        // -------------------------------------------------
+
+        if (authorizationService.hasRole("TECHNICIAN")) {
+
+            if (!authorizationService.isCurrentTechnician(
+                    execution.getTechnicianId())) {
+
+                throw new AccessDeniedException(
+                        "You are not allowed to start a job for another technician"
                 );
-    }
-
-    // Manager can view all executions
-    if (authorizationService.hasRole("MANAGER")) {
-
-        return jobExecutionRepository.findAll();
-    }
-
-    throw new AccessDeniedException(
-            "You don't have permission to access job executions"
-    );
-}
-
-// =====================================================
-// GET BY ID
-// =====================================================
-
-public Optional<JobExecution> getExecutionById(
-        Long id) {
-
-    return jobExecutionRepository.findById(id);
-}
-
-// =====================================================
-// GET BY SCHEDULE
-// =====================================================
-
-public Optional<JobExecution> getByScheduleId(
-        Long scheduleId) {
-
-    return jobExecutionRepository
-            .findByScheduleId(scheduleId);
-}
-
-// =====================================================
-// START JOB
-// =====================================================
-
-public JobExecution startJob(
-        JobExecution execution) {
-
-    // -------------------------------------------------
-    // VALIDATE TECHNICIAN
-    // -------------------------------------------------
-
-    if (execution.getTechnicianId() == null) {
-
-        throw new RuntimeException(
-                "Technician ID is required"
-        );
-    }
-
-    // -------------------------------------------------
-    // TECHNICIAN OWNERSHIP
-    // -------------------------------------------------
-
-    if (
-            authorizationService.hasRole(
-                    "TECHNICIAN"
-            )
-    ) {
-
-        if (
-                !authorizationService
-                        .isCurrentTechnician(
-                                execution.getTechnicianId()
-                        )
-        ) {
-
-            throw new AccessDeniedException(
-                    "You are not allowed to start a job for another technician"
-            );
+            }
         }
-    }
 
-    // -------------------------------------------------
-    // WORK ORDER VALIDATION
-    // -------------------------------------------------
-
-    if (execution.getWorkOrderId() == null) {
-
-        throw new RuntimeException(
-                "Work Order ID is required"
-        );
-    }
-
-    WorkOrder workOrder =
-            workOrderRepository
-                    .findById(
-                            execution.getWorkOrderId()
-                    )
-                    .orElseThrow(
-                            () -> new RuntimeException(
-                                    "Work Order not found with id: "
-                                            + execution.getWorkOrderId()
-                            )
-                    );
-
-    // -------------------------------------------------
-    // SET JOB EXECUTION STATUS
-    // -------------------------------------------------
-
-    execution.setStatus(
-            JobExecution.Status.IN_PROGRESS
-    );
-
-    // -------------------------------------------------
-    // SET START TIME
-    // -------------------------------------------------
-
-    execution.setStartedAt(
-            LocalDateTime.now()
-    );
-
-    // -------------------------------------------------
-    // CLEAR COMPLETED TIME
-    // -------------------------------------------------
-
-    execution.setCompletedAt(null);
-
-    // -------------------------------------------------
-    // UPDATE WORK ORDER STATUS
-    // -------------------------------------------------
-
-    workOrder.setStatus(
-            WorkOrder.Status.IN_PROGRESS
-    );
-
-    workOrderRepository.save(
-            workOrder
-    );
-
-    // -------------------------------------------------
-    // SAVE JOB EXECUTION
-    // -------------------------------------------------
-
-    return jobExecutionRepository.save(
-            execution
-    );
-}
-
-// =====================================================
-// UPDATE JOB EXECUTION
-// =====================================================
-
-public JobExecution updateExecution(
-        Long id,
-        JobExecution updatedExecution) {
-
-    JobExecution existing =
-            jobExecutionRepository
-                    .findById(id)
-                    .orElseThrow(
-                            () -> new RuntimeException(
-                                    "Job execution not found with id: "
-                                            + id
-                            )
-                    );
-
-    // -------------------------------------------------
-    // TECHNICIAN OWNERSHIP
-    // -------------------------------------------------
-
-    if (
-            authorizationService.hasRole(
-                    "TECHNICIAN"
-            )
-    ) {
-
-        if (
-                !authorizationService
-                        .isCurrentTechnician(
-                                existing.getTechnicianId()
-                        )
-        ) {
-
-            throw new AccessDeniedException(
-                    "You are not allowed to update another technician's job"
-            );
-        }
-    }
-
-    // -------------------------------------------------
-    // UPDATE NOTES
-    // -------------------------------------------------
-
-    existing.setWorkNotes(
-            updatedExecution.getWorkNotes()
-    );
-
-    existing.setPartsUsed(
-            updatedExecution.getPartsUsed()
-    );
-
-    existing.setCompletionNotes(
-            updatedExecution.getCompletionNotes()
-    );
-
-    return jobExecutionRepository.save(
-            existing
-    );
-}
-
-// =====================================================
-// COMPLETE JOB
-// =====================================================
-
-public JobExecution completeJob(
-        Long id,
-        JobExecution updatedExecution) {
-
-    JobExecution existing =
-            jobExecutionRepository
-                    .findById(id)
-                    .orElseThrow(
-                            () -> new RuntimeException(
-                                    "Job execution not found with id: "
-                                            + id
-                            )
-                    );
-
-    // -------------------------------------------------
-    // TECHNICIAN OWNERSHIP
-    // -------------------------------------------------
-
-    if (
-            authorizationService.hasRole(
-                    "TECHNICIAN"
-            )
-    ) {
-
-        if (
-                !authorizationService
-                        .isCurrentTechnician(
-                                existing.getTechnicianId()
-                        )
-        ) {
-
-            throw new AccessDeniedException(
-                    "You are not allowed to complete another technician's job"
-            );
-        }
-    }
-
-    // -------------------------------------------------
-    // UPDATE JOB EXECUTION
-    // -------------------------------------------------
-
-    existing.setStatus(
-            JobExecution.Status.COMPLETED
-    );
-
-    existing.setCompletedAt(
-            LocalDateTime.now()
-    );
-
-    existing.setWorkNotes(
-            updatedExecution.getWorkNotes()
-    );
-
-    existing.setPartsUsed(
-            updatedExecution.getPartsUsed()
-    );
-
-    existing.setCompletionNotes(
-            updatedExecution.getCompletionNotes()
-    );
-
-    // -------------------------------------------------
-    // UPDATE WORK ORDER
-    // -------------------------------------------------
-
-    WorkOrder workOrder =
-            workOrderRepository
-                    .findById(
-                            existing.getWorkOrderId()
-                    )
-                    .orElseThrow(
-                            () -> new RuntimeException(
-                                    "Work Order not found with id: "
-                                            + existing.getWorkOrderId()
-                            )
-                    );
-
-    workOrder.setStatus(
-            WorkOrder.Status.COMPLETED
-    );
-
-    workOrder.setCompletedDate(
-            LocalDateTime.now()
-    );
-
-    workOrderRepository.save(
-            workOrder
-    );
-
-    // -------------------------------------------------
-    // SAVE JOB EXECUTION
-    // -------------------------------------------------
-
-    return jobExecutionRepository.save(
-            existing
-    );
-}
-
-// =====================================================
-// CANCEL JOB
-// =====================================================
-
-public JobExecution cancelJob(
-        Long id) {
-
-    JobExecution execution =
-            jobExecutionRepository
-                    .findById(id)
-                    .orElseThrow(
-                            () -> new RuntimeException(
-                                    "Job execution not found with id: "
-                                            + id
-                            )
-                    );
-
-    // -------------------------------------------------
-    // TECHNICIAN OWNERSHIP
-    // -------------------------------------------------
-
-    if (
-            authorizationService.hasRole(
-                    "TECHNICIAN"
-            )
-    ) {
-
-        if (
-                !authorizationService
-                        .isCurrentTechnician(
-                                execution.getTechnicianId()
-                        )
-        ) {
-
-            throw new AccessDeniedException(
-                    "You are not allowed to cancel another technician's job"
-            );
-        }
-    }
-
-    // -------------------------------------------------
-    // UPDATE JOB EXECUTION
-    // -------------------------------------------------
-
-    execution.setStatus(
-            JobExecution.Status.CANCELLED
-    );
-
-    // -------------------------------------------------
-    // UPDATE WORK ORDER
-    // -------------------------------------------------
-
-    WorkOrder workOrder =
-            workOrderRepository
-                    .findById(
-                            execution.getWorkOrderId()
-                    )
-                    .orElseThrow(
-                            () -> new RuntimeException(
-                                    "Work Order not found with id: "
-                                            + execution.getWorkOrderId()
-                            )
-                    );
-
-    workOrder.setStatus(
-            WorkOrder.Status.CANCELLED
-    );
-
-    workOrderRepository.save(
-            workOrder
-    );
-
-    // -------------------------------------------------
-    // SAVE JOB EXECUTION
-    // -------------------------------------------------
-
-    return jobExecutionRepository.save(
-            execution
-    );
-}
-
-// =====================================================
-// TECHNICIAN JOBS
-// =====================================================
-
-public List<JobExecution> getByTechnician(
-        Long technicianId) {
-
-    if (technicianId == null) {
-
-        throw new RuntimeException(
-                "Technician ID is required"
-        );
-    }
-
-    // -------------------------------------------------
-    // TECHNICIAN CAN ONLY SEE THEIR OWN JOBS
-    // -------------------------------------------------
-
-    if (
-            authorizationService.hasRole(
-                    "TECHNICIAN"
-            )
-    ) {
-
-        if (
-                !authorizationService
-                        .isCurrentTechnician(
-                                technicianId
-                        )
-        ) {
-
-            throw new AccessDeniedException(
-                    "You are not allowed to access another technician's job executions"
+        // -------------------------------------------------
+        // LOAD SCHEDULE
+        // -------------------------------------------------
+
+        Schedule schedule =
+                scheduleRepository
+                        .findById(execution.getScheduleId())
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Schedule not found with id: "
+                                                + execution.getScheduleId()
+                                )
+                        );
+
+        // -------------------------------------------------
+        // VERIFY SCHEDULE → WORK ORDER
+        // -------------------------------------------------
+
+        if (!schedule.getWorkOrderId()
+                .equals(execution.getWorkOrderId())) {
+
+            throw new RuntimeException(
+                    "Schedule does not belong to the specified work order"
             );
         }
 
-        return jobExecutionRepository
-                .findByTechnicianId(
-                        technicianId
+        // -------------------------------------------------
+        // VERIFY SCHEDULE → TECHNICIAN
+        // -------------------------------------------------
+
+        if (!schedule.getTechnicianId()
+                .equals(execution.getTechnicianId())) {
+
+            throw new RuntimeException(
+                    "Schedule is assigned to a different technician"
+            );
+        }
+
+        // -------------------------------------------------
+        // LOAD WORK ORDER
+        // -------------------------------------------------
+
+        WorkOrder workOrder =
+                workOrderRepository
+                        .findById(execution.getWorkOrderId())
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Work Order not found with id: "
+                                                + execution.getWorkOrderId()
+                                )
+                        );
+
+        // -------------------------------------------------
+        // VERIFY WORK ORDER → TECHNICIAN
+        // -------------------------------------------------
+
+        if (workOrder.getTechnicianId() == null ||
+            !workOrder.getTechnicianId()
+                    .equals(execution.getTechnicianId())) {
+
+            throw new RuntimeException(
+                    "Work order is assigned to a different technician"
+            );
+        }
+
+        // -------------------------------------------------
+        // WORK ORDER STATUS
+        // -------------------------------------------------
+
+        if (workOrder.getStatus() ==
+                WorkOrder.Status.COMPLETED) {
+
+            throw new RuntimeException(
+                    "Completed work orders cannot be started"
+            );
+        }
+
+        if (workOrder.getStatus() ==
+                WorkOrder.Status.CANCELLED) {
+
+            throw new RuntimeException(
+                    "Cancelled work orders cannot be started"
+            );
+        }
+
+        if (workOrder.getStatus() ==
+                WorkOrder.Status.IN_PROGRESS) {
+
+            throw new RuntimeException(
+                    "This work order is already in progress"
+            );
+        }
+
+        // -------------------------------------------------
+        // SCHEDULE STATUS
+        // -------------------------------------------------
+
+        if (schedule.getStatus() ==
+                Schedule.Status.COMPLETED) {
+
+            throw new RuntimeException(
+                    "Completed schedules cannot be started"
+            );
+        }
+
+        if (schedule.getStatus() ==
+                Schedule.Status.CANCELLED) {
+
+            throw new RuntimeException(
+                    "Cancelled schedules cannot be started"
+            );
+        }
+
+        if (schedule.getStatus() ==
+                Schedule.Status.IN_PROGRESS) {
+
+            throw new RuntimeException(
+                    "This schedule is already in progress"
+            );
+        }
+
+        // -------------------------------------------------
+        // PREVENT DUPLICATE EXECUTION
+        // -------------------------------------------------
+
+        if (jobExecutionRepository
+                .existsByWorkOrderIdAndStatus(
+                        execution.getWorkOrderId(),
+                        JobExecution.Status.IN_PROGRESS)) {
+
+            throw new RuntimeException(
+                    "This work order already has an active job execution"
+            );
+        }
+
+        // -------------------------------------------------
+        // PREVENT SECOND EXECUTION FOR SAME SCHEDULE
+        // -------------------------------------------------
+
+        Optional<JobExecution> existingExecution =
+                jobExecutionRepository
+                        .findByScheduleId(
+                                execution.getScheduleId()
+                        );
+
+        if (existingExecution.isPresent()) {
+
+            JobExecution.Status existingStatus =
+                    existingExecution.get().getStatus();
+
+            if (existingStatus ==
+                    JobExecution.Status.IN_PROGRESS) {
+
+                throw new RuntimeException(
+                        "This schedule already has an active job execution"
                 );
-    }
+            }
 
-    // -------------------------------------------------
-    // MANAGER
-    // -------------------------------------------------
+            if (existingStatus ==
+                    JobExecution.Status.COMPLETED) {
 
-    if (
-            authorizationService.hasRole(
-                    "MANAGER"
-            )
-    ) {
-
-        return jobExecutionRepository
-                .findByTechnicianId(
-                        technicianId
+                throw new RuntimeException(
+                        "This schedule has already been completed"
                 );
+            }
+
+            if (existingStatus ==
+                    JobExecution.Status.CANCELLED) {
+
+                throw new RuntimeException(
+                        "This schedule has already been cancelled"
+                );
+            }
+        }
+
+        // -------------------------------------------------
+        // START EXECUTION
+        // -------------------------------------------------
+
+        execution.setStatus(
+                JobExecution.Status.IN_PROGRESS
+        );
+
+        execution.setStartedAt(
+                LocalDateTime.now()
+        );
+
+        execution.setCompletedAt(null);
+
+        // -------------------------------------------------
+        // UPDATE SCHEDULE
+        // -------------------------------------------------
+
+        schedule.setStatus(
+                Schedule.Status.IN_PROGRESS
+        );
+
+        scheduleRepository.save(schedule);
+
+        // -------------------------------------------------
+        // UPDATE WORK ORDER
+        // -------------------------------------------------
+
+        workOrder.setStatus(
+                WorkOrder.Status.IN_PROGRESS
+        );
+
+        workOrderRepository.save(workOrder);
+
+        // -------------------------------------------------
+        // SAVE EXECUTION
+        // -------------------------------------------------
+
+        return jobExecutionRepository.save(execution);
     }
 
-    throw new AccessDeniedException(
-            "You don't have permission to access job executions"
-    );
-}
+    // =====================================================
+    // UPDATE EXECUTION
+    // =====================================================
 
-// =====================================================
-// WORK ORDER JOBS
-// =====================================================
+    public JobExecution updateExecution(
+            Long id,
+            JobExecution updatedExecution) {
 
-public List<JobExecution> getByWorkOrder(
-        Long workOrderId) {
+        JobExecution existing =
+                jobExecutionRepository
+                        .findById(id)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Job execution not found with id: "
+                                                + id
+                                )
+                        );
 
-    if (workOrderId == null) {
+        // -------------------------------------------------
+        // TECHNICIAN AUTHORIZATION
+        // -------------------------------------------------
 
-        throw new RuntimeException(
-                "Work Order ID is required"
+        if (authorizationService.hasRole("TECHNICIAN")) {
+
+            if (!authorizationService.isCurrentTechnician(
+                    existing.getTechnicianId())) {
+
+                throw new AccessDeniedException(
+                        "You are not allowed to update another technician's job"
+                );
+            }
+        }
+
+        // -------------------------------------------------
+        // ONLY ACTIVE EXECUTIONS CAN BE UPDATED
+        // -------------------------------------------------
+
+        if (existing.getStatus() ==
+                JobExecution.Status.COMPLETED) {
+
+            throw new RuntimeException(
+                    "Completed job executions cannot be edited"
+            );
+        }
+
+        if (existing.getStatus() ==
+                JobExecution.Status.CANCELLED) {
+
+            throw new RuntimeException(
+                    "Cancelled job executions cannot be edited"
+            );
+        }
+
+        // -------------------------------------------------
+        // UPDATE NOTES
+        // -------------------------------------------------
+
+        existing.setWorkNotes(
+                updatedExecution.getWorkNotes()
+        );
+
+        existing.setPartsUsed(
+                updatedExecution.getPartsUsed()
+        );
+
+        existing.setCompletionNotes(
+                updatedExecution.getCompletionNotes()
+        );
+
+        return jobExecutionRepository.save(existing);
+    }
+
+    // =====================================================
+    // COMPLETE JOB
+    // =====================================================
+
+    @Transactional
+    public JobExecution completeJob(
+            Long id,
+            JobExecution updatedExecution) {
+
+        JobExecution existing =
+                jobExecutionRepository
+                        .findById(id)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Job execution not found with id: "
+                                                + id
+                                )
+                        );
+
+        // -------------------------------------------------
+        // TECHNICIAN AUTHORIZATION
+        // -------------------------------------------------
+
+        if (authorizationService.hasRole("TECHNICIAN")) {
+
+            if (!authorizationService.isCurrentTechnician(
+                    existing.getTechnicianId())) {
+
+                throw new AccessDeniedException(
+                        "You are not allowed to complete another technician's job"
+                );
+            }
+        }
+
+        // -------------------------------------------------
+        // EXECUTION MUST BE IN PROGRESS
+        // -------------------------------------------------
+
+        if (existing.getStatus() !=
+                JobExecution.Status.IN_PROGRESS) {
+
+            throw new RuntimeException(
+                    "Only an IN_PROGRESS job can be completed"
+            );
+        }
+
+        // -------------------------------------------------
+        // LOAD WORK ORDER
+        // -------------------------------------------------
+
+        WorkOrder workOrder =
+                workOrderRepository
+                        .findById(existing.getWorkOrderId())
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Work Order not found with id: "
+                                                + existing.getWorkOrderId()
+                                )
+                        );
+
+        // -------------------------------------------------
+        // LOAD SCHEDULE
+        // -------------------------------------------------
+
+        Schedule schedule =
+                scheduleRepository
+                        .findById(existing.getScheduleId())
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Schedule not found with id: "
+                                                + existing.getScheduleId()
+                                )
+                        );
+
+        // -------------------------------------------------
+        // VERIFY RELATIONSHIPS
+        // -------------------------------------------------
+
+        if (!schedule.getWorkOrderId()
+                .equals(existing.getWorkOrderId())) {
+
+            throw new RuntimeException(
+                    "Execution schedule does not belong to this work order"
+            );
+        }
+
+        if (!schedule.getTechnicianId()
+                .equals(existing.getTechnicianId())) {
+
+            throw new RuntimeException(
+                    "Execution technician does not match the schedule technician"
+            );
+        }
+
+        if (workOrder.getTechnicianId() == null ||
+            !workOrder.getTechnicianId()
+                    .equals(existing.getTechnicianId())) {
+
+            throw new RuntimeException(
+                    "Execution technician does not match the work order technician"
+            );
+        }
+
+        // -------------------------------------------------
+        // COMPLETE EXECUTION
+        // -------------------------------------------------
+
+        existing.setStatus(
+                JobExecution.Status.COMPLETED
+        );
+
+        existing.setCompletedAt(
+                LocalDateTime.now()
+        );
+
+        existing.setWorkNotes(
+                updatedExecution.getWorkNotes()
+        );
+
+        existing.setPartsUsed(
+                updatedExecution.getPartsUsed()
+        );
+
+        existing.setCompletionNotes(
+                updatedExecution.getCompletionNotes()
+        );
+
+        // -------------------------------------------------
+        // COMPLETE SCHEDULE
+        // -------------------------------------------------
+
+        schedule.setStatus(
+                Schedule.Status.COMPLETED
+        );
+
+        scheduleRepository.save(schedule);
+
+        // -------------------------------------------------
+        // COMPLETE WORK ORDER
+        // -------------------------------------------------
+
+        workOrder.setStatus(
+                WorkOrder.Status.COMPLETED
+        );
+
+        workOrder.setCompletedDate(
+                LocalDateTime.now()
+        );
+
+        workOrderRepository.save(workOrder);
+
+        // -------------------------------------------------
+        // SAVE EXECUTION
+        // -------------------------------------------------
+
+        return jobExecutionRepository.save(existing);
+    }
+
+    // =====================================================
+    // CANCEL JOB
+    // =====================================================
+
+    @Transactional
+    public JobExecution cancelJob(Long id) {
+
+        JobExecution execution =
+                jobExecutionRepository
+                        .findById(id)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Job execution not found with id: "
+                                                + id
+                                )
+                        );
+
+        // -------------------------------------------------
+        // TECHNICIAN AUTHORIZATION
+        // -------------------------------------------------
+
+        if (authorizationService.hasRole("TECHNICIAN")) {
+
+            if (!authorizationService.isCurrentTechnician(
+                    execution.getTechnicianId())) {
+
+                throw new AccessDeniedException(
+                        "You are not allowed to cancel another technician's job"
+                );
+            }
+        }
+
+        // -------------------------------------------------
+        // PREVENT INVALID CANCELLATION
+        // -------------------------------------------------
+
+        if (execution.getStatus() ==
+                JobExecution.Status.COMPLETED) {
+
+            throw new RuntimeException(
+                    "Completed job executions cannot be cancelled"
+            );
+        }
+
+        if (execution.getStatus() ==
+                JobExecution.Status.CANCELLED) {
+
+            throw new RuntimeException(
+                    "Job execution is already cancelled"
+            );
+        }
+
+        // -------------------------------------------------
+        // LOAD WORK ORDER
+        // -------------------------------------------------
+
+        WorkOrder workOrder =
+                workOrderRepository
+                        .findById(execution.getWorkOrderId())
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Work Order not found with id: "
+                                                + execution.getWorkOrderId()
+                                )
+                        );
+
+        // -------------------------------------------------
+        // LOAD SCHEDULE
+        // -------------------------------------------------
+
+        Schedule schedule =
+                scheduleRepository
+                        .findById(execution.getScheduleId())
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Schedule not found with id: "
+                                                + execution.getScheduleId()
+                                )
+                        );
+
+        // -------------------------------------------------
+        // VERIFY RELATIONSHIPS
+        // -------------------------------------------------
+
+        if (!schedule.getWorkOrderId()
+                .equals(execution.getWorkOrderId())) {
+
+            throw new RuntimeException(
+                    "Execution schedule does not belong to this work order"
+            );
+        }
+
+        if (!schedule.getTechnicianId()
+                .equals(execution.getTechnicianId())) {
+
+            throw new RuntimeException(
+                    "Execution technician does not match the schedule technician"
+            );
+        }
+
+        // -------------------------------------------------
+        // CANCEL EXECUTION
+        // -------------------------------------------------
+
+        execution.setStatus(
+                JobExecution.Status.CANCELLED
+        );
+
+        // -------------------------------------------------
+        // CANCEL SCHEDULE
+        // -------------------------------------------------
+
+        schedule.setStatus(
+                Schedule.Status.CANCELLED
+        );
+
+        scheduleRepository.save(schedule);
+
+        // -------------------------------------------------
+        // CANCEL WORK ORDER
+        // -------------------------------------------------
+
+        workOrder.setStatus(
+                WorkOrder.Status.CANCELLED
+        );
+
+        workOrderRepository.save(workOrder);
+
+        // -------------------------------------------------
+        // SAVE EXECUTION
+        // -------------------------------------------------
+
+        return jobExecutionRepository.save(execution);
+    }
+
+    // =====================================================
+    // BY TECHNICIAN
+    // =====================================================
+
+    public List<JobExecution> getByTechnician(
+            Long technicianId) {
+
+        if (technicianId == null) {
+
+            throw new RuntimeException(
+                    "Technician ID is required"
+            );
+        }
+
+        if (authorizationService.hasRole("TECHNICIAN")) {
+
+            if (!authorizationService.isCurrentTechnician(
+                    technicianId)) {
+
+                throw new AccessDeniedException(
+                        "You are not allowed to access another technician's job executions"
+                );
+            }
+
+            return jobExecutionRepository
+                    .findByTechnicianId(technicianId);
+        }
+
+        if (authorizationService.hasRole("DISPATCHER") ||
+            authorizationService.hasRole("MANAGER")) {
+
+            return jobExecutionRepository
+                    .findByTechnicianId(technicianId);
+        }
+
+        throw new AccessDeniedException(
+                "You don't have permission to access job executions"
         );
     }
 
-    return jobExecutionRepository
-            .findByWorkOrderId(
-                    workOrderId
+    // =====================================================
+    // BY WORK ORDER
+    // =====================================================
+
+    public List<JobExecution> getByWorkOrder(
+            Long workOrderId) {
+
+        if (workOrderId == null) {
+
+            throw new RuntimeException(
+                    "Work Order ID is required"
             );
-}
+        }
 
-// =====================================================
-// STATUS
-// =====================================================
+        if (authorizationService.hasRole("DISPATCHER") ||
+            authorizationService.hasRole("MANAGER")) {
 
-public List<JobExecution> getByStatus(
-        JobExecution.Status status) {
+            return jobExecutionRepository
+                    .findByWorkOrderId(workOrderId);
+        }
 
-    if (status == null) {
+        if (authorizationService.hasRole("TECHNICIAN")) {
 
-        throw new RuntimeException(
-                "Status is required"
+            Long technicianId =
+                    authorizationService.getCurrentTechnicianId();
+
+            WorkOrder workOrder =
+                    workOrderRepository
+                            .findById(workOrderId)
+                            .orElseThrow(() ->
+                                    new RuntimeException(
+                                            "Work order not found with id: "
+                                                    + workOrderId
+                                    )
+                            );
+
+            if (workOrder.getTechnicianId() == null ||
+                !workOrder.getTechnicianId().equals(technicianId)) {
+
+                throw new AccessDeniedException(
+                        "You are not allowed to access another technician's work order"
+                );
+            }
+
+            return jobExecutionRepository
+                    .findByWorkOrderId(workOrderId);
+        }
+
+        throw new AccessDeniedException(
+                "You don't have permission to access these job executions"
         );
     }
 
-    return jobExecutionRepository
-            .findByStatus(
-                    status
+    // =====================================================
+    // BY STATUS
+    // =====================================================
+
+    public List<JobExecution> getByStatus(
+            JobExecution.Status status) {
+
+        if (status == null) {
+
+            throw new RuntimeException(
+                    "Status is required"
             );
-}
+        }
 
+        if (authorizationService.hasRole("DISPATCHER") ||
+            authorizationService.hasRole("MANAGER")) {
 
+            return jobExecutionRepository
+                    .findByStatus(status);
+        }
+
+        if (authorizationService.hasRole("TECHNICIAN")) {
+
+            Long technicianId =
+                    authorizationService.getCurrentTechnicianId();
+
+            return jobExecutionRepository
+                    .findByStatus(status)
+                    .stream()
+                    .filter(execution ->
+                            execution.getTechnicianId() != null &&
+                            execution.getTechnicianId()
+                                    .equals(technicianId))
+                    .toList();
+        }
+
+        throw new AccessDeniedException(
+                "You don't have permission to access job executions"
+        );
+    }
 }

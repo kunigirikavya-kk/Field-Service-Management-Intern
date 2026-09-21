@@ -11,4 +11,14 @@ public interface SiteRepository extends JpaRepository<Site, Long> {
 
     List<Site> findByCustomerId(Long customerId);
 
+    boolean existsByCustomerIdAndSiteNameIgnoreCase(
+            Long customerId,
+            String siteName
+    );
+
+    boolean existsByCustomerIdAndSiteNameIgnoreCaseAndIdNot(
+            Long customerId,
+            String siteName,
+            Long id
+    );
 }

@@ -2,6 +2,8 @@ package com.fsm.service;
 
 import com.fsm.entity.Customer;
 import com.fsm.repository.CustomerRepository;
+import com.fsm.security.AuthorizationService;
+
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -10,9 +12,14 @@ import java.util.List;
 public class CustomerService {
 
     private final CustomerRepository customerRepository;
+    private final AuthorizationService authorizationService;
 
-    public CustomerService(CustomerRepository customerRepository) {
+    public CustomerService(
+            CustomerRepository customerRepository,
+            AuthorizationService authorizationService
+    ) {
         this.customerRepository = customerRepository;
+        this.authorizationService = authorizationService;
     }
 
     // =====================================================
@@ -20,6 +27,7 @@ public class CustomerService {
     // =====================================================
 
     public List<Customer> getAllCustomers() {
+
         return customerRepository.findAll();
     }
 
@@ -33,6 +41,23 @@ public class CustomerService {
                 .orElseThrow(() ->
                         new RuntimeException(
                                 "Customer not found with id: " + id
+                        )
+                );
+    }
+
+    // =====================================================
+    // GET CURRENT LOGGED-IN CUSTOMER
+    // =====================================================
+
+    public Customer getCurrentCustomer() {
+
+        Long customerId =
+                authorizationService.getCurrentCustomerId();
+
+        return customerRepository.findById(customerId)
+                .orElseThrow(() ->
+                        new RuntimeException(
+                                "Customer profile not found for current user"
                         )
                 );
     }

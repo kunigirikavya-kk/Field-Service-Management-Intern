@@ -61,12 +61,7 @@
 
     color: var(--inventory-ink);
 
-    font-family:
-        Inter,
-        "Segoe UI",
-        Roboto,
-        Arial,
-        sans-serif;
+    font-family: inherit;
 }
 
 

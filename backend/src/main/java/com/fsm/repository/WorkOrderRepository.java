@@ -1,5 +1,3 @@
-// WorkOrderRepository.java
-
 package com.fsm.repository;
 
 import com.fsm.entity.WorkOrder;
@@ -28,5 +26,9 @@ public interface WorkOrderRepository
     List<WorkOrder> findByCustomerIdAndStatus(
             Long customerId,
             WorkOrder.Status status
+    );
+
+    boolean existsByOrderNumber(
+            String orderNumber
     );
 }

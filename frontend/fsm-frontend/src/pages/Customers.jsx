@@ -264,14 +264,21 @@ function Customers() {
 
             <div className="customer-header">
 
-                <h1>
-                    Customer Management
-                </h1>
+                <div className="inventory-inspired-title-row">
+                    <div className="inventory-inspired-icon">♙</div>
+                    <div>
+                        <span className="inventory-inspired-eyebrow">CUSTOMERS • FIELDSYNC</span>
 
-                <p>
-                    Manage customers, their sites
-                    and contact information
-                </p>
+                        <h1>
+                            Customer Management
+                        </h1>
+
+                        <p>
+                            Manage customers, their sites
+                            and contact information
+                        </p>
+                    </div>
+                </div>
 
             </div>
 
