@@ -11,7 +11,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/sites")
-@CrossOrigin(origins = "http://localhost:5174")
 public class SiteController {
 
     private final SiteService siteService;
