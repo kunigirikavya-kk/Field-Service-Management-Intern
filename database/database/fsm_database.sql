@@ -149,22 +149,6 @@ CREATE TABLE notifications (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- SAMPLE DATA
-INSERT INTO users (username, password, email, full_name, role, phone) VALUES
-('admin', 'admin123', 'admin@fsm.com', 'System Admin', 'ADMIN', '9876543210'),
-('john_tech', 'tech123', 'john@fsm.com', 'John Smith', 'TECHNICIAN', '9876543211'),
-('acme_corp', 'cust123', 'contact@acme.com', 'Acme Corp', 'CUSTOMER', '9876543212');
 
-INSERT INTO customers (user_id, company_name, contact_person, email, phone, address, city, state, zip_code) VALUES
-(3, 'Acme Corporation', 'Jane Doe', 'contact@acme.com', '9876543212', '123 Main St', 'Bangalore', 'Karnataka', '560001');
-
-INSERT INTO technicians (user_id, employee_code, full_name, email, phone, specialization, status, rating) VALUES
-(2, 'TECH001', 'John Smith', 'john@fsm.com', '9876543211', 'HVAC Repair', 'AVAILABLE', 4.50);
-
-INSERT INTO inventory (part_code, part_name, description, category, quantity, unit_price, reorder_level) VALUES
-('P001', 'Air Filter', 'HEPA air filter', 'HVAC', 50, 450.00, 10),
-('P002', 'Compressor Unit', 'AC compressor', 'HVAC', 8, 12500.00, 5),
-('P003', 'Copper Pipe 1m', 'Refrigerant copper pipe', 'PLUMBING', 100, 320.00, 20);
-
-INSERT INTO service_requests (customer_id, title, description, priority, status, requested_date) VALUES
-(1, 'AC Not Cooling', 'Office AC unit not cooling properly', 'HIGH', 'NEW', CURDATE());
+-- Production note: seed application users through the registration flow.
+-- Never store plaintext demo passwords in a production database script.
