@@ -402,35 +402,30 @@ function Technicians() {
                                     </div>
 
 
-                                    <p>
-                                        <strong>Email:</strong>{" "}
-                                        {technician.email || "N/A"}
-                                    </p>
+                                    <div className="technician-details-grid">
+                                        <div className="technician-detail">
+                                            <strong>Email</strong>
+                                            <span>{technician.email || "N/A"}</span>
+                                        </div>
 
+                                        <div className="technician-detail">
+                                            <strong>Phone</strong>
+                                            <span>{technician.phone || "N/A"}</span>
+                                        </div>
 
-                                    <p>
-                                        <strong>Phone:</strong>{" "}
-                                        {technician.phone || "N/A"}
-                                    </p>
+                                        <div className="technician-detail">
+                                            <strong>Specialization</strong>
+                                            <span>{technician.specialization || "N/A"}</span>
+                                        </div>
 
-
-                                    <p>
-                                        <strong>
-                                            Specialization:
-                                        </strong>{" "}
-                                        {technician.specialization ||
-                                            "N/A"}
-                                    </p>
-
-
-                                    <p>
-                                        <strong>
-                                            Rating:
-                                        </strong>{" "}
-                                        <Star size={15} strokeWidth={1.8} fill="currentColor" aria-hidden />{" "}
-                                        {technician.rating ??
-                                            "0.00"}
-                                    </p>
+                                        <div className="technician-detail">
+                                            <strong>Rating</strong>
+                                            <span className="technician-rating">
+                                                <Star size={15} strokeWidth={1.8} fill="currentColor" aria-hidden />
+                                                {technician.rating ?? "0.00"}
+                                            </span>
+                                        </div>
+                                    </div>
 
                                 </div>
 
