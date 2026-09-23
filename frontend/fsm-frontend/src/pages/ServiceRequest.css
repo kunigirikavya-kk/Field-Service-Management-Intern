@@ -1,7 +1,69 @@
-.service-request-page{width:100%;max-width:1280px;margin:0 auto;padding:30px 32px 44px;background:#f8fafc;color:#334155;min-height:100%}.service-request-page *{box-sizing:border-box}
-.service-request-card,.service-request-page .card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:22px;box-shadow:0 4px 18px rgba(15,23,42,.045)}
-.service-request-page h1{margin:0;color:#0f172a;font-size:28px;font-weight:750;letter-spacing:-.035em}.service-request-page h2{color:#0f172a;font-size:16px}.service-request-page p{color:#64748b}
-.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.form-group{display:flex;flex-direction:column;gap:6px}.form-group label{font-size:12px;font-weight:650;color:#475569}.form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 12px;border:1px solid #e5e7eb;border-radius:9px;background:#fff;color:#334155;font-size:13px}.form-group input,.form-group select{height:42px}.form-group textarea{min-height:100px;resize:vertical}.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:#818cf8;box-shadow:0 0 0 3px rgba(99,102,241,.10)}
-.service-request-page button{border-radius:9px}.service-request-page .primary-button,.service-request-page .submit-button,.service-request-page .create-button{background:#4f46e5!important;color:#fff!important;border:0!important}.service-request-page .primary-button:hover,.service-request-page .submit-button:hover,.service-request-page .create-button:hover{background:#4338ca!important;transform:translateY(-1px)}
-.service-request-page .status-badge{display:inline-flex;padding:5px 9px;border-radius:999px;font-size:9px;font-weight:750}.service-request-page .status-open{background:#eef2ff;color:#4338ca}.service-request-page .status-progress{background:#eff6ff;color:#1d4ed8}.service-request-page .status-completed{background:#ecfdf5;color:#047857}.service-request-page .status-cancelled{background:#fef2f2;color:#b91c1c}
-@media(max-width:800px){.service-request-page{padding:22px 20px 34px}.form-grid{grid-template-columns:1fr}}@media(max-width:520px){.service-request-page{padding:17px 14px 28px}.service-request-card{padding:16px}}
+/* FieldSync Service Requests — Inventory visual system */
+
+.service-request-page{
+  position:relative;isolation:isolate;width:100%;max-width:1400px;margin:0 auto;
+  padding:34px 34px 44px;min-height:calc(100vh - 72px);max-height:calc(100vh - 72px);
+  box-sizing:border-box;overflow-y:auto;overflow-x:hidden;color:#20263d;
+  background:
+    radial-gradient(circle at 8% 10%,rgba(211,155,56,.09),transparent 23%),
+    radial-gradient(circle at 94% 24%,rgba(196,91,60,.08),transparent 25%),#f5efe3;
+  scrollbar-width:thin;scrollbar-color:#c9c0b2 #eee8dc;
+}
+.service-request-page::-webkit-scrollbar{width:9px}
+.service-request-page::-webkit-scrollbar-track{background:#eee8dc;border-radius:999px}
+.service-request-page::-webkit-scrollbar-thumb{background:#c9c0b2;border-radius:999px;border:2px solid #eee8dc}
+.service-request-page::-webkit-scrollbar-thumb:hover{background:#aaa091}
+.service-request-page::before,.service-request-page::after{content:"";position:absolute;pointer-events:none;z-index:-1;opacity:.16}
+.service-request-page::before{width:170px;height:170px;right:-55px;top:105px;background:#313b68;clip-path:polygon(50% 0%,100% 28%,82% 82%,30% 100%,0 48%);transform:rotate(17deg)}
+.service-request-page::after{width:130px;height:130px;left:-60px;bottom:180px;background:#c45b3c;clip-path:polygon(20% 0%,100% 20%,75% 100%,0 70%);transform:rotate(-14deg)}
+
+.service-request-page .page-heading{position:relative;z-index:2;margin-bottom:28px;padding-left:75px}
+.service-request-page .inventory-inspired-title-row{display:flex;align-items:center;gap:17px}
+.service-request-page .inventory-inspired-icon{
+  position:absolute;left:0;top:0;width:58px;height:58px;display:flex;align-items:center;justify-content:center;
+  border-radius:17px;background:linear-gradient(135deg,#313b68,#c45b3c);color:#fffaf0;font-size:29px;font-weight:800;
+  box-shadow:7px 7px 0 rgba(211,155,56,.35)
+}
+.service-request-page .inventory-inspired-eyebrow{display:block;margin-bottom:5px;color:#c45b3c;font-size:12px;font-weight:800;letter-spacing:2px}
+.service-request-page h1{margin:0;color:#242b50;font-size:34px;line-height:1.15;font-weight:800;letter-spacing:-.7px}
+.service-request-page .page-heading p{margin:10px 0 0;color:#717687;font-size:15px;line-height:1.6}
+
+.service-request-card,.service-request-page .card{
+  position:relative;z-index:2;background:#fffdf8;border:1px solid #e5ddcf;border-radius:18px;
+  padding:24px;box-shadow:0 12px 35px rgba(43,40,53,.08)
+}
+.service-request-page .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.service-request-page .form-group{display:flex;flex-direction:column;gap:6px}
+.service-request-page .form-group label{font-size:11px;font-weight:800;color:#313b68;letter-spacing:.2px}
+.service-request-page .form-group input,.service-request-page .form-group select,.service-request-page .form-group textarea{
+  width:100%;box-sizing:border-box;padding:11px 13px;border:1px solid #e5ddcf;border-radius:10px;
+  background:#fffdf9;color:#20263d;font-size:13px;outline:none;transition:border-color .18s ease,box-shadow .18s ease
+}
+.service-request-page .form-group input,.service-request-page .form-group select{height:44px}
+.service-request-page .form-group textarea{min-height:105px;resize:vertical}
+.service-request-page .form-group input:focus,.service-request-page .form-group select:focus,.service-request-page .form-group textarea:focus{
+  border-color:#313b68;box-shadow:0 0 0 3px rgba(49,59,104,.09)
+}
+.service-request-page .form-actions{display:flex;justify-content:flex-end;margin-top:19px;padding-top:17px;border-top:1px solid #eee7da;gap:8px}
+.service-request-page button{border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;transition:transform .18s ease,box-shadow .18s ease,background .18s ease}
+.service-request-page .cancel-button{padding:10px 16px;border:1px solid #e5ddcf;background:#faf6ec;color:#313b68}
+.service-request-page .cancel-button:hover{background:#f4dfae}
+.service-request-page .primary-button{
+  padding:10px 17px;background:#313b68!important;color:#fffaf0!important;border:0!important;
+  box-shadow:none
+}
+.service-request-page .primary-button:hover{background:#242b50!important;transform:translateY(-2px);box-shadow:0 7px 18px rgba(49,59,104,.18)}
+
+@media(max-width:800px){
+  .service-request-page{padding:28px 27px 38px}
+  .service-request-page .form-grid{grid-template-columns:1fr}
+}
+@media(max-width:520px){
+  .service-request-page{padding:22px 14px 32px}
+  .service-request-page .page-heading{padding-left:0;padding-top:60px}
+  .service-request-page .inventory-inspired-icon{left:0;top:0;width:50px;height:50px;font-size:24px}
+  .service-request-page h1{font-size:29px}
+  .service-request-card,.service-request-page .card{padding:18px}
+  .service-request-page .form-actions{flex-direction:column}
+  .service-request-page .cancel-button,.service-request-page .primary-button{width:100%}
+}
