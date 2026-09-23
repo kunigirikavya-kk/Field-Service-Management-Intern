@@ -2,12 +2,18 @@
 
 .customer-page{
   position:relative;isolation:isolate;width:100%;max-width:1400px;margin:0 auto;
-  padding:34px 34px 44px;min-height:calc(100vh - 72px);overflow:hidden;color:#20263d;
+  padding:34px 34px 44px;min-height:calc(100vh - 72px);max-height:calc(100vh - 72px);box-sizing:border-box;overflow-y:auto;overflow-x:hidden;color:#20263d;
+  scrollbar-width:thin;scrollbar-color:#c9c0b2 #eee8dc;
   background:
     radial-gradient(circle at 8% 10%,rgba(211,155,56,.09),transparent 23%),
     radial-gradient(circle at 94% 24%,rgba(196,91,60,.08),transparent 25%),
     #f5efe3;
 }
+.customer-page::-webkit-scrollbar{width:9px}
+.customer-page::-webkit-scrollbar-track{background:#eee8dc;border-radius:999px}
+.customer-page::-webkit-scrollbar-thumb{background:#c9c0b2;border-radius:999px;border:2px solid #eee8dc}
+.customer-page::-webkit-scrollbar-thumb:hover{background:#aaa091}
+
 .customer-page::before,.customer-page::after{content:"";position:absolute;pointer-events:none;z-index:-1;opacity:.16}
 .customer-page::before{width:170px;height:170px;right:-55px;top:105px;background:#313b68;clip-path:polygon(50% 0%,100% 28%,82% 82%,30% 100%,0 48%);transform:rotate(17deg)}
 .customer-page::after{width:130px;height:130px;left:-60px;bottom:180px;background:#c45b3c;clip-path:polygon(20% 0%,100% 20%,75% 100%,0 70%);transform:rotate(-14deg)}
