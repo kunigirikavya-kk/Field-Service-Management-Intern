@@ -103,3 +103,75 @@
   .work-order-top{flex-direction:column}.assign-technician-controls{align-items:stretch;flex-direction:column}.assign-technician-controls select,.assign-technician-btn{width:100%}
   .new-site-actions,.work-order-page .form-actions{flex-direction:column}.cancel-site-btn,.save-site-btn,.add-work-order-btn{width:100%}
 }
+
+
+/* =====================================================
+   EDIT WORK ORDER MODAL
+   ===================================================== */
+
+.edit-work-order-btn{
+  flex-shrink:0;height:34px;padding:0 13px;border:1px solid #313b68;border-radius:9px;
+  background:#fffdf8;color:#313b68;font-size:10px;font-weight:800;cursor:pointer;
+  transition:.18s ease
+}
+.edit-work-order-btn:hover{background:#313b68;color:#fffaf0;transform:translateY(-1px)}
+
+.work-order-modal-backdrop{
+  position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;
+  padding:24px;background:rgba(31,35,55,.52);backdrop-filter:blur(4px);overflow-y:auto
+}
+.work-order-edit-modal{
+  width:min(760px,100%);max-height:calc(100vh - 48px);overflow-y:auto;background:#fffdf8;
+  border:1px solid #e5ddcf;border-radius:20px;box-shadow:0 28px 80px rgba(31,35,55,.25)
+}
+.work-order-modal-header{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:20px;padding:23px 24px 18px;
+  border-bottom:1px solid #eee7da
+}
+.work-order-modal-eyebrow{display:block;margin-bottom:5px;color:#c45b3c;font-size:9px;font-weight:800;letter-spacing:1.5px}
+.work-order-modal-header h2{margin:0;color:#242b50;font-size:21px;font-weight:800}
+.work-order-modal-header p{margin:5px 0 0;color:#717687;font-size:11px}
+.work-order-modal-close{
+  width:34px;height:34px;border:1px solid #e5ddcf;border-radius:9px;background:#fffdf8;
+  color:#313b68;font-size:22px;line-height:1;cursor:pointer
+}
+.work-order-modal-close:hover{background:#f4dfae}
+.work-order-edit-modal form{padding:20px 24px 24px}
+.work-order-edit-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+.edit-form-group{display:flex;flex-direction:column;gap:6px}
+.edit-form-group.full-width{grid-column:1/-1}
+.edit-form-group label{color:#313b68;font-size:10px;font-weight:800;letter-spacing:.2px}
+.edit-form-group input,.edit-form-group select,.edit-form-group textarea{
+  width:100%;box-sizing:border-box;border:1px solid #e5ddcf;border-radius:10px;background:#fffdf9;
+  color:#20263d;font-size:12px;outline:none;transition:border-color .18s ease,box-shadow .18s ease
+}
+.edit-form-group input,.edit-form-group select{height:43px;padding:0 12px}
+.edit-form-group textarea{padding:10px 12px;min-height:95px;resize:vertical}
+.edit-form-group input:focus,.edit-form-group select:focus,.edit-form-group textarea:focus{
+  border-color:#313b68;box-shadow:0 0 0 3px rgba(49,59,104,.09)
+}
+.work-order-modal-actions{
+  display:flex;justify-content:flex-end;gap:9px;margin-top:20px;padding-top:17px;border-top:1px solid #eee7da
+}
+.work-order-modal-cancel,.work-order-modal-save{
+  height:40px;padding:0 17px;border-radius:9px;font-size:11px;font-weight:800;cursor:pointer
+}
+.work-order-modal-cancel{border:1px solid #e5ddcf;background:#fffdf8;color:#313b68}
+.work-order-modal-cancel:hover{background:#f4dfae}
+.work-order-modal-save{border:0;background:#313b68;color:#fffaf0}
+.work-order-modal-save:hover{background:#242b50}
+.work-order-modal-cancel:disabled,.work-order-modal-save:disabled,.work-order-modal-close:disabled{
+  opacity:.55;cursor:not-allowed
+}
+
+@media(max-width:650px){
+  .work-order-modal-backdrop{padding:12px}
+  .work-order-edit-modal{max-height:calc(100vh - 24px);border-radius:16px}
+  .work-order-modal-header{padding:18px 17px 15px}
+  .work-order-edit-modal form{padding:17px}
+  .work-order-edit-grid{grid-template-columns:1fr}
+  .edit-form-group.full-width{grid-column:auto}
+  .work-order-modal-actions{flex-direction:column}
+  .work-order-modal-cancel,.work-order-modal-save{width:100%}
+  .edit-work-order-btn{width:100%;margin-top:8px}
+}
