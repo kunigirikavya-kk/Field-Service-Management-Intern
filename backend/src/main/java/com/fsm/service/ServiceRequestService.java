@@ -110,6 +110,15 @@ public class ServiceRequestService {
             );
         }
 
+        if (!authorizationService.hasRole("CUSTOMER")
+                && !authorizationService.hasRole("DISPATCHER")
+                && !authorizationService.hasRole("MANAGER")) {
+            throw new AccessDeniedException(
+                    "Only customers, dispatchers, and managers can create service requests."
+            );
+        }
+
+
         /*
          * =================================================
          * CUSTOMER OWNERSHIP SECURITY
