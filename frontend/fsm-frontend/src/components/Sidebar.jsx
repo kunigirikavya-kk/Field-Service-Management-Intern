@@ -115,7 +115,7 @@ function Sidebar({ isOpen, onClose, onLogout }) {
 
     {
       name: "Job Execution",
-      path: "/job-execution",
+      path: "/execution",
       icon: "execution",
       roles: [
         "TECHNICIAN",
