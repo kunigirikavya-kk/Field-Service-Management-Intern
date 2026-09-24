@@ -125,6 +125,7 @@ function WorkOrders() {
         customerId: "",
         siteId: "",
         title: "",
+        serviceType: "",
         priority: "MEDIUM",
         description: "",
         status: "PENDING",
@@ -942,6 +943,10 @@ function WorkOrders() {
                     selectedRequest.serviceType ||
                     "",
 
+                serviceType:
+                    selectedRequest.serviceType ||
+                    "",
+
                 priority:
                     selectedRequest.priority ||
                     "MEDIUM",
@@ -1491,6 +1496,9 @@ function WorkOrders() {
 
                 title:
                     form.title,
+
+                serviceType:
+                    form.serviceType,
 
                 priority:
                     form.priority,
@@ -2486,6 +2494,49 @@ function WorkOrders() {
                                     }
                                     readOnly
                                 />
+
+                            </div>
+
+
+                            {/* SERVICE TYPE */}
+
+                            <div className="form-group">
+
+                                <label>
+                                    Service Type
+                                </label>
+
+                                <select
+                                    name="serviceType"
+                                    value={form.serviceType}
+                                    onChange={handleChange}
+                                    required
+                                >
+                                    <option value="">
+                                        Select Service Type
+                                    </option>
+                                    <option value="AC Maintenance">
+                                        AC Maintenance
+                                    </option>
+                                    <option value="Equipment Repair">
+                                        Equipment Repair
+                                    </option>
+                                    <option value="System Inspection">
+                                        System Inspection
+                                    </option>
+                                    <option value="Installation">
+                                        Installation
+                                    </option>
+                                    <option value="Electrical Maintenance">
+                                        Electrical Maintenance
+                                    </option>
+                                    <option value="Plumbing Repair">
+                                        Plumbing Repair
+                                    </option>
+                                    <option value="Preventive Maintenance">
+                                        Preventive Maintenance
+                                    </option>
+                                </select>
 
                             </div>
 
