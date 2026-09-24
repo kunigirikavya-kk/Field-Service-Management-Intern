@@ -249,6 +249,10 @@ public class WorkOrderController {
                 request.getPriority()
         );
 
+        workOrder.setServiceType(
+                request.getServiceType()
+        );
+
         workOrder.setDescription(
                 request.getDescription()
         );
