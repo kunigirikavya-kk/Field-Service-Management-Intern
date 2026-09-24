@@ -5,6 +5,7 @@ import {
     getWorkOrdersByTechnician,
     getWorkOrdersByCustomer,
     createWorkOrder,
+    updateWorkOrder,
     getServiceRequests,
     getTechnicians,
     getTechnicianByUserId,
@@ -100,6 +101,21 @@ function WorkOrders() {
 
     const [saving, setSaving] =
         useState(false);
+
+    const [editingWorkOrder, setEditingWorkOrder] = useState(null);
+
+    const [editForm, setEditForm] = useState({
+        title: "",
+        serviceType: "",
+        priority: "MEDIUM",
+        description: "",
+        status: "PENDING",
+        scheduledDate: "",
+        completedDate: "",
+        totalCost: ""
+    });
+
+    const [updatingWorkOrder, setUpdatingWorkOrder] = useState(false);
 
     const [savingSite, setSavingSite] =
         useState(false);
@@ -1574,6 +1590,98 @@ function WorkOrders() {
 
 
     // =====================================================
+    // EDIT WORK ORDER
+    // =====================================================
+
+    const serviceTypeOptions = [
+        "AC Maintenance",
+        "Equipment Repair",
+        "System Inspection",
+        "Installation",
+        "Electrical Maintenance",
+        "Plumbing Repair",
+        "Preventive Maintenance"
+    ];
+
+    const normalizeServiceType = (value) => {
+        if (!value) return "";
+        const normalized = String(value).trim().toLowerCase().replace(/_/g, " ");
+        return serviceTypeOptions.find(option => option.toLowerCase() === normalized) || String(value);
+    };
+
+    const toDateTimeLocal = (value) => {
+        if (!value) return "";
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return String(value).slice(0, 16);
+        const pad = number => String(number).padStart(2, "0");
+        return date.getFullYear() + "-" + pad(date.getMonth() + 1) + "-" + pad(date.getDate()) + "T" + pad(date.getHours()) + ":" + pad(date.getMinutes());
+    };
+
+    const openEditModal = (order) => {
+        if (!canManageWorkOrders) return;
+        setEditingWorkOrder(order);
+        setEditForm({
+            title: order.title || "",
+            serviceType: normalizeServiceType(order.serviceType),
+            priority: order.priority || "MEDIUM",
+            description: order.description || "",
+            status: order.status || "PENDING",
+            scheduledDate: toDateTimeLocal(order.scheduledDate),
+            completedDate: toDateTimeLocal(order.completedDate),
+            totalCost: order.totalCost ?? ""
+        });
+    };
+
+    const closeEditModal = () => {
+        if (updatingWorkOrder) return;
+        setEditingWorkOrder(null);
+    };
+
+    const handleEditChange = (event) => {
+        const { name, value } = event.target;
+        setEditForm(previous => ({ ...previous, [name]: value }));
+    };
+
+    const handleUpdateWorkOrder = async (event) => {
+        event.preventDefault();
+        if (!editingWorkOrder || !canManageWorkOrders) return;
+
+        if (!editForm.serviceType) {
+            alert("Please select a Service Type.");
+            return;
+        }
+
+        setUpdatingWorkOrder(true);
+        try {
+            const payload = {
+                serviceRequestId: editingWorkOrder.serviceRequestId ? Number(editingWorkOrder.serviceRequestId) : null,
+                technicianId: editingWorkOrder.technicianId ? Number(editingWorkOrder.technicianId) : (editingWorkOrder.technician?.id ? Number(editingWorkOrder.technician.id) : null),
+                customerId: editingWorkOrder.customerId ? Number(editingWorkOrder.customerId) : null,
+                siteId: editingWorkOrder.siteId ? Number(editingWorkOrder.siteId) : null,
+                title: editForm.title,
+                serviceType: editForm.serviceType,
+                priority: editForm.priority,
+                description: editForm.description,
+                status: editForm.status,
+                scheduledDate: editForm.scheduledDate || null,
+                completedDate: editForm.completedDate || null,
+                totalCost: editForm.totalCost === "" ? 0 : Number(editForm.totalCost)
+            };
+
+            await updateWorkOrder(editingWorkOrder.id, payload);
+            alert("Work order updated successfully! 🎉");
+            setEditingWorkOrder(null);
+            await loadWorkOrders();
+        } catch (error) {
+            console.error("Failed to update work order:", error);
+            alert("Failed to update work order.\\n\\n" + error.message);
+        } finally {
+            setUpdatingWorkOrder(false);
+        }
+    };
+
+
+    // =====================================================
     // ASSIGN / REASSIGN TECHNICIAN
     // =====================================================
 
@@ -2846,6 +2954,16 @@ function WorkOrders() {
                                             </div>
 
 
+                                            {canManageWorkOrders && (
+                                                <button
+                                                    type="button"
+                                                    className="edit-work-order-btn"
+                                                    onClick={() => openEditModal(order)}
+                                                >
+                                                    Edit
+                                                </button>
+                                            )}
+
                                             <span
                                                 className={`status-badge ${statusClass(
                                                     order.status
@@ -3290,6 +3408,78 @@ function WorkOrders() {
             </div>
 
         </div>
+
+        {editingWorkOrder && canManageWorkOrders && (
+            <div className="work-order-modal-backdrop" onMouseDown={closeEditModal}>
+                <div className="work-order-edit-modal" role="dialog" aria-modal="true" aria-labelledby="edit-work-order-title" onMouseDown={event => event.stopPropagation()}>
+                    <div className="work-order-modal-header">
+                        <div>
+                            <span className="work-order-modal-eyebrow">WORK ORDER #{editingWorkOrder.orderNumber || editingWorkOrder.id}</span>
+                            <h2 id="edit-work-order-title">Edit Work Order</h2>
+                            <p>Update the work order details and service type.</p>
+                        </div>
+                        <button type="button" className="work-order-modal-close" onClick={closeEditModal} disabled={updatingWorkOrder}>×</button>
+                    </div>
+
+                    <form onSubmit={handleUpdateWorkOrder}>
+                        <div className="work-order-edit-grid">
+                            <div className="edit-form-group">
+                                <label htmlFor="edit-title">Title</label>
+                                <input id="edit-title" name="title" value={editForm.title} onChange={handleEditChange} required />
+                            </div>
+                            <div className="edit-form-group">
+                                <label htmlFor="edit-service-type">Service Type</label>
+                                <select id="edit-service-type" name="serviceType" value={editForm.serviceType} onChange={handleEditChange} required>
+                                    <option value="">Select Service Type</option>
+                                    {serviceTypeOptions.map(option => <option key={option} value={option}>{option}</option>)}
+                                </select>
+                            </div>
+                            <div className="edit-form-group">
+                                <label htmlFor="edit-priority">Priority</label>
+                                <select id="edit-priority" name="priority" value={editForm.priority} onChange={handleEditChange}>
+                                    <option value="LOW">Low</option>
+                                    <option value="MEDIUM">Medium</option>
+                                    <option value="HIGH">High</option>
+                                    <option value="URGENT">Urgent</option>
+                                </select>
+                            </div>
+                            <div className="edit-form-group">
+                                <label htmlFor="edit-status">Status</label>
+                                <select id="edit-status" name="status" value={editForm.status} onChange={handleEditChange}>
+                                    <option value="PENDING">Pending</option>
+                                    <option value="ASSIGNED">Assigned</option>
+                                    <option value="IN_PROGRESS">In Progress</option>
+                                    <option value="ON_HOLD">On Hold</option>
+                                    <option value="COMPLETED">Completed</option>
+                                    <option value="CLOSED">Closed</option>
+                                    <option value="CANCELLED">Cancelled</option>
+                                </select>
+                            </div>
+                            <div className="edit-form-group">
+                                <label htmlFor="edit-scheduled-date">Scheduled Date</label>
+                                <input id="edit-scheduled-date" type="datetime-local" name="scheduledDate" value={editForm.scheduledDate} onChange={handleEditChange} />
+                            </div>
+                            <div className="edit-form-group">
+                                <label htmlFor="edit-completed-date">Completed Date</label>
+                                <input id="edit-completed-date" type="datetime-local" name="completedDate" value={editForm.completedDate} onChange={handleEditChange} />
+                            </div>
+                            <div className="edit-form-group">
+                                <label htmlFor="edit-total-cost">Total Cost</label>
+                                <input id="edit-total-cost" type="number" min="0" step="0.01" name="totalCost" value={editForm.totalCost} onChange={handleEditChange} placeholder="0.00" />
+                            </div>
+                            <div className="edit-form-group full-width">
+                                <label htmlFor="edit-description">Description</label>
+                                <textarea id="edit-description" name="description" value={editForm.description} onChange={handleEditChange} rows="4" placeholder="Describe the work required..." />
+                            </div>
+                        </div>
+                        <div className="work-order-modal-actions">
+                            <button type="button" className="work-order-modal-cancel" onClick={closeEditModal} disabled={updatingWorkOrder}>Cancel</button>
+                            <button type="submit" className="work-order-modal-save" disabled={updatingWorkOrder}>{updatingWorkOrder ? "Saving..." : "Save Changes"}</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        )}
 
     );
 
