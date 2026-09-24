@@ -135,7 +135,7 @@ function Technicians() {
                     <h2>Add New Technician</h2>
 
                     <p>
-                        Enter the technician details below. The email must belong to an existing TECHNICIAN user account.
+                        Enter the technician details below. A new TECHNICIAN account will be created if this email is not already registered.
                     </p>
 
                 </div>
@@ -206,7 +206,7 @@ function Technicians() {
                             <input
                                 type="password"
                                 name="accountPassword"
-                                placeholder="Minimum 6 characters for a new account"
+                                placeholder="Minimum 6 characters when creating a new account"
                                 value={form.accountPassword}
                                 onChange={handleChange}
                                 minLength="6"
