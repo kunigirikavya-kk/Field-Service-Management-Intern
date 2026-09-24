@@ -1,37 +1,40 @@
 services:
   db:
-    image: mysql:8.4
+    image: postgres:17-alpine
     environment:
-      MYSQL_DATABASE: field_service_management
-      MYSQL_ROOT_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-local-dev-password}
-    ports: ["3306:3306"]
+      POSTGRES_DB: field_service_management
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local-dev-password}
+    ports: ["5432:5432"]
     volumes:
-      - mysql_data:/var/lib/mysql
-      - ./database/database/fsm_database.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL","mysqladmin ping -h localhost -uroot -p${SPRING_DATASOURCE_PASSWORD:-local-dev-password} --silent"]
+      test: ["CMD-SHELL","pg_isready -U postgres -d field_service_management"]
       interval: 10s
       timeout: 5s
       retries: 10
+
   backend:
     build: ./backend
     environment:
       PORT: 8080
-      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/field_service_management?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-local-dev-password}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/field_service_management
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-local-dev-password}
       JWT_SECRET: ${JWT_SECRET:-local-development-secret-change-me-32chars}
       JWT_EXPIRATION_MINUTES: ${JWT_EXPIRATION_MINUTES:-120}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5174}
       CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
       CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
       CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
-      JPA_DDL_AUTO: update
+      FLYWAY_ENABLED: "true"
+      JPA_DDL_AUTO: validate
       JPA_SHOW_SQL: "false"
     ports: ["8080:8080"]
     depends_on:
       db:
         condition: service_healthy
+
   frontend:
     build:
       context: ./frontend/fsm-frontend
@@ -39,5 +42,6 @@ services:
         VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8080/api}
     ports: ["5174:80"]
     depends_on: [backend]
+
 volumes:
-  mysql_data:
+  postgres_data:
