@@ -6,7 +6,7 @@ import com.fsm.repository.SiteRepository;
 import com.fsm.repository.WorkOrderRepository;
 import com.fsm.security.AuthorizationService;
 
-import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.AccessDeniedException;\nimport org.springframework.data.domain.Page;\nimport org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -218,6 +218,41 @@ public class WorkOrderService {
         WorkOrder saved = workOrderRepository.save(workOrder);
         historyService.record(saved.getId(), null, saved.getStatus(), "Work order created");
         return saved;
+    }
+
+    public Page<WorkOrder> getPagedWorkOrders(String rawStatus, Pageable pageable) {
+        WorkOrder.Status status = null;
+        if (rawStatus != null && !rawStatus.isBlank()) {
+            try {
+                status = WorkOrder.Status.valueOf(rawStatus.trim().toUpperCase());
+            } catch (IllegalArgumentException ex) {
+                throw new IllegalArgumentException("Invalid work order status: " + rawStatus);
+            }
+        }
+
+        if (authorizationService.hasRole("CUSTOMER")) {
+            Long customerId = authorizationService.getCurrentCustomerId();
+            return status == null
+                    ? workOrderRepository.findByCustomerId(customerId, pageable)
+                    : workOrderRepository.findByCustomerIdAndStatus(customerId, status, pageable);
+        }
+
+        if (authorizationService.hasRole("TECHNICIAN")) {
+            Long technicianId = authorizationService.getCurrentTechnicianId();
+            return status == null
+                    ? workOrderRepository.findByTechnicianId(technicianId, pageable)
+                    : workOrderRepository.findByTechnicianIdAndStatus(technicianId, status, pageable);
+        }
+
+        if (authorizationService.hasRole("DISPATCHER")
+                || authorizationService.hasRole("MANAGER")
+                || authorizationService.hasRole("ADMIN")) {
+            return status == null
+                    ? workOrderRepository.findAll(pageable)
+                    : workOrderRepository.findByStatus(status, pageable);
+        }
+
+        throw new AccessDeniedException("You are not allowed to access work orders");
     }
 
     private void validateSiteBelongsToCustomer(
