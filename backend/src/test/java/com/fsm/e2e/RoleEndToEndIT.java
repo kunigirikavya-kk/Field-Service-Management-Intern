@@ -197,6 +197,16 @@ class RoleEndToEndIT {
                         .header("Authorization", bearer(dispatcherToken)))
                 .andExpect(status().isForbidden());
 
+        mockMvc.perform(get("/api/work-orders/page")
+                        .param("status", "CLOSED")
+                        .param("page", "0")
+                        .param("size", "1")
+                        .header("Authorization", bearer(managerToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.totalPages").value(1));
+
         mockMvc.perform(get("/api/reports/summary")
                         .header("Authorization", bearer(managerToken)))
                 .andExpect(status().isOk());
