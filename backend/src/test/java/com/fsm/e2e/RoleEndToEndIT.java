@@ -22,7 +22,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -45,7 +45,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class RoleEndToEndIT {
 
     @Container
-    static final PostgreSQLContainer<?> POSTGRES =
+    static final PostgreSQLContainer POSTGRES =
             new PostgreSQLContainer<>("postgres:17-alpine")
                     .withDatabaseName("field_service_management_e2e")
                     .withUsername("postgres")
