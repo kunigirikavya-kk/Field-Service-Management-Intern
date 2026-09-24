@@ -337,21 +337,71 @@
 .technician-page .technician-details-grid{
   display:grid;
   grid-template-columns:minmax(0,1fr) minmax(0,1fr);
-  column-gap:48px;
+  column-gap:32px;
+  row-gap:14px;
   width:100%;
   align-items:stretch;
+  padding-top:2px;
 }
-.technician-page .technician-details-column{min-width:0;display:flex;flex-direction:column}
+.technician-page .technician-details-column{
+  min-width:0;
+  display:grid;
+  grid-template-rows:1fr 1fr;
+  row-gap:12px;
+}
 .technician-page .technician-detail{
-  min-width:0;min-height:42px;display:grid;grid-template-columns:130px minmax(0,1fr);
-  align-items:center;column-gap:12px;padding:8px 0;border-bottom:1px solid #f1eadf;
-  color:#50566a;font-size:11px;line-height:1.35;
+  min-width:0;
+  min-height:62px;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:center;
+  gap:5px;
+  padding:10px 13px;
+  border:1px solid #eee8dd;
+  border-radius:10px;
+  background:#fcfaf5;
+  color:#50566a;
+  font-size:11px;
+  line-height:1.4;
 }
-.technician-page .technician-details-column .technician-detail:last-child{border-bottom:0}
-.technician-page .technician-detail strong{min-width:0;color:var(--tech-indigo-dark);font-size:11px;font-weight:800;white-space:nowrap}
-.technician-page .technician-detail>span:not(.technician-rating){min-width:0;overflow:hidden;color:#50566a;text-overflow:ellipsis;white-space:nowrap}
-.technician-page .technician-rating{min-width:0;display:inline-flex;align-items:center;gap:6px;color:#50566a;white-space:nowrap}
-.technician-page .technician-rating svg{flex:0 0 auto;color:var(--tech-gold)}
+.technician-page .technician-detail strong{
+  display:block;
+  min-width:0;
+  color:var(--tech-muted);
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.02em;
+  text-transform:uppercase;
+  white-space:nowrap;
+}
+.technician-page .technician-detail>span:not(.technician-rating){
+  display:block;
+  width:100%;
+  min-width:0;
+  overflow:visible;
+  color:var(--tech-ink);
+  font-size:12px;
+  font-weight:650;
+  line-height:1.45;
+  white-space:normal;
+  overflow-wrap:anywhere;
+  word-break:break-word;
+}
+.technician-page .technician-rating{
+  min-width:0;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  color:var(--tech-ink);
+  font-size:12px;
+  font-weight:650;
+  white-space:nowrap;
+}
+.technician-page .technician-rating svg{
+  flex:0 0 auto;
+  color:var(--tech-gold);
+}
 
 /* LOADING / EMPTY */
 
@@ -408,8 +458,8 @@
     column-gap:24px;
   }
 
-  .technician-page .technician-detail {
-    grid-template-columns:105px minmax(0,1fr);
+  .technician-page .technician-details-grid {
+    column-gap:20px;
   }
 }
 
@@ -450,13 +500,17 @@
     gap:12px;
   }
 
-  .technician-page .technician-details-grid{grid-template-columns:1fr;column-gap:0}
-  .technician-page .technician-details-column .technician-detail{
-    grid-template-columns:130px minmax(0,1fr);
-    min-height:auto;
-    border-bottom:1px solid #f1eadf;
+  .technician-page .technician-details-grid{
+    grid-template-columns:1fr;
+    column-gap:0;
+    row-gap:10px;
   }
-  .technician-page .technician-details-column:last-child .technician-detail:last-child{border-bottom:0}
+  .technician-page .technician-details-column{
+    row-gap:10px;
+  }
+  .technician-page .technician-detail{
+    min-height:58px;
+  }
 }
 
 @media (max-width: 430px) {
