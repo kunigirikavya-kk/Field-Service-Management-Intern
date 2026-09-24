@@ -241,6 +241,15 @@ function Sidebar({ isOpen, onClose, onLogout }) {
           const hasAccess =
             item.roles.includes(userRole);
 
+          // Job Execution is a field-only surface. Managers should not
+          // see a locked execution item; their dashboard owns oversight.
+          if (
+            item.name === "Job Execution" &&
+            userRole === "MANAGER"
+          ) {
+            return null;
+          }
+
 
           if (hasAccess) {
 
