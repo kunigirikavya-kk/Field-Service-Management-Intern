@@ -17,6 +17,7 @@ import {
 } from "../services/api";
 
 import "./Dashboard.css";
+import ManagerDashboard from "./ManagerDashboard";
 
 
 function Dashboard() {
@@ -450,94 +451,11 @@ function Dashboard() {
       // =================================================
 
       if (userRole === "MANAGER") {
-
-        /*
-         * Manager has full dashboard access.
-         */
-
-
-        const [
-          cD,
-          tD,
-          srD,
-          woD,
-          schD,
-          invD,
-          invoiceD
-        ] = await Promise.all([
-
-          getCustomers(),
-
-          getTechnicians(),
-
-          getServiceRequests(),
-
-          getWorkOrders(),
-
-          getSchedules(),
-
-          getInventoryParts(),
-
-          getInvoices()
-
-        ]);
-
-
-        setCustomers(
-          Array.isArray(cD)
-            ? cD
-            : []
-        );
-
-
-        setTechnicians(
-          Array.isArray(tD)
-            ? tD
-            : []
-        );
-
-
-        setServiceRequests(
-          Array.isArray(srD)
-            ? srD
-            : []
-        );
-
-
-        setWorkOrders(
-          Array.isArray(woD)
-            ? woD
-            : []
-        );
-
-
-        setSchedules(
-          Array.isArray(schD)
-            ? schD
-            : []
-        );
-
-
-        setInventoryParts(
-          Array.isArray(invD)
-            ? invD
-            : []
-        );
-
-
-        setInvoices(
-          Array.isArray(invoiceD)
-            ? invoiceD
-            : []
-        );
-
-
+        // ManagerDashboard owns manager-only operational data.
+        // Keep this loader free of technician execution data.
         setLoading(false);
-
         setRefreshing(false);
-
         return;
-
       }
 
 
@@ -1737,6 +1655,11 @@ function Dashboard() {
   // =====================================================
   // DISPATCHER / MANAGER DASHBOARD
   // =====================================================
+
+  if (userRole === "MANAGER") {
+    return <ManagerDashboard />;
+  }
+
 
   return (
 
