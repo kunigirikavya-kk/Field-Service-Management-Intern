@@ -1635,7 +1635,7 @@ function Dashboard() {
             <button
               className="btn btn-outline"
               onClick={() =>
-                navigate("/job-execution")
+                navigate("/execution")
               }
             >
               Job Execution
