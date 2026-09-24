@@ -2,6 +2,12 @@ package com.fsm.service;
 
 import com.fsm.entity.Technician;
 import com.fsm.repository.TechnicianRepository;
+import com.fsm.repository.UserRepository;
+import com.fsm.entity.User;
+import com.fsm.entity.Role;
+import com.fsm.security.AuthorizationService;
+
+import org.springframework.security.access.AccessDeniedException;
 
 import org.springframework.stereotype.Service;
 
@@ -13,12 +19,17 @@ import java.util.List;
 public class TechnicianService {
 
     private final TechnicianRepository technicianRepository;
+    private final UserRepository userRepository;
+    private final AuthorizationService authorizationService;
 
     public TechnicianService(
-            TechnicianRepository technicianRepository) {
+            TechnicianRepository technicianRepository,
+            UserRepository userRepository,
+            AuthorizationService authorizationService) {
 
-        this.technicianRepository =
-                technicianRepository;
+        this.technicianRepository = technicianRepository;
+        this.userRepository = userRepository;
+        this.authorizationService = authorizationService;
     }
 
     // =====================================================
@@ -26,7 +37,10 @@ public class TechnicianService {
     // =====================================================
 
     public List<Technician> getAllTechnicians() {
-
+        if (!authorizationService.hasRole("DISPATCHER") &&
+                !authorizationService.hasRole("MANAGER")) {
+            throw new AccessDeniedException("Only Dispatcher or Manager can view all technicians");
+        }
         return technicianRepository.findAll();
     }
 
@@ -59,6 +73,17 @@ public class TechnicianService {
             );
         }
 
+        if (authorizationService.hasRole("TECHNICIAN") &&
+                !authorizationService.isCurrentTechnicianByUserId(userId)) {
+            throw new AccessDeniedException("You are not allowed to access another technician's profile");
+        }
+
+        if (!authorizationService.hasRole("TECHNICIAN") &&
+                !authorizationService.hasRole("DISPATCHER") &&
+                !authorizationService.hasRole("MANAGER")) {
+            throw new AccessDeniedException("You don't have permission to access technician profiles");
+        }
+
         return technicianRepository
                 .findByUserId(userId)
                 .orElseThrow(() ->
@@ -76,30 +101,37 @@ public class TechnicianService {
     public Technician createTechnician(
             Technician technician) {
 
-        // -------------------------------------------------
-        // USER ID VALIDATION
-        // -------------------------------------------------
-
-        if (technician.getUserId() == null) {
-
-            throw new RuntimeException(
-                    "User ID is required"
-            );
+        if (!authorizationService.hasRole("DISPATCHER") &&
+                !authorizationService.hasRole("MANAGER")) {
+            throw new AccessDeniedException("Only Dispatcher or Manager can create technicians");
         }
 
-        // -------------------------------------------------
-        // PREVENT DUPLICATE TECHNICIAN PROFILE
-        // -------------------------------------------------
+        if (technician.getEmail() == null || technician.getEmail().isBlank()) {
+            throw new RuntimeException("Technician email is required");
+        }
 
-        if (technicianRepository
-                .existsByUserId(
-                        technician.getUserId()
-                )) {
+        User user = userRepository.findByEmail(technician.getEmail().trim().toLowerCase())
+                .orElseThrow(() -> new RuntimeException(
+                        "No user account exists for this email. Create/register the technician user first."));
 
-            throw new RuntimeException(
-                    "A technician profile already exists for user id: "
-                            + technician.getUserId()
-            );
+        if (user.getRole() != Role.TECHNICIAN) {
+            throw new RuntimeException("The selected email belongs to a " + user.getRole() + " account, not a TECHNICIAN.");
+        }
+
+        technician.setUserId(user.getId());
+
+        if (technicianRepository.existsByUserId(user.getId())) {
+            throw new RuntimeException("A technician profile already exists for this user account.");
+        }
+
+        if (technician.getEmployeeCode() == null || technician.getEmployeeCode().isBlank()) {
+            throw new RuntimeException("Employee code is required");
+        }
+
+        if (technician.getRating() != null &&
+                (technician.getRating().compareTo(BigDecimal.ZERO) < 0 ||
+                 technician.getRating().compareTo(new BigDecimal("5.00")) > 0)) {
+            throw new RuntimeException("Rating must be between 0 and 5");
         }
 
         // -------------------------------------------------
