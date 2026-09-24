@@ -1,5 +1,6 @@
 
 import {
+    Fragment,
     useEffect,
     useState
 } from "react";
@@ -2060,7 +2061,7 @@ function JobExecution() {
                     <div className="je-execution-list">
 
                         {jobExecutions.map(
-                            execution => {
+                            (execution, index) => {
 
                                 const status =
                                     String(
@@ -2119,11 +2120,10 @@ function JobExecution() {
 
                                 return (
 
+                                    <Fragment key={execution.id}>
+
                                     <article
                                         className={`je-execution-card ${cardClass}`}
-                                        key={
-                                            execution.id
-                                        }
                                     >
 
                                         <div className="je-execution-top">
@@ -2912,6 +2912,14 @@ function JobExecution() {
                                         )}
 
                                     </article>
+
+                                    {index < jobExecutions.length - 1 && (
+                                        <div className="je-execution-divider" aria-hidden="true">
+                                            <span></span>
+                                        </div>
+                                    )}
+
+                                    </Fragment>
 
                                 );
 
