@@ -67,7 +67,9 @@ public class WorkOrder {
         PENDING,
         ASSIGNED,
         IN_PROGRESS,
+        ON_HOLD,
         COMPLETED,
+        CLOSED,
         CANCELLED
     }
 
