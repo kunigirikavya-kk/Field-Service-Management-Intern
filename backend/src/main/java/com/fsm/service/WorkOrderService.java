@@ -599,11 +599,12 @@ public class WorkOrderService {
 
             if (
                     status != WorkOrder.Status.IN_PROGRESS &&
+                    status != WorkOrder.Status.ON_HOLD &&
                     status != WorkOrder.Status.COMPLETED
             ) {
 
                 throw new AccessDeniedException(
-                        "Technicians can only move their jobs to IN_PROGRESS or COMPLETED"
+                        "Technicians can only move their jobs to IN_PROGRESS, ON_HOLD or COMPLETED"
                 );
 
             }
@@ -620,17 +621,35 @@ public class WorkOrderService {
         }
 
 
-        if (
-                workOrder.getStatus() ==
-                        WorkOrder.Status.COMPLETED ||
-                workOrder.getStatus() ==
-                        WorkOrder.Status.CANCELLED
+        // Managers perform the official COMPLETED -> CLOSED close-out.
+        if (authorizationService.hasRole("MANAGER")) {
+
+            if (status == WorkOrder.Status.CLOSED) {
+
+                if (workOrder.getStatus() != WorkOrder.Status.COMPLETED) {
+                    throw new RuntimeException(
+                            "Only COMPLETED work orders can be closed by a Manager"
+                    );
+                }
+
+            } else if (
+                    workOrder.getStatus() == WorkOrder.Status.COMPLETED ||
+                    workOrder.getStatus() == WorkOrder.Status.CANCELLED
+            ) {
+
+                throw new RuntimeException(
+                        "Completed or cancelled work orders cannot change status"
+                );
+            }
+
+        } else if (
+                workOrder.getStatus() == WorkOrder.Status.COMPLETED ||
+                workOrder.getStatus() == WorkOrder.Status.CANCELLED
         ) {
 
             throw new RuntimeException(
                     "Completed or cancelled work orders cannot change status"
             );
-
         }
 
 
