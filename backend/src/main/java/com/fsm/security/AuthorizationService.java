@@ -163,6 +163,11 @@ public class AuthorizationService {
     // TECHNICIAN OWNERSHIP
     // =====================================================
 
+    public boolean isCurrentTechnicianByUserId(Long userId) {
+        if (!hasRole("TECHNICIAN")) return false;
+        return getCurrentUserId().equals(userId);
+    }
+
     public boolean isCurrentTechnician(
             Long technicianId
     ) {
