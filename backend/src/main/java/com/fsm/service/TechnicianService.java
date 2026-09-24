@@ -128,6 +128,12 @@ public class TechnicianService {
             throw new RuntimeException("Employee code is required");
         }
 
+        String employeeCode = technician.getEmployeeCode().trim();
+        if (technicianRepository.existsByEmployeeCode(employeeCode)) {
+            throw new RuntimeException("Employee code already exists: " + employeeCode);
+        }
+        technician.setEmployeeCode(employeeCode);
+
         if (technician.getRating() != null &&
                 (technician.getRating().compareTo(BigDecimal.ZERO) < 0 ||
                  technician.getRating().compareTo(new BigDecimal("5.00")) > 0)) {
