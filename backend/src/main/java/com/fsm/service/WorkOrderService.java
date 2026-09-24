@@ -621,6 +621,18 @@ public class WorkOrderService {
         }
 
 
+        if (
+                status == WorkOrder.Status.CLOSED &&
+                !authorizationService.hasRole("MANAGER")
+        ) {
+
+            throw new AccessDeniedException(
+                    "Only a Manager can perform the COMPLETED to CLOSED close-out"
+            );
+
+        }
+
+
         // Managers perform the official COMPLETED -> CLOSED close-out.
         if (authorizationService.hasRole("MANAGER")) {
 
