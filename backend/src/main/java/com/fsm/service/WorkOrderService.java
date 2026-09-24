@@ -8,6 +8,7 @@ import com.fsm.security.AuthorizationService;
 
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -21,11 +22,15 @@ public class WorkOrderService {
     private final WorkOrderRepository workOrderRepository;
     private final SiteRepository siteRepository;
     private final AuthorizationService authorizationService;
+    private final WorkOrderStatusHistoryService historyService;
+    private final SlaService slaService;
 
     public WorkOrderService(
             WorkOrderRepository workOrderRepository,
             SiteRepository siteRepository,
-            AuthorizationService authorizationService) {
+            AuthorizationService authorizationService,
+            WorkOrderStatusHistoryService historyService,
+            SlaService slaService) {
 
         this.workOrderRepository =
                 workOrderRepository;
@@ -33,15 +38,17 @@ public class WorkOrderService {
         this.siteRepository =
                 siteRepository;
 
-        this.authorizationService =
-                authorizationService;
+        this.authorizationService = authorizationService;
+        this.historyService = historyService;
+        this.slaService = slaService;
     }
 
     public List<WorkOrder> getAllWorkOrders() {
 
         if (
                 authorizationService.hasRole("DISPATCHER") ||
-                authorizationService.hasRole("MANAGER")
+                authorizationService.hasRole("MANAGER") ||
+                authorizationService.hasRole("ADMIN")
         ) {
             return workOrderRepository.findAll();
         }
@@ -181,9 +188,7 @@ public class WorkOrderService {
 
         if (workOrder.getStatus() == null) {
 
-            workOrder.setStatus(
-                    WorkOrder.Status.PENDING
-            );
+            workOrder.setStatus(WorkOrder.Status.NEW);
 
         }
 
@@ -207,17 +212,12 @@ public class WorkOrderService {
 
 
         if (workOrder.getCreatedAt() == null) {
-
-            workOrder.setCreatedAt(
-                    LocalDateTime.now()
-            );
-
+            workOrder.setCreatedAt(LocalDateTime.now());
         }
-
-
-        return workOrderRepository.save(
-                workOrder
-        );
+        slaService.applyDueDate(workOrder);
+        WorkOrder saved = workOrderRepository.save(workOrder);
+        historyService.record(saved.getId(), null, saved.getStatus(), "Work order created");
+        return saved;
     }
 
     private void validateSiteBelongsToCustomer(
@@ -357,10 +357,8 @@ public class WorkOrderService {
 
 
         if (
-                workOrder.getStatus() ==
-                        WorkOrder.Status.COMPLETED ||
-                workOrder.getStatus() ==
-                        WorkOrder.Status.CANCELLED
+                workOrder.getStatus() == WorkOrder.Status.CLOSED ||
+                workOrder.getStatus() == WorkOrder.Status.CANCELLED
         ) {
 
             throw new RuntimeException(
@@ -473,9 +471,9 @@ public class WorkOrderService {
                 workOrderDetails.getDescription()
         );
 
-        workOrder.setStatus(
-                workOrderDetails.getStatus()
-        );
+        if (workOrderDetails.getStatus() != null && workOrderDetails.getStatus() != workOrder.getStatus()) {
+            throw new IllegalArgumentException("Status changes must use the dedicated lifecycle endpoint.");
+        }
 
         workOrder.setScheduledDate(
                 workOrderDetails.getScheduledDate()
@@ -485,16 +483,12 @@ public class WorkOrderService {
                 workOrderDetails.getCompletedDate()
         );
 
-        workOrder.setTotalCost(
-                workOrderDetails.getTotalCost()
-        );
-
-
-        return workOrderRepository.save(
-                workOrder
-        );
+        workOrder.setTotalCost(workOrderDetails.getTotalCost() == null ? workOrder.getTotalCost() : workOrderDetails.getTotalCost());
+        slaService.applyDueDate(workOrder);
+        return workOrderRepository.save(workOrder);
     }
 
+    @Transactional
     public WorkOrder assignTechnician(
             Long id,
             Long technicianId) {
@@ -515,17 +509,11 @@ public class WorkOrderService {
                 getWorkOrderById(id);
 
 
-        if (
-                workOrder.getStatus() ==
-                        WorkOrder.Status.COMPLETED ||
-                workOrder.getStatus() ==
-                        WorkOrder.Status.CANCELLED
-        ) {
-
-            throw new RuntimeException(
-                    "Cannot assign a completed or cancelled work order"
-            );
-
+        if (workOrder.getStatus() == WorkOrder.Status.CLOSED || workOrder.getStatus() == WorkOrder.Status.CANCELLED) {
+            throw new RuntimeException("Cannot assign a closed or cancelled work order");
+        }
+        if (workOrder.getStatus() != WorkOrder.Status.NEW && workOrder.getStatus() != WorkOrder.Status.ASSIGNED) {
+            throw new RuntimeException("Technician assignment is only allowed before work starts");
         }
 
 
@@ -538,153 +526,78 @@ public class WorkOrderService {
         }
 
 
-        workOrder.setTechnicianId(
-                technicianId
-        );
-
-
-        workOrder.setStatus(
-                WorkOrder.Status.ASSIGNED
-        );
-
-
-        return workOrderRepository.save(
-                workOrder
-        );
+        WorkOrder.Status previousStatus = workOrder.getStatus();
+        workOrder.setTechnicianId(technicianId);
+        workOrder.setStatus(WorkOrder.Status.ASSIGNED);
+        WorkOrder saved = workOrderRepository.save(workOrder);
+        if (previousStatus != WorkOrder.Status.ASSIGNED) {
+            historyService.record(saved.getId(), previousStatus, WorkOrder.Status.ASSIGNED, "Technician assigned");
+        } else {
+            historyService.record(saved.getId(), previousStatus, WorkOrder.Status.ASSIGNED, "Technician reassigned");
+        }
+        return saved;
     }
 
-    public WorkOrder updateStatus(
-            Long id,
-            WorkOrder.Status status) {
+    @Transactional
+    public WorkOrder updateStatus(Long id, WorkOrder.Status targetStatus) {
+        if (targetStatus == null) throw new IllegalArgumentException("Status is required");
 
-        if (status == null) {
+        WorkOrder order = workOrderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Work order not found with id: " + id));
+        WorkOrder.Status current = normalizeLegacyStatus(order.getStatus());
+        targetStatus = normalizeLegacyStatus(targetStatus);
 
-            throw new RuntimeException(
-                    "Status is required"
-            );
-
+        if (current == WorkOrder.Status.CLOSED || current == WorkOrder.Status.CANCELLED) {
+            throw new IllegalStateException("Terminal work orders cannot transition further");
         }
 
+        boolean technician = authorizationService.hasRole("TECHNICIAN");
+        boolean manager = authorizationService.hasRole("MANAGER") || authorizationService.hasRole("ADMIN");
+        boolean dispatcher = authorizationService.hasRole("DISPATCHER");
 
-        WorkOrder workOrder =
-                workOrderRepository
-                        .findById(id)
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Work order not found with id: "
-                                                + id
-                                )
-                        );
+        if (technician) {
+            Long technicianId = authorizationService.getCurrentTechnicianId();
+            if (!technicianId.equals(order.getTechnicianId())) throw new AccessDeniedException("You can only update jobs assigned to you");
+            if (!(targetStatus == WorkOrder.Status.IN_PROGRESS || targetStatus == WorkOrder.Status.ON_HOLD || targetStatus == WorkOrder.Status.COMPLETED))
+                throw new AccessDeniedException("Technicians can only start, hold/resume, or complete their assigned jobs");
+        } else if (!dispatcher && !manager) {
+            throw new AccessDeniedException("You don't have permission to change work-order status");
+        }
 
-
-        if (authorizationService.hasRole("TECHNICIAN")) {
-
-            Long currentTechnicianId =
-                    authorizationService
-                            .getCurrentTechnicianId();
-
-
-            if (
-                    workOrder.getTechnicianId() == null ||
-                    !workOrder.getTechnicianId()
-                            .equals(currentTechnicianId)
-            ) {
-
-                throw new AccessDeniedException(
-                        "You are not allowed to update this work order"
-                );
-
+        if (targetStatus == WorkOrder.Status.CLOSED) {
+            if (!manager) throw new AccessDeniedException("Only a Manager or Admin can close a completed work order");
+            if (current != WorkOrder.Status.COMPLETED) throw new IllegalStateException("Only COMPLETED work orders can be closed");
+        } else if (manager || dispatcher) {
+            if (targetStatus == WorkOrder.Status.IN_PROGRESS || targetStatus == WorkOrder.Status.ON_HOLD || targetStatus == WorkOrder.Status.COMPLETED) {
+                throw new AccessDeniedException("Dispatcher/Manager should use assignment or technician execution for field status changes");
             }
-
-
-            if (
-                    status != WorkOrder.Status.IN_PROGRESS &&
-                    status != WorkOrder.Status.ON_HOLD &&
-                    status != WorkOrder.Status.COMPLETED
-            ) {
-
-                throw new AccessDeniedException(
-                        "Technicians can only move their jobs to IN_PROGRESS, ON_HOLD or COMPLETED"
-                );
-
-            }
-
         }
 
-
-        if (authorizationService.hasRole("CUSTOMER")) {
-
-            throw new AccessDeniedException(
-                    "Customers cannot update work order status"
-            );
-
+        if (!isAllowedTransition(current, targetStatus)) {
+            throw new IllegalStateException("Illegal lifecycle transition: " + current + " -> " + targetStatus);
         }
 
+        order.setStatus(targetStatus);
+        if (targetStatus == WorkOrder.Status.COMPLETED) order.setCompletedDate(LocalDateTime.now());
+        WorkOrder saved = workOrderRepository.save(order);
+        historyService.record(saved.getId(), current, targetStatus, null);
+        return saved;
+    }
 
-        if (
-                status == WorkOrder.Status.CLOSED &&
-                !authorizationService.hasRole("MANAGER")
-        ) {
+    private WorkOrder.Status normalizeLegacyStatus(WorkOrder.Status status) {
+        return status == WorkOrder.Status.PENDING ? WorkOrder.Status.NEW : status;
+    }
 
-            throw new AccessDeniedException(
-                    "Only a Manager can perform the COMPLETED to CLOSED close-out"
-            );
-
-        }
-
-
-        // Managers perform the official COMPLETED -> CLOSED close-out.
-        if (authorizationService.hasRole("MANAGER")) {
-
-            if (status == WorkOrder.Status.CLOSED) {
-
-                if (workOrder.getStatus() != WorkOrder.Status.COMPLETED) {
-                    throw new RuntimeException(
-                            "Only COMPLETED work orders can be closed by a Manager"
-                    );
-                }
-
-            } else if (
-                    workOrder.getStatus() == WorkOrder.Status.COMPLETED ||
-                    workOrder.getStatus() == WorkOrder.Status.CANCELLED
-            ) {
-
-                throw new RuntimeException(
-                        "Completed or cancelled work orders cannot change status"
-                );
-            }
-
-        } else if (
-                workOrder.getStatus() == WorkOrder.Status.COMPLETED ||
-                workOrder.getStatus() == WorkOrder.Status.CANCELLED
-        ) {
-
-            throw new RuntimeException(
-                    "Completed or cancelled work orders cannot change status"
-            );
-        }
-
-
-        workOrder.setStatus(
-                status
-        );
-
-
-        if (
-                status ==
-                        WorkOrder.Status.COMPLETED
-        ) {
-
-            workOrder.setCompletedDate(
-                    LocalDateTime.now()
-            );
-
-        }
-
-
-        return workOrderRepository.save(
-                workOrder
-        );
+    private boolean isAllowedTransition(WorkOrder.Status from, WorkOrder.Status to) {
+        return switch (from) {
+            case NEW -> to == WorkOrder.Status.ASSIGNED || to == WorkOrder.Status.CANCELLED;
+            case ASSIGNED -> to == WorkOrder.Status.IN_PROGRESS || to == WorkOrder.Status.CANCELLED;
+            case IN_PROGRESS -> to == WorkOrder.Status.ON_HOLD || to == WorkOrder.Status.COMPLETED;
+            case ON_HOLD -> to == WorkOrder.Status.IN_PROGRESS;
+            case COMPLETED -> to == WorkOrder.Status.CLOSED;
+            case CLOSED, CANCELLED -> false;
+            case PENDING -> false;
+        };
     }
 
     public List<WorkOrder> getWorkOrdersByCustomer(
