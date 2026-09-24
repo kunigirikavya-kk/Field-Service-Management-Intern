@@ -125,6 +125,12 @@ export function getPartUsageByWorkOrder(id) { return request(`/part-usage/work-o
 export function getPartUsageByJobExecution(id) { return request(`/part-usage/job-execution/${id}`); }
 export function getPartUsageByTechnician(id) { return request(`/part-usage/technician/${id}`); }
 export function deletePartUsage(id) { return request(`/part-usage/${id}`, { method: "DELETE" }); }
+export function logTime(data) { return request("/time-logs", { method: "POST", body: JSON.stringify(data) }); }
+export function getTimeLogsByWorkOrder(id) { return request(`/time-logs/work-order/${id}`); }
+export function getNotifications() { return request("/notifications"); }
+export function markNotificationRead(id) { return request(`/notifications/${id}/read`, { method: "PUT" }); }
+export function getWorkOrderHistory(id) { return request(`/work-orders/${id}/history`); }
+export function getReportsSummary() { return request("/reports/summary"); }
 
 export function getInvoices() { return request("/invoices"); }
 export function getInvoice(id) { return request(`/invoices/${id}`); }
