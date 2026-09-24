@@ -46,7 +46,7 @@ class RoleEndToEndIT {
 
     @Container
     static final PostgreSQLContainer POSTGRES =
-            new PostgreSQLContainer<>("postgres:17-alpine")
+            new PostgreSQLContainer("postgres:17-alpine")
                     .withDatabaseName("field_service_management_e2e")
                     .withUsername("postgres")
                     .withPassword("e2e-password");
