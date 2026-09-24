@@ -16,6 +16,7 @@ function Technicians() {
         employeeCode: "",
         fullName: "",
         email: "",
+        accountPassword: "",
         phone: "",
         specialization: "",
         status: "AVAILABLE",
@@ -65,6 +66,7 @@ function Technicians() {
             await createTechnician({
                 ...form,
                 email: form.email.trim().toLowerCase(),
+                accountPassword: form.accountPassword,
                 rating: Number(form.rating)
             });
 
@@ -72,6 +74,7 @@ function Technicians() {
                 employeeCode: "",
                 fullName: "",
                 email: "",
+                accountPassword: "",
                 phone: "",
                 specialization: "",
                 status: "AVAILABLE",
@@ -189,6 +192,24 @@ function Technicians() {
                                 value={form.email}
                                 onChange={handleChange}
                                 required
+                            />
+
+                        </div>
+
+
+                        <div className="form-group">
+
+                            <label>
+                                Account Password
+                            </label>
+
+                            <input
+                                type="password"
+                                name="accountPassword"
+                                placeholder="Minimum 6 characters for a new account"
+                                value={form.accountPassword}
+                                onChange={handleChange}
+                                minLength="6"
                             />
 
                         </div>
