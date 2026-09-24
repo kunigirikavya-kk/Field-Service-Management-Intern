@@ -381,9 +381,7 @@ function App() {
 
                                 <RoleRoute
                                     allowedRoles={[
-                                        "TECHNICIAN",
-                                        "MANAGER",
-                                        "ADMIN"
+                                        "TECHNICIAN"
                                     ]}
                                 >
 
