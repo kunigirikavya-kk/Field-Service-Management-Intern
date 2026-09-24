@@ -46,4 +46,6 @@ public interface TechnicianRepository
     // =====================================================
 
     boolean existsByUserId(Long userId);
+
+    boolean existsByEmployeeCode(String employeeCode);
 }
