@@ -52,17 +52,20 @@ public class SecurityConfig {
                     "/api/users/login",
                     "/api/users/register",
                     "/api/health",
+                    "/v3/api-docs/**",
+                    "/swagger-ui/**",
+                    "/swagger-ui.html",
                     "/error"
                 ).permitAll()
 
                 .requestMatchers(HttpMethod.GET, "/api/customers/me")
                     .hasRole("CUSTOMER")
                 .requestMatchers(HttpMethod.GET, "/api/customers", "/api/customers/**")
-                    .hasAnyRole("DISPATCHER", "MANAGER")
+                    .hasAnyRole("DISPATCHER", "MANAGER", "ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/customers", "/api/customers/**")
-                    .hasAnyRole("DISPATCHER", "MANAGER")
+                    .hasAnyRole("DISPATCHER", "MANAGER", "ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/api/customers", "/api/customers/**")
-                    .hasAnyRole("DISPATCHER", "MANAGER")
+                    .hasAnyRole("DISPATCHER", "MANAGER", "ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/customers", "/api/customers/**")
                     .hasRole("MANAGER")
 
@@ -85,17 +88,17 @@ public class SecurityConfig {
                     .hasAnyRole("CUSTOMER", "DISPATCHER", "MANAGER")
 
                 .requestMatchers(HttpMethod.GET, "/api/work-orders", "/api/work-orders/**")
-                    .hasAnyRole("CUSTOMER", "TECHNICIAN", "DISPATCHER", "MANAGER")
+                    .hasAnyRole("CUSTOMER", "TECHNICIAN", "DISPATCHER", "MANAGER", "ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/work-orders")
-                    .hasAnyRole("DISPATCHER", "MANAGER")
+                    .hasAnyRole("DISPATCHER", "MANAGER", "ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/work-orders/*/assign")
-                    .hasAnyRole("DISPATCHER", "MANAGER")
+                    .hasAnyRole("DISPATCHER", "MANAGER", "ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/work-orders/*/status")
-                    .hasAnyRole("TECHNICIAN", "DISPATCHER", "MANAGER")
+                    .hasAnyRole("TECHNICIAN", "DISPATCHER", "MANAGER", "ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/work-orders/**")
                     .hasAnyRole("DISPATCHER", "MANAGER")
                 .requestMatchers(HttpMethod.PUT, "/api/work-orders", "/api/work-orders/**")
-                    .hasAnyRole("TECHNICIAN", "DISPATCHER", "MANAGER")
+                    .hasAnyRole("DISPATCHER", "MANAGER", "ADMIN")
 
                 .requestMatchers(HttpMethod.GET, "/api/technicians", "/api/technicians/**")
                     .hasAnyRole("TECHNICIAN", "DISPATCHER", "MANAGER")
@@ -140,9 +143,13 @@ public class SecurityConfig {
                 .requestMatchers("/api/part-usage/**")
                     .hasAnyRole("TECHNICIAN", "DISPATCHER", "MANAGER")
                 .requestMatchers("/api/notifications/**")
-                    .hasAnyRole("CUSTOMER", "TECHNICIAN", "DISPATCHER", "MANAGER")
+                    .hasAnyRole("CUSTOMER", "TECHNICIAN", "DISPATCHER", "MANAGER", "ADMIN")
+                .requestMatchers("/api/time-logs/**")
+                    .hasAnyRole("TECHNICIAN", "DISPATCHER", "MANAGER", "ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/work-orders/*/history")
+                    .hasAnyRole("CUSTOMER", "TECHNICIAN", "DISPATCHER", "MANAGER", "ADMIN")
                 .requestMatchers("/api/reports/**")
-                    .hasRole("MANAGER")
+                    .hasAnyRole("MANAGER", "ADMIN")
 
                 .anyRequest().authenticated()
             )
