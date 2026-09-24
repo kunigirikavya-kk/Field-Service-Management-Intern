@@ -49,7 +49,7 @@ public class WorkOrder {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, columnDefinition = "VARCHAR(30)")
-    private Status status = Status.PENDING;
+    private Status status = Status.NEW;
 
     @Column(name = "scheduled_date")
     private LocalDateTime scheduledDate;
@@ -59,6 +59,21 @@ public class WorkOrder {
 
     @Column(name = "total_cost", precision = 10, scale = 2)
     private BigDecimal totalCost = BigDecimal.ZERO;
+
+    @Column(name = "parts_cost", precision = 10, scale = 2, nullable = false)
+    private BigDecimal partsCost = BigDecimal.ZERO;
+
+    @Column(name = "labour_minutes", nullable = false)
+    private Integer labourMinutes = 0;
+
+    @Column(name = "sla_due_at")
+    private LocalDateTime slaDueAt;
+
+    @Column(name = "sla_breached", nullable = false)
+    private boolean slaBreached = false;
+
+    @Column(name = "sla_breach_notified", nullable = false)
+    private boolean slaBreachNotified = false;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -106,7 +121,8 @@ public class WorkOrder {
 
     // Status
     public enum Status {
-        PENDING,
+        NEW,
+        PENDING, // legacy compatibility; new work orders use NEW
         ASSIGNED,
         IN_PROGRESS,
         ON_HOLD,
@@ -235,6 +251,17 @@ public class WorkOrder {
     public void setTotalCost(BigDecimal totalCost) {
         this.totalCost = totalCost;
     }
+
+    public BigDecimal getPartsCost() { return partsCost; }
+    public void setPartsCost(BigDecimal partsCost) { this.partsCost = partsCost; }
+    public Integer getLabourMinutes() { return labourMinutes; }
+    public void setLabourMinutes(Integer labourMinutes) { this.labourMinutes = labourMinutes; }
+    public LocalDateTime getSlaDueAt() { return slaDueAt; }
+    public void setSlaDueAt(LocalDateTime slaDueAt) { this.slaDueAt = slaDueAt; }
+    public boolean isSlaBreached() { return slaBreached; }
+    public void setSlaBreached(boolean slaBreached) { this.slaBreached = slaBreached; }
+    public boolean isSlaBreachNotified() { return slaBreachNotified; }
+    public void setSlaBreachNotified(boolean value) { this.slaBreachNotified = value; }
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
