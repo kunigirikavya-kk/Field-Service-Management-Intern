@@ -13,7 +13,6 @@ function Technicians() {
     const [saving, setSaving] = useState(false);
 
     const [form, setForm] = useState({
-        userId: 3,
         employeeCode: "",
         fullName: "",
         email: "",
@@ -65,12 +64,11 @@ function Technicians() {
 
             await createTechnician({
                 ...form,
-                userId: Number(form.userId),
+                email: form.email.trim().toLowerCase(),
                 rating: Number(form.rating)
             });
 
             setForm({
-                userId: 3,
                 employeeCode: "",
                 fullName: "",
                 email: "",
@@ -92,7 +90,7 @@ function Technicians() {
             );
 
             alert(
-                "Failed to create technician. Check backend console."
+                error?.message || "Failed to create technician."
             );
 
         } finally {
@@ -134,7 +132,7 @@ function Technicians() {
                     <h2>Add New Technician</h2>
 
                     <p>
-                        Enter the technician details below
+                        Enter the technician details below. The email must belong to an existing TECHNICIAN user account.
                     </p>
 
                 </div>
