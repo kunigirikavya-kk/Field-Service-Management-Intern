@@ -17,7 +17,8 @@ import {
     FileText,
     Image as ImageIcon,
     Upload,
-    Eye
+    Eye,
+    Clock
 } from "lucide-react";
 
 import {
