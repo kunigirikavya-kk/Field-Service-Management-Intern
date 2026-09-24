@@ -19,7 +19,7 @@ Spring Boot 3 + Java 21 + React/Vite + PostgreSQL + Flyway.
 - OpenAPI/Swagger UI.
 - PostgreSQL schema managed by Flyway; no Hibernate schema mutation in production.
 - Docker Compose for the complete local stack.
-- GitHub Actions backend tests and frontend lint/build validation.
+- GitHub Actions backend unit tests, PostgreSQL-backed role lifecycle integration tests, Docker Compose smoke validation, and frontend lint/build validation.
 
 ## Local setup
 1. Copy `.env.example` to `.env` and replace the local password/secret values.
@@ -43,6 +43,14 @@ The Flyway baseline seeds local/review accounts with the password `Password123!`
 | Customer | customer@keystone.local |
 
 These credentials are for local/review environments only. Change or remove seeded demo users before production.
+
+## Validation
+- Backend unit/compile tests: `cd backend && mvn -B test`
+- Full PostgreSQL-backed role E2E tests (requires Docker): `cd backend && mvn -B -P e2e verify`
+- Frontend production checks: `cd frontend/fsm-frontend && npm ci && npm run lint && npm run build`
+- Complete local stack smoke test: `docker compose up --build`
+
+The role E2E suite exercises login, Dispatcher assignment, Technician lifecycle, Manager close-out, customer data isolation, protected history access, and Manager reporting against a real PostgreSQL container. Cloudinary photo delivery remains environment-dependent and should be verified with real Cloudinary credentials before production use.
 
 ## Manual run
 Backend: `cd backend` then run the Maven/Spring Boot application with the environment variables from `.env`.
