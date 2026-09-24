@@ -1,6 +1,8 @@
 package com.fsm.controller;
 
 import com.fsm.dto.WorkOrderRequest;
+import com.fsm.dto.WorkOrderResponse;
+import com.fsm.security.AuthorizationService;
 import com.fsm.entity.WorkOrder;
 import com.fsm.service.WorkOrderService;
 
@@ -11,18 +13,20 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/work-orders")
 public class WorkOrderController {
 
     private final WorkOrderService workOrderService;
+    private final AuthorizationService authorizationService;
 
     public WorkOrderController(
-            WorkOrderService workOrderService) {
-
-        this.workOrderService =
-                workOrderService;
+            WorkOrderService workOrderService,
+            AuthorizationService authorizationService) {
+        this.workOrderService = workOrderService;
+        this.authorizationService = authorizationService;
     }
 
     // =====================================================
@@ -31,12 +35,10 @@ public class WorkOrderController {
     // =====================================================
 
     @GetMapping
-    public ResponseEntity<List<WorkOrder>>
+    public ResponseEntity<List<WorkOrderResponse>>
     getAllWorkOrders() {
 
-        return ResponseEntity.ok(
-                workOrderService.getAllWorkOrders()
-        );
+        return ResponseEntity.ok(toResponses(workOrderService.getAllWorkOrders(), false));
     }
 
     // =====================================================
@@ -44,14 +46,12 @@ public class WorkOrderController {
     // =====================================================
 
     @GetMapping("/{id}")
-    public ResponseEntity<WorkOrder>
+    public ResponseEntity<WorkOrderResponse>
     getWorkOrderById(
             @PathVariable Long id) {
 
-        return ResponseEntity.ok(
-                workOrderService
-                        .getWorkOrderById(id)
-        );
+        WorkOrder order = workOrderService.getWorkOrderById(id);
+        return ResponseEntity.ok(WorkOrderResponse.from(order, authorizationService.hasRole("CUSTOMER")));
     }
 
     // =====================================================
@@ -60,7 +60,7 @@ public class WorkOrderController {
     // =====================================================
 
     @PostMapping
-    public ResponseEntity<WorkOrder>
+    public ResponseEntity<WorkOrderResponse>
     createWorkOrder(
             @Valid @RequestBody WorkOrderRequest request) {
 
@@ -73,7 +73,7 @@ public class WorkOrderController {
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(savedWorkOrder);
+                .body(WorkOrderResponse.from(savedWorkOrder, false));
     }
 
     // =====================================================
@@ -82,7 +82,7 @@ public class WorkOrderController {
     // =====================================================
 
     @PutMapping("/{id}")
-    public ResponseEntity<WorkOrder>
+    public ResponseEntity<WorkOrderResponse>
     updateWorkOrder(
             @PathVariable Long id,
             @Valid @RequestBody WorkOrderRequest request) {
@@ -90,13 +90,7 @@ public class WorkOrderController {
         WorkOrder workOrder =
                 mapToEntity(request);
 
-        return ResponseEntity.ok(
-                workOrderService
-                        .updateWorkOrder(
-                                id,
-                                workOrder
-                        )
-        );
+        return ResponseEntity.ok(WorkOrderResponse.from(workOrderService.updateWorkOrder(id, workOrder), false));
     }
 
     // =====================================================
@@ -105,18 +99,12 @@ public class WorkOrderController {
     // =====================================================
 
     @PostMapping("/{id}/assign")
-    public ResponseEntity<WorkOrder>
+    public ResponseEntity<WorkOrderResponse>
     assignTechnician(
             @PathVariable Long id,
             @RequestParam Long technicianId) {
 
-        return ResponseEntity.ok(
-                workOrderService
-                        .assignTechnician(
-                                id,
-                                technicianId
-                        )
-        );
+        return ResponseEntity.ok(WorkOrderResponse.from(workOrderService.assignTechnician(id, technicianId), false));
     }
 
     // =====================================================
@@ -125,18 +113,12 @@ public class WorkOrderController {
     // =====================================================
 
     @PostMapping("/{id}/status")
-    public ResponseEntity<WorkOrder>
+    public ResponseEntity<WorkOrderResponse>
     updateStatus(
             @PathVariable Long id,
             @RequestParam String status) {
 
-        return ResponseEntity.ok(
-                workOrderService
-                        .updateStatus(
-                                id,
-                                parseStatus(status)
-                        )
-        );
+        return ResponseEntity.ok(WorkOrderResponse.from(workOrderService.updateStatus(id, parseStatus(status)), false));
     }
 
     // =====================================================
@@ -144,16 +126,11 @@ public class WorkOrderController {
     // =====================================================
 
     @GetMapping("/customer/{customerId}")
-    public ResponseEntity<List<WorkOrder>>
+    public ResponseEntity<List<WorkOrderResponse>>
     getByCustomer(
             @PathVariable Long customerId) {
 
-        return ResponseEntity.ok(
-                workOrderService
-                        .getWorkOrdersByCustomer(
-                                customerId
-                        )
-        );
+        return ResponseEntity.ok(toResponses(workOrderService.getWorkOrdersByCustomer(customerId), authorizationService.hasRole("CUSTOMER")));
     }
 
     // =====================================================
@@ -161,16 +138,11 @@ public class WorkOrderController {
     // =====================================================
 
     @GetMapping("/technician/{technicianId}")
-    public ResponseEntity<List<WorkOrder>>
+    public ResponseEntity<List<WorkOrderResponse>>
     getByTechnician(
             @PathVariable Long technicianId) {
 
-        return ResponseEntity.ok(
-                workOrderService
-                        .getWorkOrdersByTechnician(
-                                technicianId
-                        )
-        );
+        return ResponseEntity.ok(toResponses(workOrderService.getWorkOrdersByTechnician(technicianId), false));
     }
 
     // =====================================================
@@ -178,16 +150,16 @@ public class WorkOrderController {
     // =====================================================
 
     @GetMapping("/status/{status}")
-    public ResponseEntity<List<WorkOrder>>
+    public ResponseEntity<List<WorkOrderResponse>>
     getByStatus(
             @PathVariable String status) {
 
-        return ResponseEntity.ok(
-                workOrderService
-                        .getWorkOrdersByStatus(
-                                parseStatus(status)
-                        )
-        );
+        return ResponseEntity.ok(toResponses(workOrderService.getWorkOrdersByStatus(parseStatus(status)), false));
+    }
+
+
+    private List<WorkOrderResponse> toResponses(List<WorkOrder> orders, boolean customerView) {
+        return orders.stream().map(order -> WorkOrderResponse.from(order, customerView)).collect(Collectors.toList());
     }
 
     private WorkOrder.Status parseStatus(String rawStatus) {
