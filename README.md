@@ -1,90 +1,87 @@
-# FieldSync — Field Service Management
+# Project KEYSTONE — Field Service Management Platform
 
-Production-ready field service management application.
+Spring Boot 3 + Java 21 + React/Vite + PostgreSQL + Flyway.
 
-## Features
-- JWT authentication and role-based access
-- Customers and sites
-- Service requests
-- Work orders and technician assignment
-- Scheduling and job execution
-- Inventory and parts usage
-- Billing and invoices
-- Reports
-- Cloudinary job-photo uploads
-- Responsive React dashboard
+## Implemented scope
+- JWT authentication with BCrypt passwords and four business roles: Dispatcher, Technician, Manager, Customer.
+- Server-side role and ownership enforcement; the React UI is not the security boundary.
+- Customer/site management.
+- Service requests with ownership protection.
+- Work-order creation, editing while open, assignment/reassignment before execution, and unique human-readable order numbers.
+- Governed lifecycle: NEW -> ASSIGNED -> IN_PROGRESS -> ON_HOLD -> IN_PROGRESS -> COMPLETED -> CLOSED, with cancellation from NEW/ASSIGNED.
+- Append-only work-order status history.
+- Technician field execution, photos, parts usage and time logging.
+- Transactional stock deduction with pessimistic row locking; stock cannot go negative.
+- Parts cost and labour-minute rollups on work orders.
+- Configurable SLA due dates by priority, scheduled breach detection and manager notifications.
+- Manager operational reporting: status counts, overdue work, SLA compliance, technician/site breakdown.
+- Customer portal data is role-scoped and internal work-order fields are hidden from customer responses.
+- OpenAPI/Swagger UI.
+- PostgreSQL schema managed by Flyway; no Hibernate schema mutation in production.
+- Docker Compose for the complete local stack.
+- GitHub Actions backend tests and frontend lint/build validation.
 
-## Stack
-React 19 + Vite • Spring Boot 3.5 / Java 21 • Spring Security • JPA/Hibernate • MySQL 8 • Cloudinary
+## Local setup
+1. Copy `.env.example` to `.env` and replace the local password/secret values.
+2. Start the complete stack: `docker compose up --build`
+3. Open:
+- Frontend: http://localhost:5174
+- API health: http://localhost:8080/api/health
+- Swagger UI: http://localhost:8080/swagger-ui.html
+- OpenAPI JSON: http://localhost:8080/v3/api-docs
 
-## Local development
+Flyway runs automatically when the backend starts. The authoritative schema is under `backend/src/main/resources/db/migration`.
 
-### Docker
-1. Copy `.env.example` to `.env`.
-2. Set a unique `JWT_SECRET` of at least 32 characters.
-3. Add Cloudinary credentials if photo uploads are needed.
-4. Run:
-```bash
-docker compose up --build
-```
-Frontend: http://localhost:5174
-API health: http://localhost:8080/api/health
+## Demo logins
+The Flyway baseline seeds local/review accounts with the password `Password123!`:
 
-### Manual
-```bash
-mysql -u root -p < database/database/fsm_database.sql
-cd backend
-./mvnw spring-boot:run
-cd ../frontend/fsm-frontend
-npm ci
-npm run dev
-```
+| Role | Email |
+|---|---|
+| Dispatcher | dispatcher@keystone.local |
+| Manager | manager@keystone.local |
+| Technician | technician@keystone.local |
+| Customer | customer@keystone.local |
+
+These credentials are for local/review environments only. Change or remove seeded demo users before production.
+
+## Manual run
+Backend: `cd backend` then run the Maven/Spring Boot application with the environment variables from `.env`.
+Frontend: `cd frontend/fsm-frontend`, `npm ci`, then `npm run dev`.
 
 ## Environment variables
-Backend: `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`, `JWT_SECRET`, `JWT_EXPIRATION_MINUTES`, `CORS_ALLOWED_ORIGINS`, `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`, `JPA_DDL_AUTO`, `JPA_SHOW_SQL`.
+Backend: `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`, `FLYWAY_ENABLED`, `JPA_DDL_AUTO`, `JWT_SECRET`, `JWT_EXPIRATION_MINUTES`, `CORS_ALLOWED_ORIGINS`, Cloudinary variables, and SLA hour variables.
 Frontend: `VITE_API_BASE_URL`.
-Never commit `.env` or production credentials.
+Never commit real secrets.
 
-## Deployment
-### Database
-Use a managed MySQL-compatible database. Run `database/database/fsm_database.sql` once for a new database. For an existing compatible schema, `JPA_DDL_AUTO=update` can apply Hibernate changes during initial deployment.
+## API surface
+- `POST /api/users/login`
+- `POST /api/users/register`
+- `GET/POST /api/customers`
+- `GET/POST /api/sites/customer/{customerId}`
+- `GET/POST /api/service-requests`
+- `GET/POST /api/work-orders`
+- `GET/PUT /api/work-orders/{id}`
+- `POST /api/work-orders/{id}/assign`
+- `POST /api/work-orders/{id}/status`
+- `GET /api/work-orders/{id}/history`
+- `POST /api/part-usage`
+- `POST /api/time-logs`
+- `GET /api/notifications`
+- `GET /api/reports/summary`
+- `GET /swagger-ui.html`
 
-### Backend — Render or Railway
-Root directory: `backend`
-Build: `./mvnw -DskipTests package`
-Start: `java -jar target/field-service-management-0.0.1-SNAPSHOT.jar`
-Required environment: database variables, `JWT_SECRET` (32+ random characters), `JWT_EXPIRATION_MINUTES=120`, `CORS_ALLOWED_ORIGINS=https://<frontend-domain>`, `JPA_DDL_AUTO=update`, `JPA_SHOW_SQL=false`.
-Health check: `/api/health`.
+Errors use a consistent JSON structure with timestamp, HTTP status, message and field errors.
 
-### Frontend — Vercel or Netlify
-Root directory: `frontend/fsm-frontend`
-Build: `npm run build`
-Output: `dist`
-Environment: `VITE_API_BASE_URL=https://<backend-domain>/api`
-Configure SPA fallback so application routes serve `index.html`.
+## Role-to-role acceptance testing
+1. Customer logs in, creates a request for their own account, and sees only their own work.
+2. Dispatcher logs in, creates customer/site/work order, assigns or reassigns a technician, and sees open work.
+3. Technician logs in, sees only assigned jobs, starts/holds/resumes/completes, logs parts/time and uploads photos.
+4. Manager logs in, sees SLA/overdue/availability reporting and closes only COMPLETED jobs.
+5. Direct API calls using another customer/technician ID are rejected server-side.
+6. Illegal lifecycle jumps are rejected with HTTP 409.
+7. Part usage is transactional and cannot drive stock below zero.
+8. SLA breaches are recorded and notify managers.
+9. Swagger exposes the controller surface.
 
-## CI
-GitHub Actions builds the backend with Java 21 and frontend with Node 22, then runs the frontend linter.
-
-## API
-Auth: `POST /api/users/register`, `POST /api/users/login`, `GET /api/health`.
-Resources: `/api/customers`, `/api/sites`, `/api/service-requests`, `/api/work-orders`, `/api/technicians`, `/api/schedules`, `/api/job-executions`, `/api/job-photos`, `/api/inventory`, `/api/part-usage`, `/api/invoices`, `/api/reports`.
-Protected endpoints use `Authorization: Bearer <JWT>`.
-
-## Seed data warning
-The SQL file contains demo records with plaintext passwords. Do not use those passwords in production. Prefer application registration or BCrypt password hashes.
-
-## Production checklist
-- [ ] Create managed database and run schema
-- [ ] Configure backend environment variables
-- [ ] Configure Cloudinary if photos are required
-- [ ] Deploy backend and verify `/api/health`
-- [ ] Configure frontend API URL
-- [ ] Set exact backend CORS origin
-- [ ] Deploy frontend
-- [ ] Test registration/login
-- [ ] Test customer → service request → work order → schedule → technician execution
-- [ ] Confirm GitHub Actions is green
-
-## Screenshots
-Add production screenshots here after deployment.
+## Clean checkout rule
+A reviewer should be able to clone the repository, configure `.env`, run Docker Compose, and obtain the complete stack from PostgreSQL migrations without manually editing the database.
