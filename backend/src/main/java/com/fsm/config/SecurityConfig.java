@@ -100,9 +100,9 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/technicians", "/api/technicians/**")
                     .hasAnyRole("TECHNICIAN", "DISPATCHER", "MANAGER")
                 .requestMatchers(HttpMethod.POST, "/api/technicians", "/api/technicians/**")
-                    .hasRole("MANAGER")
+                    .hasAnyRole("DISPATCHER", "MANAGER")
                 .requestMatchers(HttpMethod.PUT, "/api/technicians", "/api/technicians/**")
-                    .hasRole("MANAGER")
+                    .hasAnyRole("DISPATCHER", "MANAGER")
                 .requestMatchers(HttpMethod.DELETE, "/api/technicians", "/api/technicians/**")
                     .hasRole("MANAGER")
 
