@@ -9,6 +9,17 @@ import {
 } from "react-router-dom";
 
 import {
+    User,
+    Play,
+    CheckCircle2,
+    Wrench,
+    FileText,
+    Image as ImageIcon,
+    Upload,
+    Eye
+} from "lucide-react";
+
+import {
     getSchedulesByTechnician,
     getJobExecutionsByTechnician,
     getWorkOrdersByTechnician,
@@ -2172,52 +2183,29 @@ function JobExecution() {
                                         <div className="je-execution-details">
 
                                             <div className="je-detail-item">
-
-                                                <span>
-                                                    TECHNICIAN
-                                                </span>
-
-
-                                                <strong>
-                                                    You
-                                                </strong>
-
+                                                <div className="je-detail-icon"><User /></div>
+                                                <div className="je-detail-copy">
+                                                    <span>TECHNICIAN</span>
+                                                    <strong>You</strong>
+                                                </div>
                                             </div>
 
 
                                             <div className="je-detail-item">
-
-                                                <span>
-                                                    STARTED
-                                                </span>
-
-
-                                                <strong>
-                                                    {
-                                                        formatDate(
-                                                            execution.startedAt
-                                                        )
-                                                    }
-                                                </strong>
-
+                                                <div className="je-detail-icon"><Play /></div>
+                                                <div className="je-detail-copy">
+                                                    <span>STARTED</span>
+                                                    <strong>{formatDate(execution.startedAt)}</strong>
+                                                </div>
                                             </div>
 
 
                                             <div className="je-detail-item">
-
-                                                <span>
-                                                    COMPLETED
-                                                </span>
-
-
-                                                <strong>
-                                                    {
-                                                        formatDate(
-                                                            execution.completedAt
-                                                        )
-                                                    }
-                                                </strong>
-
+                                                <div className="je-detail-icon"><CheckCircle2 /></div>
+                                                <div className="je-detail-copy">
+                                                    <span>COMPLETED</span>
+                                                    <strong>{formatDate(execution.completedAt)}</strong>
+                                                </div>
                                             </div>
 
                                         </div>
@@ -2264,9 +2252,7 @@ function JobExecution() {
 
                                                     <div className="je-parts-title">
 
-                                                        <span>
-                                                            ⚙
-                                                        </span>
+                                                        <Wrench className="je-section-icon" />
 
 
                                                         <strong>
@@ -2508,8 +2494,8 @@ function JobExecution() {
 
                                                 <div className="je-no-parts">
 
-                                                    <div>
-                                                        ⚙
+                                                    <div className="je-empty-section-icon">
+                                                        <Wrench />
                                                     </div>
 
 
@@ -2637,7 +2623,7 @@ function JobExecution() {
                                             <div className="je-notes">
 
                                                 <div className="je-note-symbol">
-                                                    ⚙
+                                                    <Wrench />
                                                 </div>
 
 
@@ -2666,7 +2652,7 @@ function JobExecution() {
                                             <div className="je-notes je-completion-notes">
 
                                                 <div className="je-note-symbol">
-                                                    ✓
+                                                    <FileText />
                                                 </div>
 
 
@@ -2703,7 +2689,7 @@ function JobExecution() {
                                                     <div className="je-photo-title">
 
                                                         <span className="je-photo-icon">
-                                                            📷
+                                                            <ImageIcon />
                                                         </span>
 
 
@@ -2747,19 +2733,15 @@ function JobExecution() {
                                                     />
 
 
+                                                    <Upload className="je-upload-icon" />
                                                     <span>
-                                                        +
+                                                        {
+                                                            uploadingPhotoId ===
+                                                            execution.id
+                                                                ? "Uploading..."
+                                                                : "Add Photo"
+                                                        }
                                                     </span>
-
-
-                                                    {
-                                                        uploadingPhotoId ===
-                                                        execution.id
-
-                                                            ? "Uploading..."
-
-                                                            : "Add Photo"
-                                                    }
 
                                                 </label>
 
@@ -2771,7 +2753,7 @@ function JobExecution() {
                                                 <div className="je-no-photos">
 
                                                     <div className="je-no-photo-icon">
-                                                        📷
+                                                        <ImageIcon />
                                                     </div>
 
 
@@ -2822,11 +2804,10 @@ function JobExecution() {
 
 
                                                                 <span className="je-photo-overlay">
-
                                                                     <span>
+                                                                        <Eye />
                                                                         View
                                                                     </span>
-
                                                                 </span>
 
                                                             </button>
@@ -2854,10 +2835,7 @@ function JobExecution() {
                                                         />
 
 
-                                                        <span className="je-photo-add-plus">
-                                                            +
-                                                        </span>
-
+                                                        <Upload className="je-photo-add-plus" />
 
                                                         <strong>
                                                             Add Photo
