@@ -81,8 +81,10 @@ public class SecurityConfig {
                     .hasAnyRole("CUSTOMER", "DISPATCHER", "MANAGER")
                 .requestMatchers(HttpMethod.GET, "/api/service-requests")
                     .hasAnyRole("DISPATCHER", "MANAGER")
+                // Service-request role authorization is also enforced in ServiceRequestService
+                // using the authenticated user's database role and ownership checks.
                 .requestMatchers(HttpMethod.POST, "/api/service-requests", "/api/service-requests/**")
-                    .hasAnyRole("CUSTOMER", "DISPATCHER", "MANAGER")
+                    .authenticated()
 
                 .requestMatchers(HttpMethod.GET, "/api/work-orders", "/api/work-orders/**")
                     .hasAnyRole("CUSTOMER", "TECHNICIAN", "DISPATCHER", "MANAGER")
