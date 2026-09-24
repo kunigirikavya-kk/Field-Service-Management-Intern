@@ -336,42 +336,35 @@
 
 .technician-page .technician-details-grid{
   display:grid;
-  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
-  column-gap:32px;
-  row-gap:14px;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:0;
   width:100%;
-  align-items:stretch;
-  padding-top:2px;
-}
-.technician-page .technician-details-column{
-  min-width:0;
-  display:grid;
-  grid-template-rows:1fr 1fr;
-  row-gap:12px;
+  box-sizing:border-box;
+  padding:13px 14px;
+  border:1px solid #eee8dd;
+  border-radius:11px;
+  background:#faf8f3;
 }
 .technician-page .technician-detail{
   min-width:0;
-  min-height:62px;
+  min-height:58px;
   display:flex;
   flex-direction:column;
   align-items:flex-start;
   justify-content:center;
   gap:5px;
-  padding:10px 13px;
-  border:1px solid #eee8dd;
-  border-radius:10px;
-  background:#fcfaf5;
-  color:#50566a;
-  font-size:11px;
-  line-height:1.4;
+  padding:7px 16px;
+  border-right:1px solid #e9e3d9;
 }
+.technician-page .technician-detail:first-child{padding-left:2px}
+.technician-page .technician-detail:last-child{border-right:0;padding-right:2px}
 .technician-page .technician-detail strong{
   display:block;
-  min-width:0;
   color:var(--tech-muted);
-  font-size:10px;
+  font-size:9px;
   font-weight:800;
-  letter-spacing:.02em;
+  letter-spacing:.08em;
+  line-height:1.2;
   text-transform:uppercase;
   white-space:nowrap;
 }
@@ -379,17 +372,15 @@
   display:block;
   width:100%;
   min-width:0;
-  overflow:visible;
   color:var(--tech-ink);
   font-size:12px;
   font-weight:650;
-  line-height:1.45;
+  line-height:1.4;
   white-space:normal;
   overflow-wrap:anywhere;
   word-break:break-word;
 }
 .technician-page .technician-rating{
-  min-width:0;
   display:inline-flex;
   align-items:center;
   gap:6px;
@@ -398,10 +389,7 @@
   font-weight:650;
   white-space:nowrap;
 }
-.technician-page .technician-rating svg{
-  flex:0 0 auto;
-  color:var(--tech-gold);
-}
+.technician-page .technician-rating svg{flex:0 0 auto;color:var(--tech-gold)}
 
 /* LOADING / EMPTY */
 
@@ -452,13 +440,7 @@
 
   .technician-page .form-grid {
     grid-template-columns: 1fr;
-  }
-
-  .technician-page .technician-details-grid {
-    column-gap:24px;
-  }
-
-  .technician-page .technician-details-grid {
+  }  .technician-page .technician-details-grid {
     column-gap:20px;
   }
 }
@@ -499,18 +481,26 @@
     flex-direction:row;
     gap:12px;
   }
-
-  .technician-page .technician-details-grid{
-    grid-template-columns:1fr;
-    column-gap:0;
-    row-gap:10px;
-  }
-  .technician-page .technician-details-column{
-    row-gap:10px;
-  }
   .technician-page .technician-detail{
     min-height:58px;
   }
+  .technician-page .technician-details-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:0;
+    padding:10px;
+  }
+  .technician-page .technician-detail{
+    min-height:60px;
+    padding:8px 11px;
+    border-right:0;
+    border-bottom:1px solid #e9e3d9;
+  }
+  .technician-page .technician-detail:nth-child(odd){border-right:1px solid #e9e3d9}
+  .technician-page .technician-detail:nth-child(3),
+  .technician-page .technician-detail:nth-child(4){border-bottom:0}
+  .technician-page .technician-detail:first-child,
+  .technician-page .technician-detail:last-child{padding-left:11px;padding-right:11px}
+
 }
 
 @media (max-width: 430px) {
@@ -523,4 +513,16 @@
     height: 46px;
     flex-basis: 46px;
   }
+  .technician-page .technician-details-grid{grid-template-columns:1fr;padding:9px}
+  .technician-page .technician-detail,
+  .technician-page .technician-detail:nth-child(odd),
+  .technician-page .technician-detail:nth-child(3),
+  .technician-page .technician-detail:nth-child(4){
+    min-height:52px;
+    padding:8px 10px;
+    border-right:0;
+    border-bottom:1px solid #e9e3d9;
+  }
+  .technician-page .technician-detail:last-child{border-bottom:0}
+
 }
