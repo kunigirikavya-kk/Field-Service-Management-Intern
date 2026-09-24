@@ -67,7 +67,7 @@ Never commit real secrets.
 - `GET/POST /api/customers`
 - `GET/POST /api/sites/customer/{customerId}`
 - `GET/POST /api/service-requests`
-- `GET/POST /api/work-orders`
+- `GET/POST /api/work-orders`\n- `GET /api/work-orders/page?page=0&size=20&sort=createdAt,desc&status=NEW`
 - `GET/PUT /api/work-orders/{id}`
 - `POST /api/work-orders/{id}/assign`
 - `POST /api/work-orders/{id}/status`
