@@ -109,7 +109,6 @@ function WorkOrders() {
         serviceType: "",
         priority: "MEDIUM",
         description: "",
-        status: "PENDING",
         scheduledDate: "",
         completedDate: "",
         totalCost: ""
@@ -1625,7 +1624,6 @@ function WorkOrders() {
             serviceType: normalizeServiceType(order.serviceType),
             priority: order.priority || "MEDIUM",
             description: order.description || "",
-            status: order.status || "PENDING",
             scheduledDate: toDateTimeLocal(order.scheduledDate),
             completedDate: toDateTimeLocal(order.completedDate),
             totalCost: order.totalCost ?? ""
@@ -1662,7 +1660,6 @@ function WorkOrders() {
                 serviceType: editForm.serviceType,
                 priority: editForm.priority,
                 description: editForm.description,
-                status: editForm.status,
                 scheduledDate: editForm.scheduledDate || null,
                 completedDate: editForm.completedDate || null,
                 totalCost: editForm.totalCost === "" ? 0 : Number(editForm.totalCost)
@@ -3442,18 +3439,6 @@ function WorkOrders() {
                                     <option value="MEDIUM">Medium</option>
                                     <option value="HIGH">High</option>
                                     <option value="URGENT">Urgent</option>
-                                </select>
-                            </div>
-                            <div className="edit-form-group">
-                                <label htmlFor="edit-status">Status</label>
-                                <select id="edit-status" name="status" value={editForm.status} onChange={handleEditChange}>
-                                    <option value="PENDING">Pending</option>
-                                    <option value="ASSIGNED">Assigned</option>
-                                    <option value="IN_PROGRESS">In Progress</option>
-                                    <option value="ON_HOLD">On Hold</option>
-                                    <option value="COMPLETED">Completed</option>
-                                    <option value="CLOSED">Closed</option>
-                                    <option value="CANCELLED">Cancelled</option>
                                 </select>
                             </div>
                             <div className="edit-form-group">
