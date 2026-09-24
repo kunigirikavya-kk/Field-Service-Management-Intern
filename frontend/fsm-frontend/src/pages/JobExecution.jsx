@@ -29,6 +29,7 @@ import {
     getInventoryParts,
     getPartUsageByJobExecution,
     recordPartUsage,
+    logTime,
     startJob,
     completeJob,
     cancelJobExecution,
@@ -68,6 +69,10 @@ function JobExecution() {
 
     const [selectedParts, setSelectedParts] =
         useState({});
+
+    const [timeMinutes, setTimeMinutes] = useState({});
+    const [timeNotes, setTimeNotes] = useState({});
+    const [loggingTimeId, setLoggingTimeId] = useState(null);
 
     const [partQuantities, setPartQuantities] =
         useState({});
@@ -1016,6 +1021,32 @@ function JobExecution() {
     // =====================================================
     // COMPLETE JOB
     // =====================================================
+
+    async function handleLogTime(execution) {
+        const minutes = Number(timeMinutes[execution.id] || 0);
+        if (!Number.isInteger(minutes) || minutes <= 0) {
+            alert("Enter a valid number of minutes greater than zero.");
+            return;
+        }
+        try {
+            setLoggingTimeId(execution.id);
+            await logTime({
+                workOrderId: execution.workOrderId,
+                technicianId: execution.technicianId,
+                minutes,
+                note: timeNotes[execution.id] || ""
+            });
+            setTimeMinutes(previous => ({ ...previous, [execution.id]: "" }));
+            setTimeNotes(previous => ({ ...previous, [execution.id]: "" }));
+            alert("Time logged successfully.");
+            await loadJobExecutions();
+        } catch (error) {
+            console.error("Failed to log time:", error);
+            alert(error?.message || "Failed to log time.");
+        } finally {
+            setLoggingTimeId(null);
+        }
+    }
 
     async function handleCompleteJob(
         execution
@@ -2237,6 +2268,46 @@ function JobExecution() {
 
                                             </div>
 
+                                        )}
+
+
+                                        {/* =================================================
+                                            TIME LOGGING
+                                        ================================================= */}
+
+                                        {status === "IN_PROGRESS" && (
+                                            <div className="je-parts-section">
+                                                <div className="je-parts-header">
+                                                    <div>
+                                                        <div className="je-parts-title">
+                                                            <Clock className="je-section-icon" />
+                                                            <strong>Time Spent</strong>
+                                                        </div>
+                                                        <p>Record the labour time spent on this job.</p>
+                                                    </div>
+                                                </div>
+                                                <div className="je-parts-form">
+                                                    <div className="je-parts-field">
+                                                        <label>MINUTES</label>
+                                                        <input type="number" min="1" step="1"
+                                                            value={timeMinutes[execution.id] || ""}
+                                                            onChange={event => setTimeMinutes(previous => ({ ...previous, [execution.id]: event.target.value }))}
+                                                            disabled={loggingTimeId === execution.id} />
+                                                    </div>
+                                                    <div className="je-parts-field">
+                                                        <label>NOTE</label>
+                                                        <input type="text" maxLength="500" placeholder="Optional note"
+                                                            value={timeNotes[execution.id] || ""}
+                                                            onChange={event => setTimeNotes(previous => ({ ...previous, [execution.id]: event.target.value }))}
+                                                            disabled={loggingTimeId === execution.id} />
+                                                    </div>
+                                                    <button type="button" className="je-record-part-btn"
+                                                        onClick={() => handleLogTime(execution)}
+                                                        disabled={loggingTimeId === execution.id}>
+                                                        {loggingTimeId === execution.id ? "Saving..." : "Log Time"}
+                                                    </button>
+                                                </div>
+                                            </div>
                                         )}
 
 
