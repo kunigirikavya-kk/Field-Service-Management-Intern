@@ -1,6 +1,7 @@
 
 package com.fsm.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -41,6 +42,10 @@ public class Technician {
 
     @Column(name = "name")
     private String name;
+
+    @Transient
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private String accountPassword;
 
 
     public Technician() {
@@ -144,4 +149,13 @@ public class Technician {
     public void setName(String name) {
         this.name = name;
     }
+
+    public String getAccountPassword() {
+        return accountPassword;
+    }
+
+    public void setAccountPassword(String accountPassword) {
+        this.accountPassword = accountPassword;
+    }
+
 }
