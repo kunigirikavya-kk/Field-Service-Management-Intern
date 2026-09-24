@@ -11,6 +11,8 @@ import jakarta.persistence.Table;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 
 @Entity
 @Table(name = "work_orders")
@@ -60,6 +62,46 @@ public class WorkOrder {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+
+    // Service Type
+    @Enumerated(EnumType.STRING)
+    @Column(name = "service_type", length = 50)
+    private ServiceType serviceType;
+
+    public enum ServiceType {
+        AC_MAINTENANCE("AC Maintenance"),
+        EQUIPMENT_REPAIR("Equipment Repair"),
+        SYSTEM_INSPECTION("System Inspection"),
+        INSTALLATION("Installation"),
+        ELECTRICAL_MAINTENANCE("Electrical Maintenance"),
+        PLUMBING_REPAIR("Plumbing Repair"),
+        PREVENTIVE_MAINTENANCE("Preventive Maintenance");
+
+        private final String label;
+
+        ServiceType(String label) {
+            this.label = label;
+        }
+
+        @JsonValue
+        public String getLabel() {
+            return label;
+        }
+
+        @JsonCreator
+        public static ServiceType fromJson(String value) {
+            if (value == null) return null;
+            String normalized = value.trim();
+            for (ServiceType type : values()) {
+                if (type.label.equalsIgnoreCase(normalized)
+                        || type.name().equalsIgnoreCase(normalized.replace(" ", "_"))) {
+                    return type;
+                }
+            }
+            throw new IllegalArgumentException("Invalid service type: " + value);
+        }
+    }
 
 
     // Status
@@ -152,6 +194,15 @@ public class WorkOrder {
     public void setDescription(String description) {
         this.description = description;
     }
+
+    public ServiceType getServiceType() {
+        return serviceType;
+    }
+
+    public void setServiceType(ServiceType serviceType) {
+        this.serviceType = serviceType;
+    }
+
 
     public Status getStatus() {
         return status;
