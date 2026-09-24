@@ -827,6 +827,18 @@ function ServiceRequest() {
                                     Installation
                                 </option>
 
+                                <option value="Electrical Maintenance">
+                                    Electrical Maintenance
+                                </option>
+
+                                <option value="Plumbing Repair">
+                                    Plumbing Repair
+                                </option>
+
+                                <option value="Preventive Maintenance">
+                                    Preventive Maintenance
+                                </option>
+
                             </select>
 
                         </div>
