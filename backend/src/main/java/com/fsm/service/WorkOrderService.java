@@ -74,7 +74,8 @@ public class WorkOrderService {
 
         if (
                 authorizationService.hasRole("DISPATCHER") ||
-                authorizationService.hasRole("MANAGER")
+                authorizationService.hasRole("MANAGER") ||
+                authorizationService.hasRole("ADMIN")
         ) {
             return workOrder;
         }
