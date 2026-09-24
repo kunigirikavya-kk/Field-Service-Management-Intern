@@ -422,9 +422,8 @@ public class WorkOrderService {
                 workOrderDetails.getTitle()
         );
 
-        workOrder.setPriority(
-                workOrderDetails.getPriority()
-        );
+        com.fsm.entity.Priority previousPriority = workOrder.getPriority();
+        workOrder.setPriority(workOrderDetails.getPriority());
 
 
         if (
@@ -484,7 +483,9 @@ public class WorkOrderService {
         );
 
         workOrder.setTotalCost(workOrderDetails.getTotalCost() == null ? workOrder.getTotalCost() : workOrderDetails.getTotalCost());
-        slaService.applyDueDate(workOrder);
+        if (workOrder.getPriority() != previousPriority || workOrder.getSlaDueAt() == null) {
+            slaService.applyDueDate(workOrder);
+        }
         return workOrderRepository.save(workOrder);
     }
 
