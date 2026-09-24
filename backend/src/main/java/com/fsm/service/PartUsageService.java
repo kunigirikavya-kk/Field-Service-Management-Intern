@@ -2,6 +2,8 @@ package com.fsm.service;
 
 import com.fsm.entity.InventoryPart;
 import com.fsm.entity.PartUsage;
+import com.fsm.entity.WorkOrder;
+import com.fsm.repository.WorkOrderRepository;
 import com.fsm.repository.InventoryRepository;
 import com.fsm.repository.PartUsageRepository;
 import com.fsm.security.AuthorizationService;
@@ -18,15 +20,18 @@ public class PartUsageService {
     private final PartUsageRepository partUsageRepository;
     private final InventoryRepository inventoryRepository;
     private final AuthorizationService authorizationService;
+    private final WorkOrderRepository workOrderRepository;
 
     public PartUsageService(
             PartUsageRepository partUsageRepository,
             InventoryRepository inventoryRepository,
-            AuthorizationService authorizationService) {
+            AuthorizationService authorizationService,
+            WorkOrderRepository workOrderRepository) {
 
         this.partUsageRepository = partUsageRepository;
         this.inventoryRepository = inventoryRepository;
         this.authorizationService = authorizationService;
+        this.workOrderRepository = workOrderRepository;
     }
 
     // ==============================
@@ -97,8 +102,17 @@ public class PartUsageService {
             throw new RuntimeException("Inventory part ID is required.");
         }
 
+        WorkOrder workOrder = workOrderRepository.findById(usage.getWorkOrderId())
+                .orElseThrow(() -> new RuntimeException("Work order not found"));
+        if (workOrder.getTechnicianId() == null || !workOrder.getTechnicianId().equals(usage.getTechnicianId())) {
+            throw new RuntimeException("Parts can only be logged by the assigned technician");
+        }
+        if (workOrder.getStatus() == WorkOrder.Status.CLOSED || workOrder.getStatus() == WorkOrder.Status.CANCELLED) {
+            throw new RuntimeException("Parts cannot be logged on a closed or cancelled work order");
+        }
+
         InventoryPart part = inventoryRepository
-                .findById(usage.getInventoryPartId())
+                .findByIdForUpdate(usage.getInventoryPartId())
                 .orElseThrow(() ->
                         new RuntimeException(
                                 "Inventory part not found with id: "
@@ -148,6 +162,8 @@ public class PartUsageService {
                 );
 
         usage.setTotalCost(totalCost);
+        workOrder.setPartsCost((workOrder.getPartsCost() == null ? BigDecimal.ZERO : workOrder.getPartsCost()).add(totalCost));
+        workOrder.setTotalCost((workOrder.getTotalCost() == null ? BigDecimal.ZERO : workOrder.getTotalCost()).add(totalCost));
 
         // ------------------------------
         // Set usage time
@@ -170,11 +186,7 @@ public class PartUsageService {
         part.setQuantity(remainingStock);
 
         inventoryRepository.save(part);
-
-        // ------------------------------
-        // Save part usage record
-        // ------------------------------
-
+        workOrderRepository.save(workOrder);
         return partUsageRepository.save(usage);
     }
 
@@ -184,6 +196,9 @@ public class PartUsageService {
 
     @Transactional
     public void deletePartUsage(Long id) {
+        if (!authorizationService.hasRole("MANAGER") && !authorizationService.hasRole("ADMIN")) {
+            throw new org.springframework.security.access.AccessDeniedException("Only Manager/Admin can delete part usage");
+        }
 
         PartUsage usage = partUsageRepository.findById(id)
                 .orElseThrow(() ->
@@ -199,7 +214,6 @@ public class PartUsageService {
                 .orElse(null);
 
         if (part != null) {
-
             part.setQuantity(
                     part.getQuantity()
                             + usage.getQuantityUsed()
@@ -208,6 +222,13 @@ public class PartUsageService {
             inventoryRepository.save(part);
         }
 
+        WorkOrder workOrder = workOrderRepository.findById(usage.getWorkOrderId()).orElse(null);
+        if (workOrder != null) {
+            BigDecimal restoredCost = usage.getTotalCost() == null ? BigDecimal.ZERO : usage.getTotalCost();
+            workOrder.setPartsCost((workOrder.getPartsCost() == null ? BigDecimal.ZERO : workOrder.getPartsCost()).subtract(restoredCost).max(BigDecimal.ZERO));
+            workOrder.setTotalCost((workOrder.getTotalCost() == null ? BigDecimal.ZERO : workOrder.getTotalCost()).subtract(restoredCost).max(BigDecimal.ZERO));
+            workOrderRepository.save(workOrder);
+        }
         partUsageRepository.deleteById(id);
     }
 }
