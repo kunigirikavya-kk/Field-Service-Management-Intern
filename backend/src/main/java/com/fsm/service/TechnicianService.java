@@ -10,6 +10,8 @@ import com.fsm.security.AuthorizationService;
 import org.springframework.security.access.AccessDeniedException;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -49,15 +51,21 @@ public class TechnicianService {
     // =====================================================
 
     public Technician getTechnicianById(Long id) {
+        Technician technician = technicianRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Technician not found with id: " + id));
 
-        return technicianRepository
-                .findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "Technician not found with id: "
-                                        + id
-                        )
-                );
+        if (authorizationService.hasRole("TECHNICIAN")) {
+            if (!technician.getUserId().equals(authorizationService.getCurrentUserId())) {
+                throw new AccessDeniedException("You are not allowed to access another technician's profile");
+            }
+            return technician;
+        }
+
+        if (authorizationService.hasRole("DISPATCHER") || authorizationService.hasRole("MANAGER")) {
+            return technician;
+        }
+
+        throw new AccessDeniedException("You don't have permission to access technician profiles");
     }
 
     // =====================================================
@@ -98,6 +106,7 @@ public class TechnicianService {
     // CREATE TECHNICIAN
     // =====================================================
 
+    @Transactional
     public Technician createTechnician(
             Technician technician) {
 
@@ -110,14 +119,28 @@ public class TechnicianService {
             throw new RuntimeException("Technician email is required");
         }
 
-        User user = userRepository.findByEmail(technician.getEmail().trim().toLowerCase())
-                .orElseThrow(() -> new RuntimeException(
-                        "No user account exists for this email. Create/register the technician user first."));
+        String email = technician.getEmail().trim().toLowerCase();
+        User user = userRepository.findByEmail(email).orElse(null);
 
-        if (user.getRole() != Role.TECHNICIAN) {
-            throw new RuntimeException("The selected email belongs to a " + user.getRole() + " account, not a TECHNICIAN.");
+        if (user == null) {
+            String accountPassword = technician.getAccountPassword();
+            if (accountPassword == null || accountPassword.length() < 6) {
+                throw new RuntimeException("A new technician account requires a password of at least 6 characters.");
+            }
+
+            user = new User();
+            user.setUsername(email);
+            user.setFullName(technician.getFullName().trim());
+            user.setEmail(email);
+            user.setPhone(technician.getPhone() == null ? "" : technician.getPhone().trim());
+            user.setPassword(new BCryptPasswordEncoder().encode(accountPassword));
+            user.setRole(Role.TECHNICIAN);
+            user = userRepository.save(user);
+        } else if (user.getRole() != Role.TECHNICIAN) {
+            throw new RuntimeException("The email belongs to a " + user.getRole() + " account. Use a TECHNICIAN account email.");
         }
 
+        technician.setEmail(email);
         technician.setUserId(user.getId());
 
         if (technicianRepository.existsByUserId(user.getId())) {
@@ -190,21 +213,25 @@ public class TechnicianService {
             );
         }
 
-        return technicianRepository.save(
-                technician
-        );
+        technician.setAccountPassword(null);
+        return technicianRepository.save(technician);
     }
 
     // =====================================================
     // UPDATE TECHNICIAN
     // =====================================================
 
+    @Transactional
     public Technician updateTechnician(
             Long id,
             Technician technicianDetails) {
 
-        Technician technician =
-                getTechnicianById(id);
+        if (!authorizationService.hasRole("DISPATCHER") && !authorizationService.hasRole("MANAGER")) {
+            throw new AccessDeniedException("Only Dispatcher or Manager can update technicians");
+        }
+
+        Technician technician = technicianRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Technician not found with id: " + id));
 
         // -------------------------------------------------
         // USER ID
@@ -320,9 +347,8 @@ public class TechnicianService {
             );
         }
 
-        return technicianRepository.save(
-                technician
-        );
+        technician.setAccountPassword(null);
+        return technicianRepository.save(technician);
     }
 
     // =====================================================
@@ -330,9 +356,12 @@ public class TechnicianService {
     // =====================================================
 
     public void deleteTechnician(Long id) {
+        if (!authorizationService.hasRole("MANAGER")) {
+            throw new AccessDeniedException("Only Manager can delete technicians");
+        }
 
-        Technician technician =
-                getTechnicianById(id);
+        Technician technician = technicianRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Technician not found with id: " + id));
 
         technicianRepository.delete(
                 technician
