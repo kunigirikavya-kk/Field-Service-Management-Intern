@@ -403,29 +403,24 @@ function Technicians() {
 
 
                                     <div className="technician-details-grid">
-                                        <div className="technician-details-column">
-                                            <div className="technician-detail">
-                                                <strong>Email</strong>
-                                                <span>{technician.email || "N/A"}</span>
-                                            </div>
-                                            <div className="technician-detail">
-                                                <strong>Specialization</strong>
-                                                <span>{technician.specialization || "N/A"}</span>
-                                            </div>
+                                        <div className="technician-detail">
+                                            <strong>Email</strong>
+                                            <span>{technician.email || "N/A"}</span>
                                         </div>
-
-                                        <div className="technician-details-column">
-                                            <div className="technician-detail">
-                                                <strong>Phone</strong>
-                                                <span>{technician.phone || "N/A"}</span>
-                                            </div>
-                                            <div className="technician-detail">
-                                                <strong>Rating</strong>
-                                                <span className="technician-rating">
-                                                    <Star size={15} strokeWidth={1.8} fill="currentColor" aria-hidden />
-                                                    {technician.rating ?? "0.00"}
-                                                </span>
-                                            </div>
+                                        <div className="technician-detail">
+                                            <strong>Phone</strong>
+                                            <span>{technician.phone || "N/A"}</span>
+                                        </div>
+                                        <div className="technician-detail">
+                                            <strong>Specialization</strong>
+                                            <span>{technician.specialization || "N/A"}</span>
+                                        </div>
+                                        <div className="technician-detail">
+                                            <strong>Rating</strong>
+                                            <span className="technician-rating">
+                                                <Star size={15} strokeWidth={1.8} fill="currentColor" aria-hidden />
+                                                {technician.rating ?? "0.00"}
+                                            </span>
                                         </div>
                                     </div>
 
