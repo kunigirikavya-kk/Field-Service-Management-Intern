@@ -104,18 +104,18 @@ public class ServiceRequestService {
             );
         }
 
-        if (request.getCustomerId() == null) {
-            throw new RuntimeException(
-                    "Customer ID is required"
-            );
-        }
+        boolean isCustomer = authorizationService.hasRole("CUSTOMER");
+        boolean isDispatcher = authorizationService.hasRole("DISPATCHER");
+        boolean isManager = authorizationService.hasRole("MANAGER");
 
-        if (!authorizationService.hasRole("CUSTOMER")
-                && !authorizationService.hasRole("DISPATCHER")
-                && !authorizationService.hasRole("MANAGER")) {
+        if (!isCustomer && !isDispatcher && !isManager) {
             throw new AccessDeniedException(
                     "Only customers, dispatchers, and managers can create service requests."
             );
+        }
+
+        if (!isCustomer && request.getCustomerId() == null) {
+            throw new RuntimeException("Customer ID is required for dispatcher or manager requests.");
         }
 
 
@@ -147,11 +147,11 @@ public class ServiceRequestService {
         Long actualCustomerId;
         Customer customer;
 
-        if (authorizationService.hasRole("CUSTOMER")) {
+        if (isCustomer) {
             /*
              * Never trust customerId sent by the browser for a CUSTOMER.
              * Resolve the customer from the authenticated JWT/user instead.
-             * This also avoids the users.id vs customers.id ambiguity.
+             * This avoids the users.id vs customers.id ambiguity.
              */
             actualCustomerId = authorizationService.getCurrentCustomerId();
             customer = customerRepository.findById(actualCustomerId)
