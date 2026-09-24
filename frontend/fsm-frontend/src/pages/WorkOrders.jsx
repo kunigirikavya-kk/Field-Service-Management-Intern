@@ -2036,7 +2036,8 @@ function WorkOrders() {
 
     return (
 
-        <div className="work-order-page">
+        <>
+            <div className="work-order-page">
 
 
             {/* HEADER */}
@@ -3480,6 +3481,7 @@ function WorkOrders() {
                 </div>
             </div>
         )}
+        </>
 
     );
 
