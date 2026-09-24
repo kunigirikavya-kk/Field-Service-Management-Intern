@@ -53,7 +53,7 @@ public class SlaService {
                 .toList();
 
         for (WorkOrder order : orders) {
-            if (order.getSlaDueAt() == null || order.getSlaBreachNotified()) continue;
+            if (order.getSlaDueAt() == null || order.isSlaBreachNotified()) continue;
             if (order.getStatus() == WorkOrder.Status.CLOSED || order.getStatus() == WorkOrder.Status.CANCELLED || order.getStatus() == WorkOrder.Status.COMPLETED) continue;
             if (order.getSlaDueAt().isBefore(now)) {
                 order.setSlaBreached(true);
