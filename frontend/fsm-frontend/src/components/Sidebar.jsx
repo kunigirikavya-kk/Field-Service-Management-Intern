@@ -128,6 +128,7 @@ function Sidebar({ isOpen, onClose, onLogout }) {
       path: "/inventory",
       icon: "inventory",
       roles: [
+        "DISPATCHER",
         "TECHNICIAN",
         "MANAGER",
         "ADMIN"
@@ -139,6 +140,7 @@ function Sidebar({ isOpen, onClose, onLogout }) {
       path: "/billing",
       icon: "billing",
       roles: [
+        "DISPATCHER",
         "MANAGER",
         "ADMIN"
       ]
