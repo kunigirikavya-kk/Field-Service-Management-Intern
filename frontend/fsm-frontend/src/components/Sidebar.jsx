@@ -119,7 +119,6 @@ function Sidebar({ isOpen, onClose, onLogout }) {
       icon: "execution",
       roles: [
         "TECHNICIAN",
-        "MANAGER",
         "ADMIN"
       ]
     },
