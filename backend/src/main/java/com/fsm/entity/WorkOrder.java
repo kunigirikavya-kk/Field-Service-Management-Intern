@@ -46,7 +46,7 @@ public class WorkOrder {
     private String description;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "status", nullable = false, columnDefinition = "VARCHAR(30)")
     private Status status = Status.PENDING;
 
     @Column(name = "scheduled_date")
