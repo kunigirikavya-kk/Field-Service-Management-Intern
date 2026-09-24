@@ -376,7 +376,7 @@ function App() {
                         ================================= */}
 
                         <Route
-                            path="/job-execution"
+                            path="/execution"
                             element={
 
                                 <RoleRoute
@@ -389,6 +389,17 @@ function App() {
 
                                 </RoleRoute>
 
+                            }
+                        />
+
+
+                        {/* Legacy technician execution URL */}
+                        <Route
+                            path="/job-execution"
+                            element={
+                                <RoleRoute allowedRoles={["TECHNICIAN"]}>
+                                    <Navigate to="/execution" replace />
+                                </RoleRoute>
                             }
                         />
 
