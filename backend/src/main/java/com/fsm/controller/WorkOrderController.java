@@ -172,7 +172,7 @@ public class WorkOrderController {
         } catch (IllegalArgumentException ex) {
             throw new IllegalArgumentException(
                     "Invalid work order status: " + rawStatus +
-                    ". Allowed values: PENDING, ASSIGNED, IN_PROGRESS, ON_HOLD, COMPLETED, CLOSED, CANCELLED",
+                    ". Allowed values: NEW, ASSIGNED, IN_PROGRESS, ON_HOLD, COMPLETED, CLOSED, CANCELLED",
                     ex
             );
         }
