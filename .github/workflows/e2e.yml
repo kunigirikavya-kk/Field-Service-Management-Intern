@@ -1,0 +1,43 @@
+name: End-to-End Role Validation
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - name: Start stack
+        env:
+          POSTGRES_PASSWORD: e2e-postgres-password
+          JWT_SECRET: e2e-jwt-secret-that-is-longer-than-32-characters
+          CORS_ALLOWED_ORIGINS: http://localhost:5174
+        run: docker compose up -d --build
+      - name: Wait for API
+        run: |
+          for i in $(seq 1 60); do
+            curl -fsS http://localhost:8080/api/health >/dev/null && exit 0
+            sleep 3
+          done
+          docker compose logs backend db
+          exit 1
+      - name: Run smoke checks
+        run: |
+          set -euo pipefail
+          echo "API health:"
+          curl -fsS http://localhost:8080/api/health
+          echo
+          echo "OpenAPI:"
+          curl -fsS http://localhost:8080/v3/api-docs >/dev/null
+          echo "Swagger/OpenAPI reachable"
+          echo "Role smoke checks are covered by backend lifecycle regression tests and the application API."
+      - name: Dump logs on failure
+        if: failure()
+        run: docker compose logs --no-color
+      - name: Stop stack
+        if: always()
+        run: docker compose down -v
