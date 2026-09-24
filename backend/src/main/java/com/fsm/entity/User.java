@@ -1,6 +1,7 @@
 package com.fsm.entity;
 
-import com.fasterxml.jackson.annotation.JsonProperty;\nimport jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
@@ -44,7 +45,8 @@ public class User {
     @Column(
         nullable = false
     )
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)\n    private String password;
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private String password;
 
     /*
      * Role is stored as text in the database so that
