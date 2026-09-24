@@ -142,43 +142,31 @@ public class ServiceRequestService {
          * requests for other customers.
          */
 
-        Long requestedCustomerId =
-                request.getCustomerId();
-
-        Customer customer =
-                customerRepository
-                        .findById(requestedCustomerId)
-                        .orElse(null);
+        Long requestedCustomerId = request.getCustomerId();
 
         Long actualCustomerId;
+        Customer customer;
 
-        if (customer != null) {
-
+        if (authorizationService.hasRole("CUSTOMER")) {
             /*
-             * The supplied ID is already customers.id.
+             * Never trust customerId sent by the browser for a CUSTOMER.
+             * Resolve the customer from the authenticated JWT/user instead.
+             * This also avoids the users.id vs customers.id ambiguity.
              */
-            actualCustomerId = customer.getId();
-
+            actualCustomerId = authorizationService.getCurrentCustomerId();
+            customer = customerRepository.findById(actualCustomerId)
+                    .orElseThrow(() -> new RuntimeException(
+                            "Customer profile not found for the authenticated user."
+                    ));
         } else {
-
             /*
-             * Sometimes the frontend may send users.id.
-             * In that case, find the corresponding customer
-             * using user_id.
+             * DISPATCHER and MANAGER may create a request for any customer.
+             * Their form supplies customers.id.
              */
-            customer =
-                    customerRepository
-                            .findByUserId(requestedCustomerId)
-                            .orElseThrow(() ->
-                                    new RuntimeException(
-                                            "Customer not found. " +
-                                            "ID " +
-                                            requestedCustomerId +
-                                            " does not exist in customers.id " +
-                                            "or customers.user_id."
-                                    )
-                            );
-
+            customer = customerRepository.findById(requestedCustomerId)
+                    .orElseThrow(() -> new RuntimeException(
+                            "Customer not found with id: " + requestedCustomerId
+                    ));
             actualCustomerId = customer.getId();
         }
 
@@ -186,19 +174,9 @@ public class ServiceRequestService {
         // ENFORCE CUSTOMER OWNERSHIP
         // =================================================
 
-        if (authorizationService.hasRole("CUSTOMER")) {
-
-            Long loggedInCustomerId =
-                    authorizationService.getCurrentCustomerId();
-
-            if (!loggedInCustomerId.equals(actualCustomerId)) {
-
-                throw new AccessDeniedException(
-                        "Customers can create service requests " +
-                        "only for their own customer account."
-                );
-            }
-        }
+        // CUSTOMER ownership is already enforced by resolving the
+        // customer from the authenticated user above. No browser-supplied
+        // customer ID can override that identity.
 
         // =================================================
         // CREATE ENTITY
