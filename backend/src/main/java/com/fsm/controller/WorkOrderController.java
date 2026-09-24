@@ -128,13 +128,13 @@ public class WorkOrderController {
     public ResponseEntity<WorkOrder>
     updateStatus(
             @PathVariable Long id,
-            @RequestParam WorkOrder.Status status) {
+            @RequestParam String status) {
 
         return ResponseEntity.ok(
                 workOrderService
                         .updateStatus(
                                 id,
-                                status
+                                parseStatus(status)
                         )
         );
     }
@@ -180,14 +180,30 @@ public class WorkOrderController {
     @GetMapping("/status/{status}")
     public ResponseEntity<List<WorkOrder>>
     getByStatus(
-            @PathVariable WorkOrder.Status status) {
+            @PathVariable String status) {
 
         return ResponseEntity.ok(
                 workOrderService
                         .getWorkOrdersByStatus(
-                                status
+                                parseStatus(status)
                         )
         );
+    }
+
+    private WorkOrder.Status parseStatus(String rawStatus) {
+        if (rawStatus == null || rawStatus.isBlank()) {
+            throw new IllegalArgumentException("Status is required");
+        }
+
+        try {
+            return WorkOrder.Status.valueOf(rawStatus.trim().toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalArgumentException(
+                    "Invalid work order status: " + rawStatus +
+                    ". Allowed values: PENDING, ASSIGNED, IN_PROGRESS, ON_HOLD, COMPLETED, CLOSED, CANCELLED",
+                    ex
+            );
+        }
     }
 
     // =====================================================
