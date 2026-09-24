@@ -453,3 +453,40 @@
     grid-template-columns:repeat(2,minmax(0,1fr));
   }
 }
+
+
+/* Distinct separation between execution records */
+.je-execution-list{
+  gap:0;
+  padding:18px 18px 26px;
+}
+.je-execution-card{
+  position:relative;
+  width:100%;
+  margin:0;
+  border:1px solid #d9d2c5;
+  border-radius:17px;
+  background:#fffdf8;
+  box-shadow:0 10px 26px rgba(43,40,53,.075);
+}
+.je-execution-card:hover{
+  border-color:#cfc5b5;
+  box-shadow:0 14px 32px rgba(43,40,53,.10);
+}
+.je-execution-divider{
+  height:30px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0 18px;
+}
+.je-execution-divider span{
+  display:block;
+  width:100%;
+  height:1px;
+  background:#d8d0c2;
+}
+@media(max-width:650px){
+  .je-execution-list{padding:14px 10px 22px}
+  .je-execution-divider{height:22px;padding:0 8px}
+}
