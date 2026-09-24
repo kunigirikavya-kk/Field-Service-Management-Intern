@@ -39,6 +39,8 @@ public class WorkOrderRequest {
     @NotNull(message = "Priority is required")
     private Priority priority;
 
+    private WorkOrder.ServiceType serviceType;
+
     @Size(
             max = 5000,
             message = "Description is too long"
@@ -135,6 +137,14 @@ public class WorkOrderRequest {
 
         this.priority =
                 priority;
+    }
+
+    public WorkOrder.ServiceType getServiceType() {
+        return serviceType;
+    }
+
+    public void setServiceType(WorkOrder.ServiceType serviceType) {
+        this.serviceType = serviceType;
     }
 
     public String getDescription() {
