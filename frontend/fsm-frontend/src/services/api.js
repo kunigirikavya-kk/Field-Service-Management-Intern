@@ -1,5 +1,5 @@
 const API_BASE_URL = (
-    import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? "http://localhost:8080/api" : "/api")
+    import.meta.env.VITE_API_BASE_URL || "/api"
 ).replace(/\/$/, "");
 
 function getErrorMessage(data, status) {
