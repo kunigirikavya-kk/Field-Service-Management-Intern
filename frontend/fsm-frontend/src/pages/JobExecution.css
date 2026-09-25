@@ -753,3 +753,16 @@
     padding-right:14px;
   }
 }
+
+
+/* DARK MODE */
+html[data-theme="dark"] .je-page{--je-cream:#0b1120;--je-paper:#151d2e;--je-soft:#111827;--je-indigo:#818cf8;--je-indigo-dark:#a5b4fc;--je-terracotta:#f07a5b;--je-gold:#f4c76a;--je-sage:#5ee0a4;--je-sage-soft:#12352b;--je-ink:#e5e7eb;--je-muted:#94a3b8;--je-border:#29354a;background:#0b1120;color:#e5e7eb}
+html[data-theme="dark"] .je-section,html[data-theme="dark"] .je-summary-card,html[data-theme="dark"] .je-schedule-card,html[data-theme="dark"] .je-execution-card{background:#151d2e;border-color:#29354a;box-shadow:0 12px 35px rgba(0,0,0,.25)}
+html[data-theme="dark"] .je-section-header{background:#151d2e;border-color:#29354a}
+html[data-theme="dark"] .je-header h1,html[data-theme="dark"] .je-section-header h2,html[data-theme="dark"] .je-schedule-title,html[data-theme="dark"] .je-execution-title h3{color:#f8fafc}
+html[data-theme="dark"] .je-header p,html[data-theme="dark"] .je-section-header p,html[data-theme="dark"] .je-job-meta>div,html[data-theme="dark"] .je-execution-title p{color:#94a3b8}
+html[data-theme="dark"] .je-card-bottom{border-color:#29354a}
+html[data-theme="dark"] .je-schedule-card,.je-execution-card{background:#151d2e}
+html[data-theme="dark"] .je-meta-icon{background:#202a45;color:#a5b4fc}
+html[data-theme="dark"] .je-live-dot{background:#1b2538;border-color:#29354a;color:#94a3b8}
+html[data-theme="dark"] .je-error{background:#3a1d20;border-color:#5b2b32;color:#f7a98e}
