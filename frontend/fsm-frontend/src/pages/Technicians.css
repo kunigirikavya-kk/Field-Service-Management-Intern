@@ -533,3 +533,45 @@
   .technician-page .technician-detail:last-child{border-bottom:0}
 
 }
+
+
+/* =========================================================
+   FIELDSYNC DARK MODE — TECHNICIANS
+========================================================= */
+html[data-theme="dark"] .technician-page{
+  --tech-cream:#0b1120;
+  --tech-paper:#151d2e;
+  --tech-paper-soft:#111827;
+  --tech-ink:#e5e7eb;
+  --tech-indigo:#818cf8;
+  --tech-indigo-dark:#a5b4fc;
+  --tech-terracotta:#f07a5b;
+  --tech-gold:#f4c76a;
+  --tech-sage:#5ee0a4;
+  --tech-sage-soft:#12352b;
+  --tech-muted:#94a3b8;
+  --tech-border:#29354a;
+  --tech-shadow:0 10px 28px rgba(0,0,0,.28);
+  background:
+    radial-gradient(circle at 8% 12%,rgba(244,199,106,.05),transparent 23%),
+    radial-gradient(circle at 92% 30%,rgba(240,122,91,.05),transparent 25%),
+    var(--tech-cream);
+  color:var(--tech-ink);
+}
+html[data-theme="dark"] .technician-page .form-group input,
+html[data-theme="dark"] .technician-page .form-group select{background:#0f172a;color:#e5e7eb;border-color:#29354a}
+html[data-theme="dark"] .technician-page .technician-grid{background:#111827;scrollbar-color:#6366f1 #172033}
+html[data-theme="dark"] .technician-page .technician-grid::-webkit-scrollbar-track{background:#172033}
+html[data-theme="dark"] .technician-page .technician-grid::-webkit-scrollbar-thumb{border-color:#172033}
+html[data-theme="dark"] .technician-page .technician-item{background:#151d2e;border-color:#29354a;box-shadow:0 5px 15px rgba(0,0,0,.22)}
+html[data-theme="dark"] .technician-page .technician-item:hover{border-color:#46536d;box-shadow:0 10px 24px rgba(0,0,0,.3)}
+html[data-theme="dark"] .technician-page .technician-icon{background:#202a45;color:#a5b4fc}
+html[data-theme="dark"] .technician-page .technician-top{border-color:#29354a}
+html[data-theme="dark"] .technician-page .technician-details-grid{background:#111827;border-color:#29354a}
+html[data-theme="dark"] .technician-page .technician-detail{border-color:#29354a}
+html[data-theme="dark"] .technician-page .technician-detail>span:not(.technician-rating),
+html[data-theme="dark"] .technician-page .technician-rating{color:#d1d5db}
+html[data-theme="dark"] .technician-page .status-busy{background:#3a211b;color:#f7a98e}
+html[data-theme="dark"] .technician-page .status-offline{background:#273142;color:#94a3b8}
+html[data-theme="dark"] .technician-page .status-available{background:#12352b;color:#5ee0a4}
+html[data-theme="dark"] .technician-page .empty-state h3{color:#e5e7eb}
