@@ -175,3 +175,27 @@
   .work-order-modal-cancel,.work-order-modal-save{width:100%}
   .edit-work-order-btn{width:100%;margin-top:8px}
 }
+
+
+/* DARK MODE */
+html[data-theme="dark"] .work-order-page{background:#0b1120;color:#e5e7eb;scrollbar-color:#475569 #111827}
+html[data-theme="dark"] .work-order-page::-webkit-scrollbar-track{background:#111827}
+html[data-theme="dark"] .work-order-page::-webkit-scrollbar-thumb{background:#475569;border-color:#111827}
+html[data-theme="dark"] .work-order-card,html[data-theme="dark"] .work-order-item{background:#151d2e;border-color:#29354a;box-shadow:0 12px 35px rgba(0,0,0,.25)}
+html[data-theme="dark"] .work-order-page .card-title,html[data-theme="dark"] .work-order-page .list-header{border-color:#29354a}
+html[data-theme="dark"] .work-order-page h1,html[data-theme="dark"] .work-order-page h2,html[data-theme="dark"] .work-order-page h3{color:#f8fafc}
+html[data-theme="dark"] .work-order-page .card-title p,html[data-theme="dark"] .work-order-page .list-header p,html[data-theme="dark"] .work-order-details p{color:#94a3b8}
+html[data-theme="dark"] .work-order-page .form-group label,html[data-theme="dark"] .work-order-parts-section h4{color:#cbd5e1}
+html[data-theme="dark"] .work-order-page .form-group input,html[data-theme="dark"] .work-order-page .form-group select,html[data-theme="dark"] .work-order-page .form-group textarea,html[data-theme="dark"] .assign-technician-controls select{background:#0f172a;color:#e5e7eb;border-color:#29354a}
+html[data-theme="dark"] .new-site-panel{background:#111827;border-color:#29354a}
+html[data-theme="dark"] .new-site-header{border-color:#29354a}
+html[data-theme="dark"] .new-site-header h3{color:#f8fafc}
+html[data-theme="dark"] .new-site-header p{color:#94a3b8}
+html[data-theme="dark"] .work-order-top,html[data-theme="dark"] .assign-technician-section,html[data-theme="dark"] .work-order-parts-section{border-color:#29354a}
+html[data-theme="dark"] .work-order-details .description{background:#111827;border-color:#29354a;color:#94a3b8}
+html[data-theme="dark"] .site-name-display{background:#202a45;color:#c7d2fe}
+html[data-theme="dark"] .cancel-site-btn{background:#151d2e;color:#c7d2fe;border-color:#29354a}
+html[data-theme="dark"] .edit-work-order-btn{background:#1b2538!important;color:#c7d2fe!important;border-color:#29354a!important}
+html[data-theme="dark"] .work-order-edit-modal{background:#151d2e!important;color:#e5e7eb;border-color:#29354a!important}
+html[data-theme="dark"] .work-order-modal-header{border-color:#29354a}
+html[data-theme="dark"] .work-order-modal-header h2{color:#f8fafc}
