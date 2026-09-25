@@ -145,3 +145,191 @@ html[data-theme="dark"] .theme-toggle:hover { background:rgba(129,140,248,.18); 
     transition:none !important;
   }
 }
+
+
+/* =========================================================
+   FIELDSYNC — PREMIUM DARK MODE POLISH
+   Recruiter-facing visual system:
+   deep navy canvas / elevated slate surfaces / soft white text /
+   restrained indigo + terracotta + gold accents.
+   Light mode is intentionally untouched.
+========================================================= */
+
+/* Shared dark-mode readability */
+html[data-theme="dark"] .content,
+html[data-theme="dark"] .main { background:#0b1120; }
+
+html[data-theme="dark"] h1,
+html[data-theme="dark"] h2,
+html[data-theme="dark"] h3,
+html[data-theme="dark"] h4 { color:#f8fafc; }
+
+html[data-theme="dark"] p,
+html[data-theme="dark"] span,
+html[data-theme="dark"] label { }
+
+html[data-theme="dark"] .page-header p,
+html[data-theme="dark"] .page-heading p { color:#94a3b8; }
+
+/* DASHBOARD / MANAGER OVERVIEW */
+html[data-theme="dark"] .manager-tech-grid{background:transparent!important}
+html[data-theme="dark"] .manager-tech-stat{
+  background:#151d2e!important;
+  border:1px solid #29354a!important;
+  color:#e5e7eb!important;
+  box-shadow:0 8px 24px rgba(0,0,0,.22);
+}
+html[data-theme="dark"] .manager-tech-stat strong,
+html[data-theme="dark"] .manager-tech-stat h3{color:#f8fafc!important}
+html[data-theme="dark"] .manager-tech-stat span,
+html[data-theme="dark"] .manager-tech-stat p{color:#94a3b8!important}
+
+/* WORK ORDERS — remove low-contrast indigo-on-navy text */
+html[data-theme="dark"] .work-order-page .work-order-details strong,
+html[data-theme="dark"] .work-order-page .assign-technician-section label,
+html[data-theme="dark"] .work-order-page .work-order-parts-section h4,
+html[data-theme="dark"] .work-order-page .work-order-details .site-detail strong{
+  color:#a5b4fc!important;
+}
+html[data-theme="dark"] .work-order-page .work-order-details p,
+html[data-theme="dark"] .work-order-page .field-hint,
+html[data-theme="dark"] .work-order-page .work-order-part-value,
+html[data-theme="dark"] .work-order-page .work-order-part-info{
+  color:#cbd5e1!important;
+}
+html[data-theme="dark"] .work-order-page .work-order-top h3,
+html[data-theme="dark"] .work-order-page .list-header h2,
+html[data-theme="dark"] .work-order-page .card-title h2{
+  color:#f8fafc!important;
+}
+html[data-theme="dark"] .work-order-page .work-order-top,
+html[data-theme="dark"] .work-order-page .work-order-details,
+html[data-theme="dark"] .work-order-page .work-order-parts-section{
+  border-color:#29354a!important;
+}
+html[data-theme="dark"] .work-order-page .work-order-parts-list,
+html[data-theme="dark"] .work-order-page .work-order-part-row{
+  background:#111827!important;
+  border-color:#29354a!important;
+}
+
+/* BILLING — no cream/white islands in dark mode */
+html[data-theme="dark"] .billing-page .billing-card,
+html[data-theme="dark"] .billing-page .invoice-card,
+html[data-theme="dark"] .billing-page .invoice-form,
+html[data-theme="dark"] .billing-page .invoice-table-scroll,
+html[data-theme="dark"] .billing-page .invoice-modal{
+  background:#151d2e!important;
+  border-color:#29354a!important;
+  color:#e5e7eb!important;
+}
+html[data-theme="dark"] .billing-page .billing-card-header,
+html[data-theme="dark"] .billing-page .invoice-table thead,
+html[data-theme="dark"] .billing-page .invoice-table th{
+  background:#111827!important;
+  border-color:#29354a!important;
+  color:#94a3b8!important;
+}
+html[data-theme="dark"] .billing-page .invoice-table td{
+  background:#151d2e!important;
+  border-color:#29354a!important;
+  color:#cbd5e1!important;
+}
+html[data-theme="dark"] .billing-page .invoice-table tbody tr:hover td{background:#1b2538!important}
+html[data-theme="dark"] .billing-page .invoice-form-actions,
+html[data-theme="dark"] .billing-page .invoice-modal-header,
+html[data-theme="dark"] .billing-page .invoice-details-section{
+  border-color:#29354a!important;
+}
+html[data-theme="dark"] .billing-page .invoice-total-box{
+  background:#202a45!important;
+  border-color:#334155!important;
+  color:#f8fafc!important;
+}
+html[data-theme="dark"] .billing-page .invoice-number-cell,
+html[data-theme="dark"] .billing-page .invoice-total,
+html[data-theme="dark"] .billing-page .work-order-chip{
+  color:#a5b4fc!important;
+}
+html[data-theme="dark"] .billing-page .billing-loading-screen{color:#e5e7eb}
+html[data-theme="dark"] .billing-page .billing-loading-text{color:#94a3b8}
+
+/* REPORTS — charts must live on the same dark surface as the cards */
+html[data-theme="dark"] .reports-page .chart-card,
+html[data-theme="dark"] .reports-page .chart-container,
+html[data-theme="dark"] .reports-page .chart-empty,
+html[data-theme="dark"] .reports-page .inventory-chart,
+html[data-theme="dark"] .reports-page .donut-container,
+html[data-theme="dark"] .reports-page .performance-card{
+  background:#151d2e!important;
+  border-color:#29354a!important;
+  color:#e5e7eb!important;
+}
+html[data-theme="dark"] .reports-page .chart-container,
+html[data-theme="dark"] .reports-page .inventory-chart{min-height:240px}
+html[data-theme="dark"] .reports-page .chart-empty{
+  color:#64748b!important;
+}
+html[data-theme="dark"] .reports-page .chart-header h3,
+html[data-theme="dark"] .reports-page .performance-header h3{
+  color:#f8fafc!important;
+}
+html[data-theme="dark"] .reports-page .chart-header p,
+html[data-theme="dark"] .reports-page .performance-header p,
+html[data-theme="dark"] .reports-page .performance-stats span{
+  color:#94a3b8!important;
+}
+html[data-theme="dark"] .reports-page .report-table-wrapper{
+  background:#151d2e!important;
+  border-color:#29354a!important;
+}
+html[data-theme="dark"] .reports-page .report-table-wrapper table th{
+  background:#111827!important;
+  color:#94a3b8!important;
+  border-color:#29354a!important;
+}
+html[data-theme="dark"] .reports-page .report-table-wrapper table td{
+  background:#151d2e!important;
+  color:#cbd5e1!important;
+  border-color:#29354a!important;
+}
+
+/* SCHEDULE — consistent elevated surfaces */
+html[data-theme="dark"] .schedule-page .schedule-card,
+html[data-theme="dark"] .schedule-page .form-card,
+html[data-theme="dark"] .schedule-page .list-card{
+  background:#151d2e!important;
+}
+html[data-theme="dark"] .schedule-page .schedule-table{
+  background:#151d2e!important;
+}
+html[data-theme="dark"] .schedule-page .schedule-table tbody td strong,
+html[data-theme="dark"] .schedule-page .work-order-info strong{
+  color:#a5b4fc!important;
+}
+html[data-theme="dark"] .schedule-page .date-value,
+html[data-theme="dark"] .schedule-page .time-info,
+html[data-theme="dark"] .schedule-page .technician-info span,
+html[data-theme="dark"] .schedule-page .notes-text{
+  color:#cbd5e1!important;
+}
+
+/* SERVICE REQUESTS */
+html[data-theme="dark"] .service-request-page .form-group label{color:#cbd5e1!important}
+html[data-theme="dark"] .service-request-page .form-group input::placeholder,
+html[data-theme="dark"] .service-request-page .form-group textarea::placeholder{color:#64748b!important}
+
+/* CONSISTENT DARK INPUTS */
+html[data-theme="dark"] input,
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea{
+  color-scheme:dark;
+}
+html[data-theme="dark"] input::placeholder,
+html[data-theme="dark"] textarea::placeholder{color:#64748b}
+
+/* Avoid bright native scrollbars */
+html[data-theme="dark"] ::-webkit-scrollbar{width:10px;height:10px}
+html[data-theme="dark"] ::-webkit-scrollbar-track{background:#0f172a}
+html[data-theme="dark"] ::-webkit-scrollbar-thumb{background:#334155;border:2px solid #0f172a;border-radius:999px}
+html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover{background:#475569}
