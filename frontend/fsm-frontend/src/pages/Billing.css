@@ -1490,3 +1490,12 @@ button {
         height: 8px;
     }
 }
+
+/* DARK MODE */
+html[data-theme="dark"] .billing-page{--billing-cream:#0b1120;--billing-paper:#151d2e;--billing-paper-2:#1b2538;--billing-ink:#e5e7eb;--billing-indigo:#818cf8;--billing-indigo-dark:#a5b4fc;--billing-terracotta:#f07a5b;--billing-gold:#f4c76a;--billing-gold-soft:#3a2e17;--billing-sage:#5ee0a4;--billing-sage-soft:#12352b;--billing-red:#f58a82;--billing-red-soft:#3a1d20;--billing-muted:#94a3b8;--billing-border:#29354a;--billing-shadow:0 12px 35px rgba(0,0,0,.28);background:var(--billing-cream);color:var(--billing-ink)}
+html[data-theme="dark"] .billing-page .billing-card,html[data-theme="dark"] .billing-page .billing-stat-card,html[data-theme="dark"] .billing-page .invoice-card,html[data-theme="dark"] .billing-page .billing-loading-art{background:var(--billing-paper);border-color:var(--billing-border);color:var(--billing-ink);box-shadow:var(--billing-shadow)}
+html[data-theme="dark"] .billing-page input,html[data-theme="dark"] .billing-page select,html[data-theme="dark"] .billing-page textarea{background:#0f172a!important;color:#e5e7eb!important;border-color:#29354a!important}
+html[data-theme="dark"] .billing-page table th{background:#172033!important;color:#94a3b8!important;border-color:#29354a!important}
+html[data-theme="dark"] .billing-page table td{background:#151d2e!important;color:#d1d5db!important;border-color:#29354a!important}
+html[data-theme="dark"] .billing-page h1,html[data-theme="dark"] .billing-page h2,html[data-theme="dark"] .billing-page h3,html[data-theme="dark"] .billing-page strong{color:#f8fafc}
+html[data-theme="dark"] .billing-page p,html[data-theme="dark"] .billing-page small,.billing-page .billing-muted{color:#94a3b8}
