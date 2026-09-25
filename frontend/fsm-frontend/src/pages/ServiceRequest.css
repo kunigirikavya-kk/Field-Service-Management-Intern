@@ -67,3 +67,14 @@
   .service-request-page .form-actions{flex-direction:column}
   .service-request-page .cancel-button,.service-request-page .primary-button{width:100%}
 }
+
+
+/* DARK MODE */
+html[data-theme="dark"] .service-request-page{background:#0b1120;color:#e5e7eb}
+html[data-theme="dark"] .service-request-card,html[data-theme="dark"] .service-request-page .card{background:#151d2e;border-color:#29354a;box-shadow:0 12px 35px rgba(0,0,0,.25)}
+html[data-theme="dark"] .service-request-page h1{color:#f8fafc}
+html[data-theme="dark"] .service-request-page .page-heading p{color:#94a3b8}
+html[data-theme="dark"] .service-request-page .form-group label{color:#cbd5e1}
+html[data-theme="dark"] .service-request-page .form-group input,html[data-theme="dark"] .service-request-page .form-group select,html[data-theme="dark"] .service-request-page .form-group textarea{background:#0f172a;color:#e5e7eb;border-color:#29354a}
+html[data-theme="dark"] .service-request-page .form-actions{border-color:#29354a}
+html[data-theme="dark"] .service-request-page .cancel-button{background:#1b2538;color:#c7d2fe;border-color:#29354a}
