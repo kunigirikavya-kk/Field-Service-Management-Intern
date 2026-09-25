@@ -52,3 +52,96 @@ p,li,td,th,label,input,select,textarea{line-height:var(--line-height-normal)}
   .form-grid,.invoice-form-grid,.site-form-grid,.new-site-grid{grid-template-columns:1fr!important}
   .full-width{grid-column:1/-1}
 }
+
+/* =========================================================
+   FIELDSYNC THEME SYSTEM
+   Light mode remains the existing default UI.
+   Dark mode changes only visual tokens, not layout/components.
+   ========================================================= */
+html[data-theme="dark"] {
+  --background:#0b1120; --bg:#0b1120; --surface:#111827; --card-bg:#111827;
+  --text-primary:#e5e7eb; --heading:#f8fafc; --text:#d1d5db; --text-secondary:#9ca3af;
+  --text-light:#9ca3af; --text-muted:#6b7280;
+  --border:#263244; --border-strong:#374151;
+  --primary:#818cf8; --primary-dark:#6366f1; --primary-hover:#a5b4fc; --primary-light:#1e1b4b;
+  --success:#34d399; --success-bg:#052e24; --warning:#fbbf24; --warning-bg:#33200a;
+  --danger:#f87171; --danger-bg:#3a1115; --info:#60a5fa; --info-bg:#102a43;
+  --topbar-bg:rgba(17,24,39,.94); --topbar-border:#263244;
+  --shadow-sm:0 4px 18px rgba(0,0,0,.20); --shadow:0 6px 22px rgba(0,0,0,.24);
+  --shadow-md:0 12px 30px rgba(0,0,0,.30); --shadow-lg:0 20px 45px rgba(0,0,0,.38);
+}
+html[data-theme="dark"] body,
+html[data-theme="dark"] .content { background:var(--background); color:var(--text); }
+html[data-theme="dark"] .card,
+html[data-theme="dark"] .customer-card,
+html[data-theme="dark"] .technician-card,
+html[data-theme="dark"] .technician-list-section,
+html[data-theme="dark"] .service-request-card,
+html[data-theme="dark"] .work-order-card,
+html[data-theme="dark"] .work-order-list-section,
+html[data-theme="dark"] .schedule-card,
+html[data-theme="dark"] .table-container,
+html[data-theme="dark"] .report-table-wrapper,
+html[data-theme="dark"] .schedule-table-container,
+html[data-theme="dark"] .invoice-table-scroll {
+  background:var(--surface);
+  border-color:var(--border);
+  box-shadow:var(--shadow-sm);
+}
+html[data-theme="dark"] .page-header h1,
+html[data-theme="dark"] .page-heading h1,
+html[data-theme="dark"] .customer-header h1,
+html[data-theme="dark"] .technician-header h1,
+html[data-theme="dark"] .work-order-header h1,
+html[data-theme="dark"] .schedule-header h1,
+html[data-theme="dark"] .inventory-header h1,
+html[data-theme="dark"] .billing-header h1,
+html[data-theme="dark"] .reports-header h1,
+html[data-theme="dark"] .topbar-title { color:var(--heading); }
+html[data-theme="dark"] .page-header p,
+html[data-theme="dark"] .page-heading p,
+html[data-theme="dark"] .customer-header p,
+html[data-theme="dark"] .technician-header p,
+html[data-theme="dark"] .work-order-header p,
+html[data-theme="dark"] .schedule-header p,
+html[data-theme="dark"] .text-muted { color:var(--text-secondary); }
+html[data-theme="dark"] .table-container th,
+html[data-theme="dark"] .table-container td { border-color:var(--border); color:var(--text); }
+html[data-theme="dark"] .table-container th { background:#172033; color:#9ca3af; }
+html[data-theme="dark"] .table-container tbody tr:hover td { background:#172033; }
+html[data-theme="dark"] .form-group label { color:#cbd5e1; }
+html[data-theme="dark"] .form-group input,
+html[data-theme="dark"] .form-group select,
+html[data-theme="dark"] .form-group textarea,
+html[data-theme="dark"] .login-card input,
+html[data-theme="dark"] .register-field input,
+html[data-theme="dark"] .register-field select {
+  background:#0f172a; color:#e5e7eb; border-color:var(--border);
+}
+html[data-theme="dark"] .form-group input::placeholder,
+html[data-theme="dark"] .form-group textarea::placeholder { color:#6b7280; }
+html[data-theme="dark"] .btn-outline { background:#111827; color:#e5e7eb; border-color:var(--border); }
+html[data-theme="dark"] .btn-outline:hover { background:#172033; border-color:#475569; }
+html[data-theme="dark"] .empty-state h3,
+html[data-theme="dark"] .reports-empty,
+html[data-theme="dark"] .empty-invoices,
+html[data-theme="dark"] .empty-schedules { color:var(--text); }
+html[data-theme="dark"] .empty-state p,
+html[data-theme="dark"] .loading { color:var(--text-muted); }
+html[data-theme="dark"] .topbar-icon-btn,
+html[data-theme="dark"] .topbar-profile-btn { color:#cbd5e1; }
+html[data-theme="dark"] .dropdown-menu { background:#111827; border-color:var(--border); box-shadow:var(--shadow-lg); color:#e5e7eb; }
+html[data-theme="dark"] .dropdown-header { border-color:var(--border); color:#f8fafc; }
+html[data-theme="dark"] .dropdown-item { color:#d1d5db; }
+html[data-theme="dark"] .dropdown-item:hover { background:#172033; }
+html[data-theme="dark"] .topbar-search { background:#111827; border-color:var(--border); color:#9ca3af; }
+html[data-theme="dark"] .topbar-search input { background:transparent; color:#e5e7eb; }
+html[data-theme="dark"] .topbar-search input::placeholder { color:#6b7280; }
+html[data-theme="dark"] .theme-toggle { background:rgba(129,140,248,.10); border-color:rgba(129,140,248,.20); color:#a5b4fc; }
+html[data-theme="dark"] .theme-toggle:hover { background:rgba(129,140,248,.18); }
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme] *, html[data-theme] *::before, html[data-theme] *::after {
+    transition:none !important;
+  }
+}
