@@ -594,6 +594,12 @@ public class WorkOrderService {
             throw new AccessDeniedException("You don't have permission to change work-order status");
         }
 
+        if (dispatcher) {
+            throw new AccessDeniedException(
+                    "Dispatcher status changes are not allowed; use assignment or cancellation workflows"
+            );
+        }
+
         if (current == WorkOrder.Status.CLOSED || current == WorkOrder.Status.CANCELLED) {
             throw new IllegalStateException("Terminal work orders cannot transition further");
         }
