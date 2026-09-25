@@ -941,3 +941,13 @@ button {
         transition-duration: 0.01ms !important;
     }
 }
+
+/* DARK MODE */
+html[data-theme="dark"] .reports-page{background:#0b1120!important;color:#e5e7eb}
+html[data-theme="dark"] .reports-page .kpi-card,html[data-theme="dark"] .reports-page .chart-card,html[data-theme="dark"] .reports-page .report-section,html[data-theme="dark"] .reports-page .performance-card{background:#151d2e!important;border-color:#29354a!important;box-shadow:0 12px 35px rgba(0,0,0,.25)}
+html[data-theme="dark"] .reports-page h1,html[data-theme="dark"] .reports-page h2,html[data-theme="dark"] .reports-page h3,html[data-theme="dark"] .reports-page .section-heading{color:#f8fafc}
+html[data-theme="dark"] .reports-page p,html[data-theme="dark"] .reports-page small,html[data-theme="dark"] .reports-page .chart-header{color:#94a3b8}
+html[data-theme="dark"] .reports-page .reports-refresh-button,html[data-theme="dark"] .reports-page .view-all-button{background:#1b2538;color:#c7d2fe;border-color:#29354a}
+html[data-theme="dark"] .reports-page .recharts-default-tooltip{background:#111827!important;border:1px solid #29354a!important;color:#e5e7eb!important}
+html[data-theme="dark"] .reports-page .recharts-text,html[data-theme="dark"] .reports-page .recharts-cartesian-axis-tick-value{fill:#94a3b8!important}
+html[data-theme="dark"] .reports-page .recharts-legend-item-text{color:#cbd5e1!important}
