@@ -1731,3 +1731,53 @@ input:focus-visible {
 
     outline-offset: 2px;
 }
+
+
+
+/* =========================================================
+   FIELDSYNC DARK MODE — INVENTORY
+   Same layout and visual language; dark surfaces only.
+========================================================= */
+html[data-theme="dark"] .inventory-page{
+  --inventory-cream:#0b1120;
+  --inventory-paper:#151d2e;
+  --inventory-paper-2:#1b2538;
+  --inventory-ink:#e5e7eb;
+  --inventory-indigo:#818cf8;
+  --inventory-indigo-dark:#a5b4fc;
+  --inventory-terracotta:#f07a5b;
+  --inventory-terracotta-dark:#d95d43;
+  --inventory-gold:#f4c76a;
+  --inventory-gold-soft:#3a2e17;
+  --inventory-sage:#5ee0a4;
+  --inventory-sage-soft:#12352b;
+  --inventory-red:#f58a82;
+  --inventory-red-soft:#3a1d20;
+  --inventory-muted:#94a3b8;
+  --inventory-border:#29354a;
+  --inventory-shadow:0 12px 35px rgba(0,0,0,.28);
+  --inventory-shadow-hover:0 18px 45px rgba(0,0,0,.38);
+  background:
+    radial-gradient(circle at 8% 12%,rgba(244,199,106,.055),transparent 23%),
+    radial-gradient(circle at 92% 30%,rgba(240,122,91,.055),transparent 25%),
+    var(--inventory-cream);
+  color:var(--inventory-ink);
+}
+html[data-theme="dark"] .inventory-page .inventory-main-icon{color:#fff}
+html[data-theme="dark"] .inventory-page .role-symbol,
+html[data-theme="dark"] .inventory-page .stat-icon.parts-icon{background:#202a45}
+html[data-theme="dark"] .inventory-page .input-wrapper,
+html[data-theme="dark"] .inventory-page .search-box{background:#0f172a;color:var(--inventory-ink)}
+html[data-theme="dark"] .inventory-page .input-wrapper input,
+html[data-theme="dark"] .inventory-page .search-box input{color:var(--inventory-ink)}
+html[data-theme="dark"] .inventory-page .input-wrapper input::placeholder,
+html[data-theme="dark"] .inventory-page .search-box input::placeholder{color:#64748b}
+html[data-theme="dark"] .inventory-page .btn-secondary{background:#1b2538;color:#c7d2fe;border-color:var(--inventory-border)}
+html[data-theme="dark"] .inventory-page .btn-secondary:hover{background:#243149}
+html[data-theme="dark"] .inventory-page .search-box button{background:#243149;color:#94a3b8}
+html[data-theme="dark"] .inventory-page .inventory-notification{background:#152338!important;color:#dbeafe!important;border-color:#334155!important}
+html[data-theme="dark"] .inventory-page .inventory-table{background:#111827!important;color:#e5e7eb}
+html[data-theme="dark"] .inventory-page .inventory-table th{background:#172033!important;color:#94a3b8!important;border-color:#29354a!important}
+html[data-theme="dark"] .inventory-page .inventory-table td{background:#151d2e;color:#d1d5db;border-color:#29354a!important}
+html[data-theme="dark"] .inventory-page .inventory-table tbody tr:hover td{background:#1b2538}
+html[data-theme="dark"] .inventory-page .inventory-footer-note{color:#94a3b8}
