@@ -24,6 +24,9 @@ public class TimeLogService {
 
     @Transactional
     public TimeLog log(TimeLog input) {
+        if (!authorizationService.hasRole("TECHNICIAN"))
+            throw new AccessDeniedException("Only technicians can log time");
+
         if (input.getWorkOrderId() == null || input.getTechnicianId() == null) throw new IllegalArgumentException("Work order and technician are required");
         if (input.getMinutes() == null || input.getMinutes() <= 0) throw new IllegalArgumentException("Minutes must be greater than zero");
 
