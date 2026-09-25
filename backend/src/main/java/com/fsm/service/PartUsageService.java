@@ -83,6 +83,12 @@ public class PartUsageService {
             throw new RuntimeException("Technician ID is required.");
         }
 
+        if (!authorizationService.hasRole("TECHNICIAN")) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "Only technicians can record part usage"
+            );
+        }
+
         if (authorizationService.hasRole("TECHNICIAN")) {
 
             if (!authorizationService.isCurrentTechnician(
