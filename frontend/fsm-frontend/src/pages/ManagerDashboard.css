@@ -19,3 +19,15 @@
 .manager-loading{min-height:60vh;display:flex;align-items:center;justify-content:center;color:#717687;font-size:11px}
 @media(max-width:900px){.manager-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.manager-header{align-items:flex-start;flex-direction:column}}
 @media(max-width:600px){.manager-dashboard{padding:22px 14px 30px}.manager-metrics{grid-template-columns:1fr}.manager-panel-head{align-items:flex-start;flex-direction:column}.manager-tech-grid{grid-template-columns:1fr}.manager-refresh{width:100%}}
+
+
+/* DARK MODE */
+html[data-theme="dark"] .manager-dashboard{background:#0b1120;color:#e5e7eb}
+html[data-theme="dark"] .manager-metric,html[data-theme="dark"] .manager-panel{background:#151d2e;border-color:#29354a;box-shadow:0 12px 35px rgba(0,0,0,.25)}
+html[data-theme="dark"] .manager-header h1,html[data-theme="dark"] .manager-panel-head h2,html[data-theme="dark"] .manager-metric strong,html[data-theme="dark"] .manager-table td strong{color:#f8fafc}
+html[data-theme="dark"] .manager-header p,html[data-theme="dark"] .manager-panel-head p,html[data-theme="dark"] .manager-metric div span{color:#94a3b8}
+html[data-theme="dark"] .manager-panel-head{border-color:#29354a}
+html[data-theme="dark"] .manager-table th{background:#172033;color:#94a3b8}
+html[data-theme="dark"] .manager-table td{background:#151d2e;color:#d1d5db;border-color:#29354a}
+html[data-theme="dark"] .manager-count{background:#202a45;color:#c7d2fe}
+html[data-theme="dark"] .manager-error{background:#3a1d20;border-color:#5b2b32;color:#f7a98e}
