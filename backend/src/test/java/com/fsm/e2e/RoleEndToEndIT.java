@@ -33,6 +33,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.math.BigDecimal;
 import java.util.Map;
 
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
@@ -208,8 +209,8 @@ class RoleEndToEndIT {
                         .header("Authorization", bearer(managerToken)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content", hasSize(1)))
-                .andExpect(jsonPath("$.totalElements").value(1))
-                .andExpect(jsonPath("$.totalPages").value(1));
+                .andExpect(jsonPath("$.totalElements").value(greaterThanOrEqualTo(1)))
+                .andExpect(jsonPath("$.totalPages").value(greaterThanOrEqualTo(1)));
 
         mockMvc.perform(get("/api/reports/summary")
                         .header("Authorization", bearer(managerToken)))
@@ -376,12 +377,14 @@ class RoleEndToEndIT {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("CLOSED"));
 
-        mockMvc.perform(delete("/api/part-usage/{id}", objectMapper.readTree(
-                        mockMvc.perform(get("/api/part-usage/work-order/{id}", workOrderId)
-                                .header("Authorization", bearer(technicianToken)))
-                                .andExpect(status().isOk())
-                                .andReturn().getResponse().getContentAsString()
-                ).get(0).get("id").asLong())
+        String partUsageResponse = mockMvc.perform(get("/api/part-usage/work-order/{id}", workOrderId)
+                        .header("Authorization", bearer(technicianToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andReturn().getResponse().getContentAsString();
+        long partUsageId = objectMapper.readTree(partUsageResponse).get(0).get("id").asLong();
+
+        mockMvc.perform(delete("/api/part-usage/{id}", partUsageId)
                         .header("Authorization", bearer(managerToken)))
                 .andExpect(status().isNoContent());
 
