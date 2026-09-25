@@ -70,3 +70,20 @@
   .schedule-header .inventory-inspired-icon{left:0;top:0;width:50px;height:50px;font-size:24px}.schedule-header h1{font-size:29px}
   .schedule-count{width:100%;justify-content:flex-start}.schedule-card{border-radius:15px}.schedule-form{padding:16px}.time-row{grid-template-columns:1fr}.schedule-table{min-width:850px}
 }
+
+
+/* DARK MODE */
+html[data-theme="dark"] .schedule-page{background:#0b1120!important;color:#e5e7eb}
+html[data-theme="dark"] .schedule-page .schedule-card{background:#151d2e;border-color:#29354a;box-shadow:0 12px 35px rgba(0,0,0,.25)}
+html[data-theme="dark"] .schedule-page .card-title{background:#151d2e;border-color:#29354a}
+html[data-theme="dark"] .schedule-page .card-title h2,html[data-theme="dark"] .schedule-page h1{color:#f8fafc}
+html[data-theme="dark"] .schedule-page .card-title p,html[data-theme="dark"] .schedule-page .schedule-header p{color:#94a3b8}
+html[data-theme="dark"] .schedule-page .schedule-form .form-group label{color:#cbd5e1}
+html[data-theme="dark"] .schedule-page .schedule-form input,html[data-theme="dark"] .schedule-page .schedule-form select,html[data-theme="dark"] .schedule-page .schedule-form textarea{background:#0f172a;color:#e5e7eb;border-color:#29354a}
+html[data-theme="dark"] .schedule-page .schedule-table-container{background:#111827}
+html[data-theme="dark"] .schedule-page .schedule-table thead th{background:#172033;color:#94a3b8;border-color:#29354a}
+html[data-theme="dark"] .schedule-page .schedule-table tbody td{background:#151d2e;color:#d1d5db;border-color:#29354a}
+html[data-theme="dark"] .schedule-page .schedule-table tbody tr:hover td{background:#1b2538}
+html[data-theme="dark"] .schedule-page .technician-avatar{background:#202a45;color:#a5b4fc}
+html[data-theme="dark"] .schedule-page .delete-btn{background:#301b20;border-color:#5b2b32}
+html[data-theme="dark"] .schedule-page .empty-schedules{color:#94a3b8}
