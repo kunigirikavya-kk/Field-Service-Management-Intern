@@ -94,22 +94,26 @@ class RoleEndToEndIT {
             userRepository.save(user);
         }
 
-        if (userRepository.findByEmail("customer2@keystone.local").isEmpty()) {
+        User secondCustomerUser = userRepository.findByEmail("customer2@keystone.local").orElseGet(() -> {
             User customerUser = new User();
             customerUser.setUsername("customer2@keystone.local");
             customerUser.setFullName("KEYSTONE Customer Two");
             customerUser.setEmail("customer2@keystone.local");
             customerUser.setPhone("9000000010");
-            customerUser.setPassword(password);
             customerUser.setRole(Role.CUSTOMER);
-            customerUser = userRepository.save(customerUser);
+            return userRepository.save(customerUser);
+        });
+        secondCustomerUser.setPassword(password);
+        secondCustomerUser.setRole(Role.CUSTOMER);
+        userRepository.save(secondCustomerUser);
 
+        if (customerRepository.findByUserId(secondCustomerUser.getId()).isEmpty()) {
             Customer customer = new Customer();
-            customer.setUserId(customerUser.getId());
+            customer.setUserId(secondCustomerUser.getId());
             customer.setCompanyName("KEYSTONE Second Customer");
-            customer.setContactPerson(customerUser.getFullName());
-            customer.setEmail(customerUser.getEmail());
-            customer.setPhone(customerUser.getPhone());
+            customer.setContactPerson(secondCustomerUser.getFullName());
+            customer.setEmail(secondCustomerUser.getEmail());
+            customer.setPhone(secondCustomerUser.getPhone());
             customerRepository.save(customer);
         }
     }
