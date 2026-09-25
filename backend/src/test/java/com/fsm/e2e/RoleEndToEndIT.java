@@ -3,12 +3,14 @@ package com.fsm.e2e;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fsm.entity.Customer;
+import com.fsm.entity.InventoryPart;
 import com.fsm.entity.Role;
 import com.fsm.entity.Site;
 import com.fsm.entity.Technician;
 import com.fsm.entity.User;
 import com.fsm.entity.WorkOrder;
 import com.fsm.repository.CustomerRepository;
+import com.fsm.repository.InventoryRepository;
 import com.fsm.repository.SiteRepository;
 import com.fsm.repository.TechnicianRepository;
 import com.fsm.repository.UserRepository;
@@ -36,6 +38,7 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -71,6 +74,7 @@ class RoleEndToEndIT {
     @Autowired TechnicianRepository technicianRepository;
     @Autowired SiteRepository siteRepository;
     @Autowired WorkOrderRepository workOrderRepository;
+    @Autowired InventoryRepository inventoryRepository;
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
@@ -210,6 +214,186 @@ class RoleEndToEndIT {
         mockMvc.perform(get("/api/reports/summary")
                         .header("Authorization", bearer(managerToken)))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void customerDispatcherTechnicianManagerExecutionFlow() throws Exception {
+        User customerUser = userRepository.findByEmail("customer@keystone.local").orElseThrow();
+        Customer customer = customerRepository.findByUserId(customerUser.getId()).orElseThrow();
+        Customer secondCustomer = customerRepository.findByUserId(
+                userRepository.findByEmail("customer2@keystone.local").orElseThrow().getId()
+        ).orElseThrow();
+        Technician technician = technicianRepository.findByUserId(
+                userRepository.findByEmail("technician@keystone.local").orElseThrow().getId()
+        ).orElseThrow();
+        Site site = siteRepository.findByCustomerId(customer.getId()).stream().findFirst().orElseThrow();
+
+        String customerToken = login("customer@keystone.local");
+        String secondCustomerToken = login("customer2@keystone.local");
+        String dispatcherToken = login("dispatcher@keystone.local");
+        String technicianToken = login("technician@keystone.local");
+        String managerToken = login("manager@keystone.local");
+
+        String serviceRequestBody = objectMapper.writeValueAsString(Map.of(
+                "customerId", secondCustomer.getId(),
+                "serviceType", "AC Maintenance",
+                "priority", "HIGH",
+                "title", "Customer-owned E2E request",
+                "serviceLocation", "Test Site",
+                "description", "Customer ownership and request creation test"
+        ));
+
+        String serviceRequestResponse = mockMvc.perform(post("/api/service-requests")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(serviceRequestBody)
+                        .header("Authorization", bearer(customerToken)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.customerId").value(customer.getId()))
+                .andExpect(jsonPath("$.status").value("NEW"))
+                .andReturn().getResponse().getContentAsString();
+
+        long serviceRequestId = objectMapper.readTree(serviceRequestResponse).get("id").asLong();
+
+        mockMvc.perform(get("/api/service-requests/{id}", serviceRequestId)
+                        .header("Authorization", bearer(secondCustomerToken)))
+                .andExpect(status().isForbidden());
+
+        String workOrderBody = objectMapper.writeValueAsString(Map.of(
+                "serviceRequestId", serviceRequestId,
+                "customerId", customer.getId(),
+                "siteId", site.getId(),
+                "title", "E2E created work order",
+                "priority", "HIGH",
+                "serviceType", "AC Maintenance",
+                "description", "Dispatcher creation flow"
+        ));
+
+        String workOrderResponse = mockMvc.perform(post("/api/work-orders")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(workOrderBody)
+                        .header("Authorization", bearer(dispatcherToken)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.status").value("NEW"))
+                .andReturn().getResponse().getContentAsString();
+
+        long workOrderId = objectMapper.readTree(workOrderResponse).get("id").asLong();
+
+        mockMvc.perform(post("/api/work-orders/{id}/assign", workOrderId)
+                        .param("technicianId", technician.getId().toString())
+                        .header("Authorization", bearer(dispatcherToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("ASSIGNED"));
+
+        String inventoryResponse = mockMvc.perform(post("/api/inventory")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of(
+                                "partNumber", "E2E-" + System.nanoTime(),
+                                "partName", "E2E Filter",
+                                "category", "HVAC",
+                                "quantity", 2,
+                                "minimumStock", 1,
+                                "unitPrice", 50.00,
+                                "supplier", "KEYSTONE Test Supplier"
+                        )))
+                        .header("Authorization", bearer(managerToken)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        long inventoryPartId = objectMapper.readTree(inventoryResponse).get("id").asLong();
+
+        mockMvc.perform(post("/api/part-usage")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of(
+                                "workOrderId", workOrderId,
+                                "technicianId", technician.getId(),
+                                "inventoryPartId", inventoryPartId,
+                                "quantityUsed", 1
+                        )))
+                        .header("Authorization", bearer(managerToken)))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(post("/api/work-orders/{id}/status", workOrderId)
+                        .param("status", "IN_PROGRESS")
+                        .header("Authorization", bearer(technicianToken)))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/part-usage")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of(
+                                "workOrderId", workOrderId,
+                                "technicianId", technician.getId(),
+                                "inventoryPartId", inventoryPartId,
+                                "quantityUsed", 1
+                        )))
+                        .header("Authorization", bearer(technicianToken)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.quantityUsed").value(1));
+
+        mockMvc.perform(get("/api/inventory/{id}", inventoryPartId)
+                        .header("Authorization", bearer(managerToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.quantity").value(1));
+
+        mockMvc.perform(post("/api/time-logs")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of(
+                                "workOrderId", workOrderId,
+                                "technicianId", technician.getId(),
+                                "minutes", 45,
+                                "note", "E2E field work"
+                        )))
+                        .header("Authorization", bearer(managerToken)))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(post("/api/time-logs")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of(
+                                "workOrderId", workOrderId,
+                                "technicianId", technician.getId(),
+                                "minutes", 45,
+                                "note", "E2E field work"
+                        )))
+                        .header("Authorization", bearer(technicianToken)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.minutes").value(45));
+
+        WorkOrder saved = workOrderRepository.findById(workOrderId).orElseThrow();
+        if (!Integer.valueOf(45).equals(saved.getLabourMinutes())) {
+            throw new AssertionError("Expected 45 labour minutes but found " + saved.getLabourMinutes());
+        }
+        if (!BigDecimal.valueOf(50).equals(saved.getPartsCost())) {
+            throw new AssertionError("Expected parts cost 50.00 but found " + saved.getPartsCost());
+        }
+
+        mockMvc.perform(post("/api/work-orders/{id}/status", workOrderId)
+                        .param("status", "COMPLETED")
+                        .header("Authorization", bearer(technicianToken)))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/work-orders/{id}/status", workOrderId)
+                        .param("status", "CLOSED")
+                        .header("Authorization", bearer(managerToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CLOSED"));
+
+        mockMvc.perform(delete("/api/part-usage/{id}", objectMapper.readTree(
+                        mockMvc.perform(get("/api/part-usage/work-order/{id}", workOrderId)
+                                .header("Authorization", bearer(technicianToken)))
+                                .andExpect(status().isOk())
+                                .andReturn().getResponse().getContentAsString()
+                ).get(0).get("id").asLong())
+                        .header("Authorization", bearer(managerToken)))
+                .andExpect(status().isNoContent());
+
+        InventoryPart restored = inventoryRepository.findById(inventoryPartId).orElseThrow();
+        if (!Integer.valueOf(2).equals(restored.getQuantity())) {
+            throw new AssertionError("Expected stock restoration to 2 but found " + restored.getQuantity());
+        }
+
+        mockMvc.perform(get("/api/time-logs/work-order/{id}", workOrderId)
+                        .header("Authorization", bearer(customerToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)));
     }
 
     private String login(String email) throws Exception {
