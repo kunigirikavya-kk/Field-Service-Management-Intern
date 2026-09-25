@@ -362,7 +362,7 @@ class RoleEndToEndIT {
         if (!Integer.valueOf(45).equals(saved.getLabourMinutes())) {
             throw new AssertionError("Expected 45 labour minutes but found " + saved.getLabourMinutes());
         }
-        if (!BigDecimal.valueOf(50).equals(saved.getPartsCost())) {
+        if (saved.getPartsCost() == null || saved.getPartsCost().compareTo(BigDecimal.valueOf(50)) != 0) {
             throw new AssertionError("Expected parts cost 50.00 but found " + saved.getPartsCost());
         }
 
