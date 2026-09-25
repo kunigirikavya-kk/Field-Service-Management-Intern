@@ -1,12 +1,13 @@
 import { useState, useRef, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { Bell, ChevronDown, LogOut, Menu, Search, UserRound } from "lucide-react";
+import { Bell, ChevronDown, LogOut, Menu, Search, UserRound, Sun, Moon } from "lucide-react";
 import "./Topbar.css";
 
 function Topbar({ onLogout, onMenuToggle }) {
 
   const [showProfile, setShowProfile] = useState(false);
   const [showNotif, setShowNotif] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem("fieldsyncTheme") === "dark");
   const profileRef = useRef(null);
   const notifRef = useRef(null);
   const location = useLocation();
@@ -18,6 +19,11 @@ function Topbar({ onLogout, onMenuToggle }) {
   const userName = user?.fullName || "User";
   const userRole = user?.role || "USER";
   const userInitial = userName.charAt(0).toUpperCase();
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", darkMode ? "dark" : "light");
+    localStorage.setItem("fieldsyncTheme", darkMode ? "dark" : "light");
+  }, [darkMode]);
 
   // Page titles
   const titles = {
@@ -64,6 +70,17 @@ function Topbar({ onLogout, onMenuToggle }) {
           <Search size={16} strokeWidth={1.8} aria-hidden />
           <input type="text" placeholder="Search..." />
         </div>
+
+        {/* Theme */}
+        <button
+          className="topbar-icon-btn theme-toggle"
+          onClick={() => setDarkMode(value => !value)}
+          type="button"
+          aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+          title={darkMode ? "Light mode" : "Dark mode"}
+        >
+          {darkMode ? <Sun size={20} strokeWidth={1.8} aria-hidden /> : <Moon size={20} strokeWidth={1.8} aria-hidden />}
+        </button>
 
         {/* Notifications */}
         <div className="topbar-dropdown" ref={notifRef}>
