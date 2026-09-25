@@ -144,6 +144,8 @@ public class SecurityConfig {
                     .hasAnyRole("TECHNICIAN", "DISPATCHER", "MANAGER")
                 .requestMatchers("/api/notifications/**")
                     .hasAnyRole("CUSTOMER", "TECHNICIAN", "DISPATCHER", "MANAGER", "ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/time-logs/work-order/*")
+                    .hasAnyRole("CUSTOMER", "TECHNICIAN", "DISPATCHER", "MANAGER", "ADMIN")
                 .requestMatchers("/api/time-logs/**")
                     .hasAnyRole("TECHNICIAN", "DISPATCHER", "MANAGER", "ADMIN")
                 .requestMatchers(HttpMethod.GET, "/api/work-orders/*/history")

@@ -136,6 +136,22 @@ public class WorkOrder {
     public WorkOrder() {
     }
 
+    @jakarta.persistence.PrePersist
+    protected void onCreate() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+        if (totalCost == null) {
+            totalCost = BigDecimal.ZERO;
+        }
+        if (partsCost == null) {
+            partsCost = BigDecimal.ZERO;
+        }
+        if (labourMinutes == null) {
+            labourMinutes = 0;
+        }
+    }
+
 
     // Getters and Setters
 

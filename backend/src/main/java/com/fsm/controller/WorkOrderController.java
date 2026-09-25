@@ -47,6 +47,43 @@ public class WorkOrderController {
     }
 
     // =====================================================
+    // PAGINATED WORK ORDERS
+    // =====================================================
+
+    @GetMapping("/page")
+    public ResponseEntity<PagedResponse<WorkOrderResponse>> getPagedWorkOrders(
+            @RequestParam(required = false) String status,
+            @PageableDefault(
+                    size = 20,
+                    sort = "createdAt",
+                    direction = Sort.Direction.DESC
+            ) Pageable pageable) {
+
+        Page<WorkOrder> page =
+                workOrderService.getPagedWorkOrders(status, pageable);
+
+        List<WorkOrderResponse> content =
+                toResponses(
+                        page.getContent(),
+                        authorizationService.hasRole("CUSTOMER")
+                );
+
+        PagedResponse<WorkOrderResponse> response =
+                new PagedResponse<>(
+                        content,
+                        page.getNumber(),
+                        page.getSize(),
+                        page.getTotalElements(),
+                        page.getTotalPages(),
+                        page.isFirst(),
+                        page.isLast(),
+                        page.getSort().toString()
+                );
+
+        return ResponseEntity.ok(response);
+    }
+
+    // =====================================================
     // GET WORK ORDER BY ID
     // =====================================================
 
