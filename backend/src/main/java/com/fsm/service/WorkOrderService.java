@@ -586,21 +586,23 @@ public class WorkOrderService {
         WorkOrder.Status current = normalizeLegacyStatus(order.getStatus());
         targetStatus = normalizeLegacyStatus(targetStatus);
 
-        if (current == WorkOrder.Status.CLOSED || current == WorkOrder.Status.CANCELLED) {
-            throw new IllegalStateException("Terminal work orders cannot transition further");
-        }
-
         boolean technician = authorizationService.hasRole("TECHNICIAN");
         boolean manager = authorizationService.hasRole("MANAGER") || authorizationService.hasRole("ADMIN");
         boolean dispatcher = authorizationService.hasRole("DISPATCHER");
+
+        if (!technician && !dispatcher && !manager) {
+            throw new AccessDeniedException("You don't have permission to change work-order status");
+        }
+
+        if (current == WorkOrder.Status.CLOSED || current == WorkOrder.Status.CANCELLED) {
+            throw new IllegalStateException("Terminal work orders cannot transition further");
+        }
 
         if (technician) {
             Long technicianId = authorizationService.getCurrentTechnicianId();
             if (!technicianId.equals(order.getTechnicianId())) throw new AccessDeniedException("You can only update jobs assigned to you");
             if (!(targetStatus == WorkOrder.Status.IN_PROGRESS || targetStatus == WorkOrder.Status.ON_HOLD || targetStatus == WorkOrder.Status.COMPLETED))
                 throw new AccessDeniedException("Technicians can only start, hold/resume, or complete their assigned jobs");
-        } else if (!dispatcher && !manager) {
-            throw new AccessDeniedException("You don't have permission to change work-order status");
         }
 
         if (targetStatus == WorkOrder.Status.CLOSED) {
