@@ -527,6 +527,7 @@ function Dashboard() {
 
       return (
         status !== "COMPLETED" &&
+        status !== "CLOSED" &&
         status !== "CANCELLED"
       );
 
@@ -662,11 +663,17 @@ function Dashboard() {
 
 
   const customerCompletedJobs =
-    workOrders.filter(w =>
-      String(
-        w.status || ""
-      ).toUpperCase() === "COMPLETED"
-    );
+    workOrders.filter(w => {
+      const status =
+        String(
+          w.status || ""
+        ).toUpperCase();
+
+      return (
+        status === "COMPLETED" ||
+        status === "CLOSED"
+      );
+    });
 
 
   // =====================================================
