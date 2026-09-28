@@ -656,6 +656,7 @@ function Dashboard() {
 
       return (
         status !== "COMPLETED" &&
+        status !== "CLOSED" &&
         status !== "CANCELLED"
       );
 
