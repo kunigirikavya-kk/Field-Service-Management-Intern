@@ -699,11 +699,17 @@ function Dashboard() {
 
 
   const technicianCompletedJobs =
-    workOrders.filter(w =>
-      String(
-        w.status || ""
-      ).toUpperCase() === "COMPLETED"
-    );
+    workOrders.filter(w => {
+      const status =
+        String(
+          w.status || ""
+        ).toUpperCase();
+
+      return (
+        status === "COMPLETED" ||
+        status === "CLOSED"
+      );
+    });
 
 
   // =====================================================
