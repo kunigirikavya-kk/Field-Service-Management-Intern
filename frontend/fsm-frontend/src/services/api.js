@@ -110,6 +110,25 @@ export async function uploadJobPhoto(file, jobExecutionId) {
 }
 export function getJobPhotosByExecution(id) { return request(`/job-photos/execution/${id}`); }
 export function getJobPhotosByWorkOrder(id) { return request(`/job-photos/work-order/${id}`); }
+
+export async function uploadServiceRequestPhoto(file, serviceRequestId) {
+    if (!file) throw new Error("Please select an image.");
+    if (!serviceRequestId) throw new Error("Service Request ID is required.");
+    if (file.size > 10 * 1024 * 1024) throw new Error("Image must be smaller than 10 MB.");
+    return request("/job-photos/service-request/upload", {
+        method: "POST",
+        body: (() => {
+            const form = new FormData();
+            form.append("file", file);
+            form.append("serviceRequestId", String(serviceRequestId));
+            return form;
+        })()
+    });
+}
+
+export function getJobPhotosByServiceRequest(id) {
+    return request(`/job-photos/service-request/${id}`);
+}
 export function getJobPhotosByTechnician(id) { return request(`/job-photos/technician/${id}`); }
 export function getJobPhoto(id) { return request(`/job-photos/${id}`); }
 
