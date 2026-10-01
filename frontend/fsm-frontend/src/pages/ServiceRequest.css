@@ -96,16 +96,29 @@ html[data-theme="dark"] .service-request-page .cancel-button{background:#1b2538;
     display: none;
 }
 
-.service-request-upload-label {
+.service-request-page .form-group .service-request-upload-label {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
-    padding: 10px 14px;
+    min-width: 122px;
+    height: 42px;
+    box-sizing: border-box;
+    padding: 0 16px;
     border-radius: 10px;
     background: #313b68;
-    color: #fff;
-    font-weight: 700;
+    color: #ffffff !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    line-height: 1;
     cursor: pointer;
+    transition: background .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+
+.service-request-page .form-group .service-request-upload-label:hover {
+    background: #242b50;
+    transform: translateY(-1px);
+    box-shadow: 0 5px 14px rgba(49, 59, 104, 0.18);
 }
 
 .service-request-upload-hint {
