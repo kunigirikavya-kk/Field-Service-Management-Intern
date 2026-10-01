@@ -2,10 +2,12 @@ package com.fsm.controller;
 
 import com.fsm.entity.JobExecution;
 import com.fsm.entity.ServiceRequest;
+import com.fsm.entity.WorkOrder;
 import com.fsm.entity.JobPhoto.PhotoType;
 import com.fsm.entity.JobPhoto;
 import com.fsm.repository.JobExecutionRepository;
 import com.fsm.repository.ServiceRequestRepository;
+import com.fsm.repository.WorkOrderRepository;
 import com.fsm.repository.JobPhotoRepository;
 import com.fsm.service.CloudinaryService;
 import com.fsm.security.AuthorizationService;
@@ -30,6 +32,7 @@ public class JobPhotoController {
 
     private final AuthorizationService authorizationService;
     private final ServiceRequestRepository serviceRequestRepository;
+    private final WorkOrderRepository workOrderRepository;
 
 
     public JobPhotoController(
@@ -37,7 +40,8 @@ public class JobPhotoController {
             JobPhotoRepository jobPhotoRepository,
             JobExecutionRepository jobExecutionRepository,
             AuthorizationService authorizationService,
-            ServiceRequestRepository serviceRequestRepository
+            ServiceRequestRepository serviceRequestRepository,
+            WorkOrderRepository workOrderRepository
     ) {
 
         this.cloudinaryService =
@@ -53,6 +57,8 @@ public class JobPhotoController {
                 authorizationService;
         this.serviceRequestRepository =
                 serviceRequestRepository;
+        this.workOrderRepository =
+                workOrderRepository;
     }
 
 
@@ -324,12 +330,22 @@ public class JobPhotoController {
             @PathVariable Long workOrderId
     ) {
 
-        return ResponseEntity.ok(
-                jobPhotoRepository
-                        .findByWorkOrderId(
-                                workOrderId
-                        )
+        WorkOrder workOrder = workOrderRepository.findById(workOrderId)
+                .orElseThrow(() -> new RuntimeException("Work order not found with id: " + workOrderId));
+
+        List<JobPhoto> photos = new java.util.ArrayList<>(
+                jobPhotoRepository.findByWorkOrderId(workOrderId)
         );
+
+        if (workOrder.getServiceRequestId() != null) {
+            photos.addAll(
+                    jobPhotoRepository.findByServiceRequestId(
+                            workOrder.getServiceRequestId()
+                    )
+            );
+        }
+
+        return ResponseEntity.ok(photos);
     }
 
 
