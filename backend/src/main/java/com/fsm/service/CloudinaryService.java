@@ -18,6 +18,10 @@ public class CloudinaryService {
     }
 
     public Map uploadImage(MultipartFile file) throws IOException {
+        return uploadImage(file, "fieldsync/job-photos");
+    }
+
+    public Map uploadImage(MultipartFile file, String folder) throws IOException {
 
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("File cannot be empty");
@@ -26,7 +30,7 @@ public class CloudinaryService {
         return cloudinary.uploader().upload(
                 file.getBytes(),
                 ObjectUtils.asMap(
-                        "folder", "fieldsync/job-photos"
+                        "folder", folder
                 )
         );
     }
