@@ -279,6 +279,27 @@ public class JobExecutionService {
         }
 
         // -------------------------------------------------
+        // CUSTOMER REQUEST EVIDENCE
+        // -------------------------------------------------
+        // A technician must be able to review the customer's
+        // original issue photo before starting field work.
+        if (workOrder.getServiceRequestId() == null) {
+            throw new RuntimeException(
+                    "This work order has no linked service request"
+            );
+        }
+
+        if (jobPhotoRepository.findByServiceRequestId(
+                workOrder.getServiceRequestId()
+        ).stream().noneMatch(photo ->
+                photo.getPhotoType() == com.fsm.entity.JobPhoto.PhotoType.CUSTOMER_REQUEST
+        )) {
+            throw new RuntimeException(
+                    "Customer issue photo is required before starting this job"
+            );
+        }
+
+        // -------------------------------------------------
         // WORK ORDER STATUS
         // -------------------------------------------------
 
