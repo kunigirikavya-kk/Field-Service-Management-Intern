@@ -27,6 +27,7 @@ import {
     getWorkOrdersByTechnician,
     getTechnicianByUserId,
     getJobPhotosByExecution,
+    getJobPhotosByWorkOrder,
     getInventoryParts,
     getPartUsageByJobExecution,
     recordPartUsage,
@@ -63,6 +64,9 @@ function JobExecution() {
         useState([]);
 
     const [jobPhotos, setJobPhotos] =
+        useState({});
+
+    const [requestPhotos, setRequestPhotos] =
         useState({});
 
     const [partUsages, setPartUsages] =
@@ -263,6 +267,46 @@ function JobExecution() {
             setWorkOrders(
                 workOrderList
             );
+
+            // Customer evidence is linked to the service request,
+            // so load it through each assigned work order.
+            const workOrderIds = workOrderList
+                .map(order => order.id)
+                .filter(Boolean);
+
+            if (workOrderIds.length > 0) {
+                const requestPhotoResults = await Promise.all(
+                    workOrderIds.map(async (workOrderId) => {
+                        try {
+                            const photos = await getJobPhotosByWorkOrder(workOrderId);
+                            return {
+                                workOrderId,
+                                photos: Array.isArray(photos)
+                                    ? photos.filter(photo =>
+                                        String(photo.photoType || "")
+                                            .toUpperCase()
+                                            .includes("CUSTOMER")
+                                    )
+                                    : []
+                            };
+                        } catch (photoError) {
+                            console.error(
+                                `Failed to load customer evidence for work order ${workOrderId}:`,
+                                photoError
+                            );
+                            return { workOrderId, photos: [] };
+                        }
+                    })
+                );
+
+                const requestPhotoMap = {};
+                requestPhotoResults.forEach(result => {
+                    requestPhotoMap[result.workOrderId] = result.photos;
+                });
+                setRequestPhotos(requestPhotoMap);
+            } else {
+                setRequestPhotos({});
+            }
 
 
             setInventoryParts(
@@ -1494,6 +1538,10 @@ function JobExecution() {
 
     }
 
+    function getCustomerPhotosForExecution(execution) {
+        return requestPhotos[execution.workOrderId] || [];
+    }
+
 
     // =====================================================
     // COUNTS
@@ -2123,6 +2171,11 @@ function JobExecution() {
                                         execution
                                     );
 
+                                const customerPhotos =
+                                    getCustomerPhotosForExecution(
+                                        execution
+                                    );
+
 
                                 const executionParts =
                                     getPartsForExecution(
@@ -2749,6 +2802,51 @@ function JobExecution() {
 
 
                                         {/* =================================================
+                                            CUSTOMER REQUEST EVIDENCE
+                                        ================================================= */}
+
+                                        {customerPhotos.length > 0 && (
+                                            <div className="je-photo-section je-customer-evidence">
+                                                <div className="je-photo-header">
+                                                    <div>
+                                                        <div className="je-photo-title">
+                                                            <span className="je-photo-icon">
+                                                                <ImageIcon />
+                                                            </span>
+                                                            <strong>Customer Request Images</strong>
+                                                            <span className="je-photo-count">
+                                                                {customerPhotos.length}
+                                                            </span>
+                                                        </div>
+                                                        <p>Images uploaded by the customer to show the original issue.</p>
+                                                    </div>
+                                                </div>
+
+                                                <div className="je-photo-grid">
+                                                    {customerPhotos.map(photo => (
+                                                        <button
+                                                            type="button"
+                                                            className="je-photo-card"
+                                                            key={photo.id}
+                                                            onClick={() => setSelectedPhoto(photo)}
+                                                        >
+                                                            <img
+                                                                src={photo.imageUrl}
+                                                                alt="Customer service issue"
+                                                            />
+                                                            <span className="je-photo-overlay">
+                                                                <span>
+                                                                    <Eye />
+                                                                    View
+                                                                </span>
+                                                            </span>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                                                                {/* =================================================
                                             PHOTOS
                                         ================================================= */}
 
