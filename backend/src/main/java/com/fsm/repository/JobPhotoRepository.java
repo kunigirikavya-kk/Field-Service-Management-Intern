@@ -16,6 +16,11 @@ public interface JobPhotoRepository
             Long workOrderId
     );
 
+    List<JobPhoto> findByWorkOrderIdAndPhotoType(
+            Long workOrderId,
+            JobPhoto.PhotoType photoType
+    );
+
     List<JobPhoto> findByServiceRequestId(Long serviceRequestId);
 
     List<JobPhoto> findByTechnicianId(
