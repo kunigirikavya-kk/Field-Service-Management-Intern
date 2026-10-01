@@ -35,14 +35,14 @@ public class SecurityConfig {
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                     response.setContentType(MediaType.APPLICATION_JSON_VALUE);
                     response.getWriter().write(
-                        "{\"status\":401,\"error\":\"Unauthorized\",\"message\":\"Authentication required\"}"
+                        "{"status":401,"error":"Unauthorized","message":"Authentication required"}"
                     );
                 })
                 .accessDeniedHandler((request, response, ex) -> {
                     response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                     response.setContentType(MediaType.APPLICATION_JSON_VALUE);
                     response.getWriter().write(
-                        "{\"status\":403,\"error\":\"Forbidden\",\"message\":\"You don't have permission to access this resource\"}"
+                        "{"status":403,"error":"Forbidden","message":"You don't have permission to access this resource"}"
                     );
                 })
             )
@@ -139,7 +139,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/job-executions/**")
                     .hasAnyRole("TECHNICIAN", "DISPATCHER", "MANAGER")
                 .requestMatchers("/api/job-photos/**")
-                    .hasAnyRole("TECHNICIAN", "DISPATCHER", "MANAGER")
+                    .hasAnyRole("CUSTOMER", "TECHNICIAN", "DISPATCHER", "MANAGER")
                 .requestMatchers("/api/part-usage/**")
                     .hasAnyRole("TECHNICIAN", "DISPATCHER", "MANAGER")
                 .requestMatchers("/api/notifications/**")
