@@ -1555,6 +1555,14 @@ function JobExecution() {
         return requestPhotos[execution.workOrderId] || [];
     }
 
+    function getCustomerPhotosForWorkOrder(workOrder) {
+        if (!workOrder?.id) {
+            return [];
+        }
+
+        return requestPhotos[workOrder.id] || [];
+    }
+
 
     // =====================================================
     // COUNTS
@@ -1937,6 +1945,12 @@ function JobExecution() {
                                         "MEDIUM"
                                     ).toLowerCase();
 
+                                const customerPhotos =
+                                    getCustomerPhotosForWorkOrder(workOrder);
+
+                                const hasCustomerEvidence =
+                                    customerPhotos.length > 0;
+
 
                                 return (
 
@@ -2036,10 +2050,68 @@ function JobExecution() {
                                         </div>
 
 
+                                        <div className="je-scheduled-customer-evidence je-customer-evidence">
+                                            <div className="je-photo-header">
+                                                <div>
+                                                    <div className="je-photo-title">
+                                                        <span className="je-photo-icon">
+                                                            <ImageIcon />
+                                                        </span>
+                                                        <strong>Customer Issue Photo</strong>
+                                                        <span className="je-photo-count">
+                                                            {customerPhotos.length}
+                                                        </span>
+                                                    </div>
+                                                    <p>
+                                                        Review the customer's original issue before starting this job.
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            {hasCustomerEvidence ? (
+                                                <div className="je-photo-grid">
+                                                    {customerPhotos.map(photo => (
+                                                        <button
+                                                            type="button"
+                                                            className="je-photo-card"
+                                                            key={photo.id}
+                                                            onClick={() => setSelectedPhoto(photo)}
+                                                        >
+                                                            <img
+                                                                src={photo.imageUrl}
+                                                                alt="Customer reported service issue"
+                                                            />
+                                                            <span className="je-photo-overlay">
+                                                                <span>
+                                                                    <Eye />
+                                                                    View Issue
+                                                                </span>
+                                                            </span>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div className="je-no-photos">
+                                                    <div className="je-no-photo-icon">
+                                                        <ImageIcon />
+                                                    </div>
+                                                    <div>
+                                                        <strong>Customer issue image required</strong>
+                                                        <span>
+                                                            This job cannot be started until the customer's service-request image is available.
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+
+
                                         <div className="je-card-bottom">
 
                                             <span className="je-assigned-label">
-                                                ASSIGNED TO YOU
+                                                {hasCustomerEvidence
+                                                    ? "ISSUE REVIEWED — READY TO START"
+                                                    : "WAITING FOR CUSTOMER ISSUE IMAGE"}
                                             </span>
 
 
@@ -2052,7 +2124,8 @@ function JobExecution() {
                                                 }
                                                 disabled={
                                                     startingJob ||
-                                                    !workOrder
+                                                    !workOrder ||
+                                                    !hasCustomerEvidence
                                                 }
                                             >
 
@@ -2063,9 +2136,11 @@ function JobExecution() {
 
                                                 {startingJob
                                                     ? "Starting..."
-                                                    : workOrder
-                                                        ? "Start Job"
-                                                        : "Missing Work Order"}
+                                                    : !workOrder
+                                                        ? "Missing Work Order"
+                                                        : !hasCustomerEvidence
+                                                            ? "Customer Image Required"
+                                                            : "Start Job"}
 
                                             </button>
 
@@ -2877,7 +2952,7 @@ function JobExecution() {
 
 
                                                         <strong>
-                                                            Job Photos
+                                                            Technician Completion Evidence
                                                         </strong>
 
 
@@ -2891,42 +2966,44 @@ function JobExecution() {
 
 
                                                     <p>
-                                                        Photos for this specific job execution
+                                                        Upload the repaired/working result after completing the field work.
                                                     </p>
 
                                                 </div>
 
 
-                                                <label className="je-upload-btn">
+                                                {status === "IN_PROGRESS" && (
+                                                    <label className="je-upload-btn">
 
-                                                    <input
-                                                        type="file"
-                                                        accept="image/*"
-                                                        onChange={
-                                                            event =>
-                                                                handlePhotoUpload(
-                                                                    execution,
-                                                                    event
-                                                                )
-                                                        }
-                                                        disabled={
-                                                            uploadingPhotoId ===
-                                                            execution.id
-                                                        }
-                                                    />
+                                                        <input
+                                                            type="file"
+                                                            accept="image/*"
+                                                            onChange={
+                                                                event =>
+                                                                    handlePhotoUpload(
+                                                                        execution,
+                                                                        event
+                                                                    )
+                                                            }
+                                                            disabled={
+                                                                uploadingPhotoId ===
+                                                                execution.id
+                                                            }
+                                                        />
 
 
-                                                    <Upload className="je-upload-icon" />
-                                                    <span>
-                                                        {
-                                                            uploadingPhotoId ===
-                                                            execution.id
-                                                                ? "Uploading..."
-                                                                : "Add Photo"
-                                                        }
-                                                    </span>
+                                                        <Upload className="je-upload-icon" />
+                                                        <span>
+                                                            {
+                                                                uploadingPhotoId ===
+                                                                execution.id
+                                                                    ? "Uploading..."
+                                                                    : "Upload Completion Photo"
+                                                            }
+                                                        </span>
 
-                                                </label>
+                                                    </label>
+                                                )}
 
                                             </div>
 
@@ -2943,13 +3020,12 @@ function JobExecution() {
                                                     <div>
 
                                                         <strong>
-                                                            No photos for this job
+                                                            No completion photo uploaded yet
                                                         </strong>
 
 
                                                         <span>
-                                                            Upload equipment,
-                                                            site or completed-work photos.
+                                                            Upload a photo showing the repaired/working result before completing this job.
                                                         </span>
 
                                                     </div>
