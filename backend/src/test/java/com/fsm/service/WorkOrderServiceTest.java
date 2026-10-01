@@ -1,5 +1,6 @@
 package com.fsm.service;
 
+import com.fsm.entity.JobPhoto;
 import com.fsm.entity.WorkOrder;
 import com.fsm.repository.JobPhotoRepository;
 import com.fsm.repository.SiteRepository;
