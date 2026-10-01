@@ -78,3 +78,68 @@ html[data-theme="dark"] .service-request-page .form-group label{color:#cbd5e1}
 html[data-theme="dark"] .service-request-page .form-group input,html[data-theme="dark"] .service-request-page .form-group select,html[data-theme="dark"] .service-request-page .form-group textarea{background:#0f172a;color:#e5e7eb;border-color:#29354a}
 html[data-theme="dark"] .service-request-page .form-actions{border-color:#29354a}
 html[data-theme="dark"] .service-request-page .cancel-button{background:#1b2538;color:#c7d2fe;border-color:#29354a}
+
+
+/* Service request evidence upload */
+.service-request-upload {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 14px;
+    border: 1px dashed rgba(49, 59, 104, 0.35);
+    border-radius: 14px;
+    background: #fffdf8;
+}
+
+.service-request-upload input {
+    display: none;
+}
+
+.service-request-upload-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: #313b68;
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.service-request-upload-hint {
+    color: #6b675e;
+    font-size: 0.85rem;
+}
+
+.service-request-image-preview {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.service-request-image-item {
+    overflow: hidden;
+    border: 1px solid rgba(49, 59, 104, 0.12);
+    border-radius: 12px;
+    background: #fffdf8;
+}
+
+.service-request-image-item img {
+    display: block;
+    width: 100%;
+    height: 90px;
+    object-fit: cover;
+}
+
+.service-request-image-item span {
+    display: block;
+    padding: 7px 8px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #555;
+    font-size: 0.75rem;
+}
