@@ -138,6 +138,19 @@ function ManagerDashboard() {
   );
 
   async function closeWorkOrder(order) {
+    const photos = evidencePhotos[order.id] || [];
+    const technicianPhotos = photos.filter(
+      photo =>
+        String(photo.photoType || "").toUpperCase() === "WORK_COMPLETION"
+    );
+
+    if (technicianPhotos.length === 0) {
+      setError(
+        "A technician completion photo is required before this work order can be closed."
+      );
+      return;
+    }
+
     try {
       setClosingId(order.id);
       setError("");
@@ -247,13 +260,37 @@ function ManagerDashboard() {
                     <td>{order.completedAt ? new Date(order.completedAt).toLocaleString() : "Completed"}</td>
                     <td><span className="manager-status completed">COMPLETED</span></td>
                     <td>
-                      <button
-                        className="manager-close-btn"
-                        onClick={() => closeWorkOrder(order)}
-                        disabled={closingId === order.id}
-                      >
-                        {closingId === order.id ? "Closing..." : "Close Work Order"}
-                      </button>
+                      {(() => {
+                        const technicianPhotoCount = (evidencePhotos[order.id] || []).filter(
+                          photo =>
+                            String(photo.photoType || "").toUpperCase() === "WORK_COMPLETION"
+                        ).length;
+
+                        return (
+                          <div className="manager-close-action">
+                            <button
+                              className="manager-close-btn"
+                              onClick={() => closeWorkOrder(order)}
+                              disabled={
+                                closingId === order.id ||
+                                technicianPhotoCount === 0
+                              }
+                              title={
+                                technicianPhotoCount === 0
+                                  ? "Review the technician completion photo before closing"
+                                  : "Close work order"
+                              }
+                            >
+                              {closingId === order.id ? "Closing..." : "Close Work Order"}
+                            </button>
+                            {technicianPhotoCount === 0 && (
+                              <small className="manager-close-hint">
+                                Completion photo required
+                              </small>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </td>
                   </tr>
                 ))}
