@@ -44,7 +44,7 @@ public class JobPhoto {
         WORK_COMPLETION("Technician Work");
         private final String label;
         PhotoType(String label) { this.label = label; }
-        @JsonValue public String getLabel() { return label; }
+        @JsonValue public String toJson() { return name(); }
         @JsonCreator public static PhotoType fromJson(String value) {
             if (value == null) return null;
             for (PhotoType type : values()) {
