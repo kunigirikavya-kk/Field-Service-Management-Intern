@@ -2,6 +2,8 @@ package com.fsm.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 
 @Entity
 @Table(name = "job_photos")
@@ -14,10 +16,13 @@ public class JobPhoto {
     @Column(name = "job_execution_id")
     private Long jobExecutionId;
 
-    @Column(name = "work_order_id", nullable = false)
+    @Column(name = "service_request_id")
+    private Long serviceRequestId;
+
+    @Column(name = "work_order_id")
     private Long workOrderId;
 
-    @Column(name = "technician_id", nullable = false)
+    @Column(name = "technician_id")
     private Long technicianId;
 
     @Column(
@@ -29,6 +34,25 @@ public class JobPhoto {
 
     @Column(name = "public_id")
     private String publicId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "photo_type", nullable = false, length = 30)
+    private PhotoType photoType = PhotoType.WORK_COMPLETION;
+
+    public enum PhotoType {
+        CUSTOMER_REQUEST("Customer Request"),
+        WORK_COMPLETION("Technician Work");
+        private final String label;
+        PhotoType(String label) { this.label = label; }
+        @JsonValue public String getLabel() { return label; }
+        @JsonCreator public static PhotoType fromJson(String value) {
+            if (value == null) return null;
+            for (PhotoType type : values()) {
+                if (type.name().equalsIgnoreCase(value) || type.label.equalsIgnoreCase(value)) return type;
+            }
+            throw new IllegalArgumentException("Invalid photo type: " + value);
+        }
+    }
 
     @Column(name = "uploaded_at")
     private LocalDateTime uploadedAt;
@@ -67,6 +91,11 @@ public class JobPhoto {
                 jobExecutionId;
     }
 
+
+    public Long getServiceRequestId() { return serviceRequestId; }
+    public void setServiceRequestId(Long serviceRequestId) { this.serviceRequestId = serviceRequestId; }
+    public PhotoType getPhotoType() { return photoType; }
+    public void setPhotoType(PhotoType photoType) { this.photoType = photoType; }
 
     public Long getWorkOrderId() {
         return workOrderId;
