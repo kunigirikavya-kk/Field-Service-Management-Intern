@@ -70,7 +70,7 @@
 .je-job-meta{display:flex;flex-direction:column;gap:7px;margin-top:13px}
 .je-job-meta>div{display:flex;align-items:center;gap:7px;color:var(--je-muted);font-size:10px}
 .je-meta-icon{width:20px;height:20px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:#e7e8f3;color:var(--je-indigo)}
-.je-card-bottom{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:auto;padding-top:15px;border-top:1px solid #eee7da}
+.je-card-bottom{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:auto;padding-top:15px;border-top:1px solid #eee7da}.je-scheduled-customer-evidence{margin-top:14px}.je-scheduled-customer-evidence .je-photo-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.je-scheduled-customer-evidence .je-photo-card img{aspect-ratio:1.5}.je-scheduled-customer-evidence .je-no-photos{min-height:68px}.je-scheduled-customer-evidence .je-photo-header{margin-bottom:9px}
 .je-assigned-label{color:var(--je-muted);font-size:8px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
 .je-priority{display:inline-flex;align-items:center;gap:5px;padding:5px 8px;border-radius:999px;font-size:8px;font-weight:800;text-transform:uppercase}
 .je-priority i{width:5px;height:5px;border-radius:50%}.je-priority.low{background:#eeeae2;color:#687080}.je-priority.low i{background:#9a9ba1}.je-priority.medium{background:#e7e8f3;color:var(--je-indigo)}.je-priority.medium i{background:var(--je-indigo)}.je-priority.high{background:#f8e2d8;color:#a84931}.je-priority.high i{background:var(--je-terracotta)}.je-priority.urgent{background:#f6dddd;color:#a04444}.je-priority.urgent i{background:#a04444}
