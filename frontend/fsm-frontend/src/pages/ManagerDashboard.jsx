@@ -4,6 +4,7 @@ import {
   getServiceRequests,
   getTechnicians,
   getWorkOrders,
+  getJobPhotosByWorkOrder,
   updateWorkOrderStatus
 } from "../services/api";
 import "./ManagerDashboard.css";
@@ -20,6 +21,7 @@ function ManagerDashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [closingId, setClosingId] = useState(null);
   const [error, setError] = useState("");
+  const [evidencePhotos, setEvidencePhotos] = useState({});
 
   async function loadData() {
     try {
@@ -30,9 +32,40 @@ function ManagerDashboard() {
         getServiceRequests(),
         getTechnicians()
       ]);
-      setWorkOrders(Array.isArray(orders) ? orders : []);
+      const orderList = Array.isArray(orders) ? orders : [];
+      setWorkOrders(orderList);
       setRequests(Array.isArray(serviceRequests) ? serviceRequests : []);
       setTechnicians(Array.isArray(techs) ? techs : []);
+
+      const completedOrders = orderList.filter(
+        order => ["COMPLETED", "CLOSED"].includes(normalize(order.status))
+      );
+
+      const evidenceResults = await Promise.all(
+        completedOrders
+          .filter(order => order.id)
+          .map(async order => {
+            try {
+              const photos = await getJobPhotosByWorkOrder(order.id);
+              return {
+                workOrderId: order.id,
+                photos: Array.isArray(photos) ? photos : []
+              };
+            } catch (photoError) {
+              console.error(
+                `Failed to load evidence for work order ${order.id}:`,
+                photoError
+              );
+              return { workOrderId: order.id, photos: [] };
+            }
+          })
+      );
+
+      const evidenceMap = {};
+      evidenceResults.forEach(result => {
+        evidenceMap[result.workOrderId] = result.photos;
+      });
+      setEvidencePhotos(evidenceMap);
     } catch (err) {
       console.error("Manager dashboard error:", err);
       setError(err.message || "Unable to load manager operations.");
@@ -231,6 +264,78 @@ function ManagerDashboard() {
       </section>
 
       <section className="manager-panel">
+        <div className="manager-panel-head">
+          <div>
+            <span className="manager-section-kicker">FIELD EVIDENCE</span>
+            <h2>Service Evidence</h2>
+            <p>Compare the customer's reported issue with technician work photos before closing the work order.</p>
+          </div>
+        </div>
+
+        {pendingCloseout.length === 0 ? (
+          <div className="manager-empty">
+            <span>No completed work-order evidence to review.</span>
+          </div>
+        ) : (
+          <div className="manager-evidence-grid">
+            {pendingCloseout.map(order => {
+              const photos = evidencePhotos[order.id] || [];
+              const customerPhotos = photos.filter(photo =>
+                String(photo.photoType || "").toUpperCase().includes("CUSTOMER")
+              );
+              const technicianPhotos = photos.filter(photo =>
+                !String(photo.photoType || "").toUpperCase().includes("CUSTOMER")
+              );
+
+              return (
+                <article className="manager-evidence-card" key={order.id}>
+                  <div className="manager-evidence-head">
+                    <div>
+                      <strong>{workOrderNumber(order)}</strong>
+                      <span>{order.title || "Completed service"}</span>
+                    </div>
+                    <span className="manager-status completed">COMPLETED</span>
+                  </div>
+
+                  <div className="manager-evidence-columns">
+                    <div>
+                      <h4>Customer Issue</h4>
+                      {customerPhotos.length === 0 ? (
+                        <div className="manager-evidence-empty">No customer images</div>
+                      ) : (
+                        <div className="manager-evidence-thumbs">
+                          {customerPhotos.map(photo => (
+                            <a href={photo.imageUrl} target="_blank" rel="noreferrer" key={photo.id}>
+                              <img src={photo.imageUrl} alt="Customer issue" />
+                            </a>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <h4>Technician Work</h4>
+                      {technicianPhotos.length === 0 ? (
+                        <div className="manager-evidence-empty">No technician images</div>
+                      ) : (
+                        <div className="manager-evidence-thumbs">
+                          {technicianPhotos.map(photo => (
+                            <a href={photo.imageUrl} target="_blank" rel="noreferrer" key={photo.id}>
+                              <img src={photo.imageUrl} alt="Technician work" />
+                            </a>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+            <section className="manager-panel">
         <div className="manager-panel-head compact">
           <div>
             <span className="manager-section-kicker">FIELD OVERSIGHT</span>
