@@ -13,9 +13,15 @@ import static org.mockito.Mockito.*;
 class WorkOrderServiceTest {
 
     private WorkOrderService service(WorkOrderRepository repo, AuthorizationService auth) {
+        JobPhotoRepository photos = mock(JobPhotoRepository.class);
+        when(photos.findByWorkOrderIdAndPhotoType(
+                anyLong(),
+                eq(JobPhoto.PhotoType.WORK_COMPLETION)
+        )).thenReturn(java.util.List.of(mock(JobPhoto.class)));
+
         return new WorkOrderService(
                 repo,
-                mock(JobPhotoRepository.class),
+                photos,
                 mock(SiteRepository.class),
                 auth,
                 mock(WorkOrderStatusHistoryService.class),
