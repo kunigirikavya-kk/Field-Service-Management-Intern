@@ -2176,7 +2176,7 @@ function JobExecution() {
                 EXECUTION HISTORY
             ================================================= */}
 
-            <section className="je-section">
+            <section className="je-section je-execution-center">
 
                 <div className="je-section-header">
 
@@ -2238,9 +2238,22 @@ function JobExecution() {
 
                 ) : (
 
-                    <div className="je-execution-list">
+                    <div className="je-execution-scroll">
 
-                        {jobExecutions.map(
+                        <div className="je-execution-list">
+
+                        {[...jobExecutions]
+                            .sort((a, b) => {
+                                const rank = {
+                                    IN_PROGRESS: 0,
+                                    NOT_STARTED: 1,
+                                    COMPLETED: 2,
+                                    CANCELLED: 3
+                                };
+                                return (rank[String(a.status || "").toUpperCase()] ?? 9) -
+                                    (rank[String(b.status || "").toUpperCase()] ?? 9);
+                            })
+                            .map(
                             (execution, index) => {
 
                                 const status =
@@ -3206,6 +3219,8 @@ function JobExecution() {
 
                             }
                         )}
+
+                        </div>
 
                     </div>
 
