@@ -321,7 +321,7 @@ function ManagerDashboard() {
                 String(photo.photoType || "").toUpperCase().includes("CUSTOMER")
               );
               const technicianPhotos = photos.filter(photo =>
-                !String(photo.photoType || "").toUpperCase().includes("CUSTOMER")
+                String(photo.photoType || "").toUpperCase() === "WORK_COMPLETION"
               );
 
               return (
