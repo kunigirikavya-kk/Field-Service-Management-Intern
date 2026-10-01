@@ -4,6 +4,7 @@ import com.fsm.entity.JobExecution;
 import com.fsm.entity.Schedule;
 import com.fsm.entity.WorkOrder;
 import com.fsm.repository.JobExecutionRepository;
+import com.fsm.repository.JobPhotoRepository;
 import com.fsm.repository.ScheduleRepository;
 import com.fsm.repository.WorkOrderRepository;
 import com.fsm.security.AuthorizationService;
@@ -20,17 +21,20 @@ import java.util.Optional;
 public class JobExecutionService {
 
     private final JobExecutionRepository jobExecutionRepository;
+    private final JobPhotoRepository jobPhotoRepository;
     private final WorkOrderRepository workOrderRepository;
     private final ScheduleRepository scheduleRepository;
     private final AuthorizationService authorizationService;
 
     public JobExecutionService(
             JobExecutionRepository jobExecutionRepository,
+            JobPhotoRepository jobPhotoRepository,
             WorkOrderRepository workOrderRepository,
             ScheduleRepository scheduleRepository,
             AuthorizationService authorizationService) {
 
         this.jobExecutionRepository = jobExecutionRepository;
+        this.jobPhotoRepository = jobPhotoRepository;
         this.workOrderRepository = workOrderRepository;
         this.scheduleRepository = scheduleRepository;
         this.authorizationService = authorizationService;
@@ -540,6 +544,19 @@ public class JobExecutionService {
 
             throw new RuntimeException(
                     "Only an IN_PROGRESS job can be completed"
+            );
+        }
+
+        // -------------------------------------------------
+        // REQUIRE TECHNICIAN COMPLETION EVIDENCE
+        // -------------------------------------------------
+
+        if (jobPhotoRepository.findByWorkOrderIdAndPhotoType(
+                existing.getWorkOrderId(),
+                com.fsm.entity.JobPhoto.PhotoType.WORK_COMPLETION
+        ).isEmpty()) {
+            throw new RuntimeException(
+                    "Upload at least one completed-work photo before completing this job"
             );
         }
 
