@@ -5,7 +5,8 @@ import "./ServiceRequest.css";
 
 import {
     getCustomers,
-    createServiceRequest
+    createServiceRequest,
+    uploadServiceRequestPhoto
 } from "../services/api";
 
 
@@ -73,6 +74,9 @@ function ServiceRequest() {
 
     const [submitting, setSubmitting] =
         useState(false);
+
+    const [requestImages, setRequestImages] =
+        useState([]);
 
 
     const [formData, setFormData] =
@@ -319,6 +323,21 @@ function ServiceRequest() {
     };
 
 
+    const handleImageChange = (e) => {
+        const files = Array.from(e.target.files || []);
+        const validImages = files.filter(file =>
+            file.type.startsWith("image/") &&
+            file.size <= 10 * 1024 * 1024
+        );
+
+        if (files.length !== validImages.length) {
+            alert("Only image files up to 10 MB each are allowed.");
+        }
+
+        setRequestImages(validImages.slice(0, 5));
+        e.target.value = "";
+    };
+
     // =====================================================
     // CREATE SERVICE REQUEST
     // =====================================================
@@ -484,6 +503,11 @@ function ServiceRequest() {
             }
 
 
+            if (isCustomer && requestImages.length === 0) {
+                alert("Please upload at least one image showing the service issue.");
+                return;
+            }
+
             // =================================================
             // REQUEST DATA
             // =================================================
@@ -551,6 +575,24 @@ function ServiceRequest() {
                     result
                 );
 
+                if (requestImages.length > 0 && result?.id) {
+                    const uploadResults = await Promise.allSettled(
+                        requestImages.map(file =>
+                            uploadServiceRequestPhoto(file, result.id)
+                        )
+                    );
+
+                    const failedUploads = uploadResults.filter(
+                        item => item.status === "rejected"
+                    );
+
+                    if (failedUploads.length > 0) {
+                        throw new Error(
+                            "The service request was created, but one or more images could not be uploaded."
+                        );
+                    }
+                }
+
 
                 alert(
                     "Service request created successfully! 🎉"
@@ -581,6 +623,8 @@ function ServiceRequest() {
                     description: ""
 
                 });
+
+                setRequestImages([]);
 
 
                 // -------------------------------------------------
@@ -996,6 +1040,50 @@ function ServiceRequest() {
                                 required
                             />
 
+                        </div>
+
+                        {/* =================================================
+                            SERVICE ISSUE IMAGES
+                        ================================================= */}
+
+                        <div className="form-group full-width">
+
+                            <label>
+                                Service Issue Images <span style={{ color: "#c45b3c" }}>*</span>
+                            </label>
+
+                            <div className="service-request-upload">
+                                <input
+                                    id="service-request-images"
+                                    type="file"
+                                    accept="image/*"
+                                    multiple
+                                    onChange={handleImageChange}
+                                    disabled={submitting}
+                                />
+
+                                <label htmlFor="service-request-images" className="service-request-upload-label">
+                                    📷 Choose Images
+                                </label>
+
+                                <span className="service-request-upload-hint">
+                                    Upload up to 5 images • JPG / PNG / WEBP • Max 10 MB each
+                                </span>
+                            </div>
+
+                            {requestImages.length > 0 && (
+                                <div className="service-request-image-preview">
+                                    {requestImages.map((file, index) => (
+                                        <div className="service-request-image-item" key={file.name + index}>
+                                            <img
+                                                src={URL.createObjectURL(file)}
+                                                alt={"Service issue " + (index + 1)}
+                                            />
+                                            <span>{file.name}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
 
                     </div>
