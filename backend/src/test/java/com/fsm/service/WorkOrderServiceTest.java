@@ -1,6 +1,7 @@
 package com.fsm.service;
 
 import com.fsm.entity.WorkOrder;
+import com.fsm.repository.JobPhotoRepository;
 import com.fsm.repository.SiteRepository;
 import com.fsm.repository.WorkOrderRepository;
 import com.fsm.security.AuthorizationService;
@@ -14,6 +15,7 @@ class WorkOrderServiceTest {
     private WorkOrderService service(WorkOrderRepository repo, AuthorizationService auth) {
         return new WorkOrderService(
                 repo,
+                mock(JobPhotoRepository.class),
                 mock(SiteRepository.class),
                 auth,
                 mock(WorkOrderStatusHistoryService.class),
