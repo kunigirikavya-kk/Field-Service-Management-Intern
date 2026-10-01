@@ -4,6 +4,7 @@ import com.fsm.entity.Site;
 import com.fsm.entity.WorkOrder;
 import com.fsm.repository.SiteRepository;
 import com.fsm.repository.WorkOrderRepository;
+import com.fsm.repository.JobPhotoRepository;
 import com.fsm.security.AuthorizationService;
 
 import org.springframework.security.access.AccessDeniedException;
@@ -22,6 +23,7 @@ import java.util.regex.Pattern;
 public class WorkOrderService {
 
     private final WorkOrderRepository workOrderRepository;
+    private final JobPhotoRepository jobPhotoRepository;
     private final SiteRepository siteRepository;
     private final AuthorizationService authorizationService;
     private final WorkOrderStatusHistoryService historyService;
@@ -29,6 +31,7 @@ public class WorkOrderService {
 
     public WorkOrderService(
             WorkOrderRepository workOrderRepository,
+            JobPhotoRepository jobPhotoRepository,
             SiteRepository siteRepository,
             AuthorizationService authorizationService,
             WorkOrderStatusHistoryService historyService,
@@ -36,6 +39,9 @@ public class WorkOrderService {
 
         this.workOrderRepository =
                 workOrderRepository;
+
+        this.jobPhotoRepository =
+                jobPhotoRepository;
 
         this.siteRepository =
                 siteRepository;
@@ -614,6 +620,15 @@ public class WorkOrderService {
         if (targetStatus == WorkOrder.Status.CLOSED) {
             if (!manager) throw new AccessDeniedException("Only a Manager or Admin can close a completed work order");
             if (current != WorkOrder.Status.COMPLETED) throw new IllegalStateException("Only COMPLETED work orders can be closed");
+
+            if (jobPhotoRepository.findByWorkOrderIdAndPhotoType(
+                    order.getId(),
+                    com.fsm.entity.JobPhoto.PhotoType.WORK_COMPLETION
+            ).isEmpty()) {
+                throw new IllegalStateException(
+                        "A technician completion photo is required before closing this work order"
+                );
+            }
         } else if (manager || dispatcher) {
             if (targetStatus == WorkOrder.Status.IN_PROGRESS || targetStatus == WorkOrder.Status.ON_HOLD || targetStatus == WorkOrder.Status.COMPLETED) {
                 throw new AccessDeniedException("Dispatcher/Manager should use assignment or technician execution for field status changes");
