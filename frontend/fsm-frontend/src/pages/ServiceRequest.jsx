@@ -587,8 +587,14 @@ function ServiceRequest() {
                     );
 
                     if (failedUploads.length > 0) {
+                        const firstFailure = failedUploads[0]?.reason;
+                        const detail = firstFailure?.message
+                            ? ` Upload error: ${firstFailure.message}`
+                            : "";
                         throw new Error(
-                            "The service request was created, but one or more images could not be uploaded."
+                            "The service request was created, but one or more images could not be uploaded." +
+                            detail +
+                            " Please verify the backend deployment, Cloudinary configuration, and database migration V4."
                         );
                     }
                 }
