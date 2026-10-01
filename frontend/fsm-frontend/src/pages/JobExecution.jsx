@@ -1099,13 +1099,7 @@ function JobExecution() {
 
         try {
 
-            const completionPhotos = getPhotosForExecution(execution).filter(
-                photo =>
-                    String(photo.photoType || "WORK_COMPLETION").toUpperCase() ===
-                    "WORK_COMPLETION"
-            );
-
-            if (completionPhotos.length === 0) {
+            if (!hasCompletionPhoto(execution)) {
                 alert(
                     "Please upload at least one photo showing the completed/working result before completing this job."
                 );
@@ -1549,6 +1543,24 @@ function JobExecution() {
             ] || []
         );
 
+    }
+
+    function isCompletionPhoto(photo) {
+        const type = String(photo?.photoType || "")
+            .trim()
+            .toUpperCase();
+
+        return [
+            "WORK_COMPLETION",
+            "TECHNICIAN WORK",
+            "TECHNICIAN_WORK",
+            "TECHNICIAN COMPLETION",
+            "TECHNICIAN_COMPLETION"
+        ].includes(type);
+    }
+
+    function hasCompletionPhoto(execution) {
+        return getPhotosForExecution(execution).some(isCompletionPhoto);
     }
 
     function getCustomerPhotosForExecution(execution) {
@@ -3154,18 +3166,10 @@ function JobExecution() {
                                                         execution.id ||
                                                         recordingPartId ===
                                                         execution.id ||
-                                                        !getPhotosForExecution(execution).some(
-                                                            photo =>
-                                                                String(photo.photoType || "WORK_COMPLETION").toUpperCase() ===
-                                                                "WORK_COMPLETION"
-                                                        )
+                                                        !hasCompletionPhoto(execution)
                                                     }
                                                     title={
-                                                        !getPhotosForExecution(execution).some(
-                                                            photo =>
-                                                                String(photo.photoType || "WORK_COMPLETION").toUpperCase() ===
-                                                                "WORK_COMPLETION"
-                                                        )
+                                                        !hasCompletionPhoto(execution)
                                                             ? "Upload a completed-work photo first"
                                                             : "Complete this job"
                                                     }
@@ -3177,11 +3181,7 @@ function JobExecution() {
 
 
                                                     {
-                                                        getPhotosForExecution(execution).some(
-                                                            photo =>
-                                                                String(photo.photoType || "WORK_COMPLETION").toUpperCase() ===
-                                                                "WORK_COMPLETION"
-                                                        )
+                                                        hasCompletionPhoto(execution)
                                                             ? "Complete Job"
                                                             : "Upload Completion Photo First"
                                                     }
