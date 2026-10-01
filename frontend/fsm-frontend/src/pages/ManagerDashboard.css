@@ -31,3 +31,95 @@ html[data-theme="dark"] .manager-table th{background:#172033;color:#94a3b8}
 html[data-theme="dark"] .manager-table td{background:#151d2e;color:#d1d5db;border-color:#29354a}
 html[data-theme="dark"] .manager-count{background:#202a45;color:#c7d2fe}
 html[data-theme="dark"] .manager-error{background:#3a1d20;border-color:#5b2b32;color:#f7a98e}
+
+.manager-evidence-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 18px;
+}
+
+.manager-evidence-card {
+  padding: 18px;
+  border: 1px solid rgba(49, 59, 104, 0.12);
+  border-radius: 16px;
+  background: #fffdf8;
+  box-shadow: 0 10px 28px rgba(49, 59, 104, 0.08);
+}
+
+.manager-evidence-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.manager-evidence-head strong,
+.manager-evidence-head span {
+  display: block;
+}
+
+.manager-evidence-head strong {
+  color: #313b68;
+}
+
+.manager-evidence-head span:not(.manager-status) {
+  margin-top: 4px;
+  color: #777;
+  font-size: 0.85rem;
+}
+
+.manager-evidence-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.manager-evidence-columns h4 {
+  margin: 0 0 9px;
+  color: #313b68;
+  font-size: 0.86rem;
+}
+
+.manager-evidence-thumbs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.manager-evidence-thumbs a {
+  display: block;
+  overflow: hidden;
+  border-radius: 10px;
+  aspect-ratio: 1;
+  background: #f3eee4;
+}
+
+.manager-evidence-thumbs img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.2s ease;
+}
+
+.manager-evidence-thumbs a:hover img {
+  transform: scale(1.04);
+}
+
+.manager-evidence-empty {
+  min-height: 80px;
+  display: grid;
+  place-items: center;
+  border: 1px dashed rgba(49, 59, 104, 0.18);
+  border-radius: 10px;
+  color: #888;
+  font-size: 0.78rem;
+  text-align: center;
+  padding: 10px;
+}
+
+@media (max-width: 720px) {
+  .manager-evidence-columns {
+    grid-template-columns: 1fr;
+  }
+}
