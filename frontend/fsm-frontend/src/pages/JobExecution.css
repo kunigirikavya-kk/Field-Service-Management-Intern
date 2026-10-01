@@ -151,6 +151,62 @@
 /* ACTIONS */
 .je-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:16px;padding-top:16px;border-top:1px solid #eee7da}.je-cancel-btn,.je-complete-btn{min-height:40px;padding:9px 15px;border-radius:9px;font-size:10px;font-weight:800;cursor:pointer}.je-cancel-btn{border:1px solid var(--je-border);background:#faf6ec;color:var(--je-indigo)}.je-cancel-btn:hover{background:#f4dfae}.je-complete-btn{border:0;background:var(--je-sage);color:#fff;box-shadow:0 5px 13px rgba(82,122,104,.16)}.je-complete-btn:hover{background:#416653;transform:translateY(-1px)}
 
+
+/* EXECUTION CENTER — clean, readable, scrollable workspace */
+.je-execution-center{overflow:hidden}
+.je-execution-center .je-section-header{padding:22px 24px}
+.je-execution-center .je-section-label{font-size:10px}
+.je-execution-center .je-section-header h2{font-size:21px;line-height:1.25}
+.je-execution-center .je-section-header p{font-size:12px;line-height:1.5;max-width:620px}
+.je-execution-center .je-execution-mark{font-size:10px}
+.je-execution-scroll{max-height:720px;overflow-y:auto;overflow-x:hidden;padding:18px 22px 22px;scrollbar-gutter:stable}
+.je-execution-scroll::-webkit-scrollbar{width:9px}
+.je-execution-scroll::-webkit-scrollbar-track{background:#f4eee3;border-radius:999px}
+.je-execution-scroll::-webkit-scrollbar-thumb{background:#c9c0b2;border:2px solid #f4eee3;border-radius:999px}
+.je-execution-scroll::-webkit-scrollbar-thumb:hover{background:#aaa091}
+.je-execution-list{display:flex;flex-direction:column;gap:16px;padding:0}
+.je-execution-card{padding:22px 24px;border-radius:15px}
+.je-execution-top{margin-bottom:18px}
+.je-execution-title{gap:13px}
+.je-execution-icon{width:46px;height:46px;flex-basis:46px;font-size:17px}
+.je-execution-kicker{font-size:9px;letter-spacing:.11em}
+.je-execution-title h3{font-size:18px;line-height:1.3}
+.je-execution-title p{font-size:11px}
+.je-status{padding:8px 12px;font-size:10px}
+.je-execution-details{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:1px solid var(--je-border);border-radius:11px;background:#faf7f0;overflow:hidden}
+.je-detail-item{min-height:62px;padding:11px 14px;border-right:1px solid var(--je-border)}
+.je-detail-item:last-child{border-right:0}
+.je-detail-icon{width:28px;height:28px}
+.je-detail-copy span{font-size:9px;letter-spacing:.08em}
+.je-detail-copy strong{font-size:12px;line-height:1.35}
+.je-parts-section,.je-photo-section,.je-notes{margin-top:16px}
+.je-parts-header,.je-photo-header{padding-bottom:2px}
+.je-parts-title strong,.je-photo-title strong{font-size:13px}
+.je-parts-header p,.je-photo-header p{font-size:10px;line-height:1.5}
+.je-parts-form{gap:10px}
+.je-parts-field label{font-size:9px}
+.je-parts-field input,.je-parts-field select{min-height:40px;font-size:11px}
+.je-record-part-btn,.je-upload-btn{min-height:40px;font-size:10px;padding:10px 14px}
+.je-execution-card .je-photo-grid{grid-template-columns:repeat(auto-fill,minmax(120px,150px));gap:10px}
+.je-execution-card .je-photo-card img{aspect-ratio:1.25}
+.je-execution-card .je-photo-count{font-size:10px}
+.je-actions{margin-top:18px;padding-top:18px}
+.je-cancel-btn,.je-complete-btn{min-height:44px;padding:11px 18px;font-size:12px}
+.je-execution-divider{height:0;margin:0}
+@media (max-width:900px){
+  .je-execution-scroll{max-height:650px;padding:14px}
+  .je-execution-details{grid-template-columns:1fr}
+  .je-detail-item{border-right:0;border-bottom:1px solid var(--je-border)}
+  .je-detail-item:last-child{border-bottom:0}
+}
+@media (max-width:640px){
+  .je-execution-center .je-section-header{align-items:flex-start;flex-direction:column}
+  .je-execution-scroll{max-height:600px;padding:12px}
+  .je-execution-card{padding:17px}
+  .je-execution-top{align-items:flex-start;flex-direction:column}
+  .je-status{align-self:flex-start}
+}
+
 /* EMPTY / LOADING / LIGHTBOX */
 .je-empty{padding:50px 20px;text-align:center;color:var(--je-muted);font-size:11px}.je-empty h3{margin:0 0 5px;color:var(--je-indigo-dark);font-size:14px}.je-empty-art{width:54px;height:54px;margin:0 auto 12px;border-radius:14px;background:#f4dfae;color:var(--je-indigo)}
 .je-loading{min-height:65vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}.je-spinner{width:34px;height:34px;border:3px solid var(--je-border);border-top-color:var(--je-indigo);border-radius:50%;animation:je-spin .8s linear infinite}.je-loading p{margin:12px 0 0;color:var(--je-muted);font-size:11px}@keyframes je-spin{to{transform:rotate(360deg)}}
