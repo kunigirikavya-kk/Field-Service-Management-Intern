@@ -1,8 +1,11 @@
 package com.fsm.controller;
 
 import com.fsm.entity.JobExecution;
+import com.fsm.entity.ServiceRequest;
+import com.fsm.entity.JobPhoto.PhotoType;
 import com.fsm.entity.JobPhoto;
 import com.fsm.repository.JobExecutionRepository;
+import com.fsm.repository.ServiceRequestRepository;
 import com.fsm.repository.JobPhotoRepository;
 import com.fsm.service.CloudinaryService;
 import com.fsm.security.AuthorizationService;
@@ -26,13 +29,15 @@ public class JobPhotoController {
     private final JobExecutionRepository jobExecutionRepository;
 
     private final AuthorizationService authorizationService;
+    private final ServiceRequestRepository serviceRequestRepository;
 
 
     public JobPhotoController(
             CloudinaryService cloudinaryService,
             JobPhotoRepository jobPhotoRepository,
             JobExecutionRepository jobExecutionRepository,
-            AuthorizationService authorizationService
+            AuthorizationService authorizationService,
+            ServiceRequestRepository serviceRequestRepository
     ) {
 
         this.cloudinaryService =
@@ -46,6 +51,8 @@ public class JobPhotoController {
 
         this.authorizationService =
                 authorizationService;
+        this.serviceRequestRepository =
+                serviceRequestRepository;
     }
 
 
@@ -178,6 +185,7 @@ public class JobPhotoController {
             jobPhoto.setJobExecutionId(
                     execution.getId()
             );
+            jobPhoto.setPhotoType(PhotoType.WORK_COMPLETION);
 
 
             jobPhoto.setWorkOrderId(
@@ -234,6 +242,56 @@ public class JobPhotoController {
 
 
     // =====================================================
+    // CUSTOMER REQUEST PHOTO UPLOAD
+
+    @PostMapping("/service-request/upload")
+    public ResponseEntity<?> uploadServiceRequestPhoto(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("serviceRequestId") Long serviceRequestId) {
+        try {
+            validateImage(file);
+            ServiceRequest request = serviceRequestRepository.findById(serviceRequestId)
+                    .orElseThrow(() -> new RuntimeException("Service request not found with id: " + serviceRequestId));
+
+            if (authorizationService.hasRole("CUSTOMER") &&
+                    !authorizationService.isCurrentCustomer(request.getCustomerId())) {
+                return ResponseEntity.status(403).body("You are not allowed to upload evidence for another customer's service request.");
+            }
+
+            if (!authorizationService.hasRole("CUSTOMER") &&
+                    !authorizationService.hasRole("MANAGER") &&
+                    !authorizationService.hasRole("DISPATCHER")) {
+                return ResponseEntity.status(403).body("You do not have permission to upload service-request evidence.");
+            }
+
+            Map uploadResult = cloudinaryService.uploadImage(file, "fieldsync/service-request-photos");
+
+            JobPhoto photo = new JobPhoto();
+            photo.setServiceRequestId(serviceRequestId);
+            photo.setPhotoType(PhotoType.CUSTOMER_REQUEST);
+            photo.setImageUrl(uploadResult.get("secure_url").toString());
+            photo.setPublicId(uploadResult.get("public_id").toString());
+
+            return ResponseEntity.ok(jobPhotoRepository.save(photo));
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError().body("Image upload failed: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Something went wrong: " + e.getMessage());
+        }
+    }
+
+    private void validateImage(MultipartFile file) {
+        if (file == null || file.isEmpty()) throw new IllegalArgumentException("Please select an image.");
+        if (file.getContentType() == null || !file.getContentType().startsWith("image/")) throw new IllegalArgumentException("Only image files are allowed.");
+        if (file.getSize() > 10 * 1024 * 1024) throw new IllegalArgumentException("Image size must be 10 MB or less.");
+    }
+
+    @GetMapping("/service-request/{serviceRequestId}")
+    public ResponseEntity<List<JobPhoto>> getPhotosByServiceRequest(
+            @PathVariable Long serviceRequestId) {
+        return ResponseEntity.ok(jobPhotoRepository.findByServiceRequestId(serviceRequestId));
+    }
+
     // GET PHOTOS BY JOB EXECUTION
     // =====================================================
 
