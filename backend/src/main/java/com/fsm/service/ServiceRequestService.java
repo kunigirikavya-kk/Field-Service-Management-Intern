@@ -21,15 +21,18 @@ public class ServiceRequestService {
     private final ServiceRequestRepository serviceRequestRepository;
     private final CustomerRepository customerRepository;
     private final AuthorizationService authorizationService;
+    private final NotificationService notificationService;
 
     public ServiceRequestService(
             ServiceRequestRepository serviceRequestRepository,
             CustomerRepository customerRepository,
-            AuthorizationService authorizationService) {
+            AuthorizationService authorizationService,
+            NotificationService notificationService) {
 
         this.serviceRequestRepository = serviceRequestRepository;
         this.customerRepository = customerRepository;
         this.authorizationService = authorizationService;
+        this.notificationService = notificationService;
     }
 
     // =====================================================
@@ -293,8 +296,18 @@ public class ServiceRequestService {
         // SAVE
         // =================================================
 
-        return serviceRequestRepository.save(
-                serviceRequest
-        );
+        ServiceRequest saved = serviceRequestRepository.save(serviceRequest);
+        String requestLabel = "#" + saved.getId();
+        notificationService.notifyRoles(java.util.Set.of("MANAGER", "DISPATCHER"),
+                "New service request",
+                "Service request " + requestLabel + " — " + saved.getTitle() + " was submitted.",
+                "REQUEST");
+        Customer customer = customerRepository.findById(saved.getCustomerId()).orElse(null);
+        if (customer != null && customer.getUserId() != null) {
+            notificationService.create(customer.getUserId(), "Service request received",
+                    "Your service request " + requestLabel + " — " + saved.getTitle() + " has been received.",
+                    "REQUEST");
+        }
+        return saved;
     }
 }
