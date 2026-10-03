@@ -4,6 +4,7 @@ import com.fsm.entity.JobPhoto;
 import com.fsm.entity.WorkOrder;
 import com.fsm.repository.JobPhotoRepository;
 import com.fsm.repository.SiteRepository;
+import com.fsm.repository.TechnicianRepository;
 import com.fsm.repository.WorkOrderRepository;
 import com.fsm.security.AuthorizationService;
 import org.junit.jupiter.api.Test;
@@ -26,7 +27,9 @@ class WorkOrderServiceTest {
                 mock(SiteRepository.class),
                 auth,
                 mock(WorkOrderStatusHistoryService.class),
-                mock(SlaService.class)
+                mock(SlaService.class),
+                mock(TechnicianRepository.class),
+                mock(NotificationService.class)
         );
     }
 
