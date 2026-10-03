@@ -5,6 +5,9 @@ import com.fsm.entity.WorkOrder;
 import com.fsm.repository.SiteRepository;
 import com.fsm.repository.WorkOrderRepository;
 import com.fsm.repository.JobPhotoRepository;
+import com.fsm.repository.TechnicianRepository;
+import com.fsm.entity.Technician;
+import java.util.Set;
 import com.fsm.security.AuthorizationService;
 
 import org.springframework.security.access.AccessDeniedException;
@@ -28,6 +31,8 @@ public class WorkOrderService {
     private final AuthorizationService authorizationService;
     private final WorkOrderStatusHistoryService historyService;
     private final SlaService slaService;
+    private final TechnicianRepository technicianRepository;
+    private final NotificationService notificationService;
 
     public WorkOrderService(
             WorkOrderRepository workOrderRepository,
@@ -35,7 +40,9 @@ public class WorkOrderService {
             SiteRepository siteRepository,
             AuthorizationService authorizationService,
             WorkOrderStatusHistoryService historyService,
-            SlaService slaService) {
+            SlaService slaService,
+            TechnicianRepository technicianRepository,
+            NotificationService notificationService) {
 
         this.workOrderRepository =
                 workOrderRepository;
@@ -49,6 +56,8 @@ public class WorkOrderService {
         this.authorizationService = authorizationService;
         this.historyService = historyService;
         this.slaService = slaService;
+        this.technicianRepository = technicianRepository;
+        this.notificationService = notificationService;
     }
 
     public List<WorkOrder> getAllWorkOrders() {
@@ -580,6 +589,22 @@ public class WorkOrderService {
         } else {
             historyService.record(saved.getId(), previousStatus, WorkOrder.Status.ASSIGNED, "Technician reassigned");
         }
+
+        Technician assignedTechnician = technicianRepository.findById(technicianId).orElse(null);
+        if (assignedTechnician != null && assignedTechnician.getUserId() != null) {
+            String title = previousStatus == WorkOrder.Status.ASSIGNED ? "Work order reassigned" : "New work order assigned";
+            String message = "Work order " + (saved.getOrderNumber() == null ? "#" + saved.getId() : saved.getOrderNumber())
+                    + " — " + (saved.getTitle() == null ? "Field service job" : saved.getTitle())
+                    + " has been assigned to you."
+                    + (saved.getScheduledDate() == null ? "" : " Scheduled for " + saved.getScheduledDate() + ".");
+            notificationService.create(assignedTechnician.getUserId(), title, message, "ASSIGNMENT");
+        }
+        notificationService.notifyRoles(Set.of("MANAGER", "DISPATCHER"),
+                "Work order assigned",
+                "Work order " + (saved.getOrderNumber() == null ? "#" + saved.getId() : saved.getOrderNumber())
+                        + " has been assigned to " + (assignedTechnician == null ? "a technician" :
+                        (assignedTechnician.getFullName() == null ? assignedTechnician.getName() : assignedTechnician.getFullName())) + ".",
+                "ASSIGNMENT");
         return saved;
     }
 
@@ -643,6 +668,25 @@ public class WorkOrderService {
         if (targetStatus == WorkOrder.Status.COMPLETED) order.setCompletedDate(LocalDateTime.now());
         WorkOrder saved = workOrderRepository.save(order);
         historyService.record(saved.getId(), current, targetStatus, null);
+
+        String orderLabel = saved.getOrderNumber() == null ? "#" + saved.getId() : saved.getOrderNumber();
+        if (targetStatus == WorkOrder.Status.IN_PROGRESS) {
+            notificationService.notifyRoles(Set.of("MANAGER", "DISPATCHER"),
+                    "Work started", "Technician started work on order " + orderLabel + ".", "WORK_STATUS");
+        } else if (targetStatus == WorkOrder.Status.ON_HOLD) {
+            notificationService.notifyRoles(Set.of("MANAGER", "DISPATCHER"),
+                    "Work order on hold", "Work order " + orderLabel + " has been placed on hold.", "WARNING");
+        } else if (targetStatus == WorkOrder.Status.COMPLETED) {
+            notificationService.notifyRoles(Set.of("MANAGER", "DISPATCHER"),
+                    "Work order ready for review", "Work order " + orderLabel + " is completed and awaiting manager review.", "COMPLETED");
+        } else if (targetStatus == WorkOrder.Status.CLOSED) {
+            Technician assignedTechnician = saved.getTechnicianId() == null ? null :
+                    technicianRepository.findById(saved.getTechnicianId()).orElse(null);
+            if (assignedTechnician != null && assignedTechnician.getUserId() != null) {
+                notificationService.create(assignedTechnician.getUserId(), "Work order closed",
+                        "Manager closed work order " + orderLabel + ".", "COMPLETED");
+            }
+        }
         return saved;
     }
 
