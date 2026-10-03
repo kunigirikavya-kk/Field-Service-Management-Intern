@@ -302,9 +302,9 @@ public class ServiceRequestService {
                 "New service request",
                 "Service request " + requestLabel + " — " + saved.getTitle() + " was submitted.",
                 "REQUEST");
-        Customer customer = customerRepository.findById(saved.getCustomerId()).orElse(null);
-        if (customer != null && customer.getUserId() != null) {
-            notificationService.create(customer.getUserId(), "Service request received",
+        Customer notificationCustomer = customerRepository.findById(saved.getCustomerId()).orElse(null);
+        if (notificationCustomer != null && notificationCustomer.getUserId() != null) {
+            notificationService.create(notificationCustomer.getUserId(), "Service request received",
                     "Your service request " + requestLabel + " — " + saved.getTitle() + " has been received.",
                     "REQUEST");
         }
