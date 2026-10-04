@@ -2,6 +2,24 @@ const API_BASE_URL = (
     import.meta.env.DEV ? "/api" : (import.meta.env.VITE_API_BASE_URL || "/api")
 ).replace(/\/$/, "");
 
+// Wake the hosted API while the login page is open. Render free services may
+// sleep when idle; this background request helps reduce the first-login delay.
+export async function warmUpBackend() {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 90000);
+    try {
+        await fetch(`${API_BASE_URL}/health`, {
+            method: "GET",
+            cache: "no-store",
+            signal: controller.signal
+        });
+    } catch {
+        // The login request will show a user-facing error if the API is unavailable.
+    } finally {
+        clearTimeout(timeoutId);
+    }
+}
+
 function getErrorMessage(data, status) {
     if (data && typeof data === "object" && data.message) return data.message;
     if (typeof data === "string" && data.trim()) return data;
@@ -19,13 +37,21 @@ async function request(url, options = {}) {
     };
 
     let response;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 90000);
     try {
         response = await fetch(`${API_BASE_URL}${url}`, {
             ...options,
-            headers
+            headers,
+            signal: controller.signal
         });
-    } catch {
+    } catch (error) {
+        if (error?.name === "AbortError") {
+            throw new Error("The server is taking longer than expected to wake up. Please wait a moment and try again.");
+        }
         throw new Error("Unable to reach the server. Please check your connection and try again.");
+    } finally {
+        clearTimeout(timeoutId);
     }
 
     const responseText = await response.text();
