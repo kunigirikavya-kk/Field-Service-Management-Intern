@@ -1126,3 +1126,178 @@ html[data-theme="dark"] .je-execution-top{background:#151d2e;border-color:#29354
 html[data-theme="dark"] .je-execution-details{background:#111827;border-color:#29354a}
 html[data-theme="dark"] .je-detail-item{border-color:#29354a}
 html[data-theme="dark"] .je-execution-card{background:#151d2e}
+
+
+/* Queue and execution history: single-column scan-friendly layout */
+.je-schedule-grid{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) !important;
+  gap:14px !important;
+  padding:22px 26px 26px !important;
+}
+.je-schedule-card{
+  display:grid;
+  grid-template-columns:58px minmax(0,1fr);
+  column-gap:18px;
+  row-gap:12px;
+  align-items:start;
+  min-height:0 !important;
+  padding:20px 22px !important;
+  border:1px solid #e6dfd3;
+  border-left:4px solid #c8bda9;
+  background:#fffdf8;
+  box-shadow:0 3px 12px rgba(45,52,72,.045);
+  transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease;
+}
+.je-schedule-card:hover{
+  border-color:#c9cfe4;
+  border-left-color:#313b68;
+  box-shadow:0 8px 20px rgba(45,52,72,.08);
+  transform:translateY(-1px);
+}
+.je-schedule-card .je-card-topline{
+  grid-column:1;
+  grid-row:1 / span 3;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:10px;
+  padding-top:2px;
+}
+.je-schedule-card .je-job-index{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:46px;
+  height:46px;
+  border-radius:13px;
+  background:#edf0fa;
+  color:#313b68;
+  font-size:17px;
+  font-weight:800;
+  letter-spacing:-.04em;
+  border:1px solid #dce2f4;
+}
+.je-schedule-card .je-priority{
+  display:inline-flex;
+  justify-content:center;
+  min-width:58px;
+  font-size:9px;
+  letter-spacing:.06em;
+  font-weight:800;
+}
+.je-schedule-card .je-work-order,
+.je-schedule-card .je-schedule-title,
+.je-schedule-card .je-job-meta,
+.je-schedule-card .je-scheduled-customer-evidence,
+.je-schedule-card .je-customer-evidence,
+.je-schedule-card .je-card-bottom{
+  grid-column:2;
+  min-width:0;
+}
+.je-schedule-card .je-work-order{font-size:10px;letter-spacing:.1em;color:#8a806e;font-weight:800}
+.je-schedule-card .je-schedule-title{font-size:17px;line-height:1.4;color:#252e48;font-weight:750;overflow-wrap:anywhere}
+.je-schedule-card .je-job-meta{display:flex;flex-wrap:wrap;gap:10px 20px;margin-top:3px}
+.je-schedule-card .je-job-meta>div{font-size:12px;line-height:1.55;color:#626b7e}
+.je-schedule-card .je-card-bottom{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  padding-top:14px;
+  margin-top:4px;
+  border-top:1px solid #eee8dc;
+}
+.je-schedule-card .je-start-btn{min-width:150px;min-height:44px;font-size:12px;font-weight:750}
+.je-section-header{background:#fffdf8}
+.je-execution-center .je-section-header{
+  position:relative;
+  background:linear-gradient(110deg,#fffdf8 0%,#f6f2e9 100%);
+  border-bottom:1px solid #e7dfd2;
+}
+.je-execution-center .je-section-header:before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:0;
+  bottom:0;
+  width:4px;
+  background:#313b68;
+}
+.je-execution-list{gap:16px !important}
+.je-record-number{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 38px;
+  width:38px;
+  height:38px;
+  margin-right:1px;
+  border:1px solid #dce2f4;
+  border-radius:11px;
+  background:#eef1fb;
+  color:#313b68;
+  font-size:13px;
+  font-weight:850;
+  letter-spacing:-.03em;
+}
+.je-execution-card{
+  position:relative;
+  overflow:hidden;
+  border:1px solid #e6dfd3 !important;
+  border-left:5px solid #9ca3af !important;
+  background:#fffdf8 !important;
+  box-shadow:0 4px 14px rgba(45,52,72,.055);
+}
+.je-execution-card:before{
+  content:"";
+  position:absolute;
+  inset:0 0 auto 0;
+  height:3px;
+  background:#c9c3b8;
+}
+.je-execution-card.active{
+  border-left-color:#c27a20 !important;
+  background:linear-gradient(105deg,#fffaf0 0%,#fffdf8 34%) !important;
+}
+.je-execution-card.active:before{background:#d9952d}
+.je-execution-card.completed{
+  border-left-color:#2f855a !important;
+  background:linear-gradient(105deg,#f0faf3 0%,#fffdf8 34%) !important;
+}
+.je-execution-card.completed:before{background:#4caa75}
+.je-execution-card.cancelled-card{
+  border-left-color:#b84c4c !important;
+  background:linear-gradient(105deg,#fff3f2 0%,#fffdf8 34%) !important;
+}
+.je-execution-card.cancelled-card:before{background:#c75a5a}
+.je-execution-card.active .je-record-number{background:#fff0d4;color:#945b14;border-color:#f1d6a7}
+.je-execution-card.completed .je-record-number{background:#e0f5e7;color:#216c43;border-color:#bde4ca}
+.je-execution-card.cancelled-card .je-record-number{background:#ffe4e2;color:#a23838;border-color:#f4c5c2}
+.je-execution-card .je-execution-top{background:transparent !important}
+.je-execution-card .je-execution-title{align-items:center}
+.je-execution-card .je-execution-kicker{font-size:10px;font-weight:800;color:#817966}
+.je-execution-card .je-execution-title h3{font-size:18px;font-weight:800;color:#26304b}
+.je-execution-card .je-execution-title p{font-size:12px;color:#6d7485}
+.je-execution-card .je-execution-details{background:rgba(248,246,240,.72) !important;border-color:#e9e2d7 !important;border-radius:12px}
+.je-execution-card .je-detail-item{border-color:#e9e2d7 !important}
+.je-execution-card.active .je-status.active{background:#fff0d4;color:#925811;border-color:#f1d5a2}
+.je-execution-card.completed .je-status.completed{background:#e0f5e7;color:#216c43;border-color:#bde4ca}
+.je-execution-card.cancelled-card .je-status{background:#ffe4e2;color:#a23838;border-color:#f4c5c2}
+
+@media(max-width:650px){
+  .je-schedule-grid{grid-template-columns:minmax(0,1fr) !important;padding:13px !important;gap:12px !important}
+  .je-schedule-card{grid-template-columns:42px minmax(0,1fr);column-gap:11px;padding:15px !important}
+  .je-schedule-card .je-job-index{width:38px;height:38px;font-size:14px;border-radius:10px}
+  .je-schedule-card .je-priority{min-width:0;font-size:8px;padding:5px 6px}
+  .je-schedule-card .je-schedule-title{font-size:15px}
+  .je-schedule-card .je-job-meta{flex-direction:column;gap:7px}
+  .je-schedule-card .je-card-bottom{align-items:stretch;flex-direction:column}
+  .je-schedule-card .je-start-btn{width:100%}
+  .je-record-number{flex-basis:30px;width:30px;height:30px;font-size:11px;border-radius:9px}
+  .je-execution-card .je-execution-title{align-items:flex-start}
+  .je-execution-card .je-execution-title h3{font-size:16px}
+}
+@media(prefers-reduced-motion:reduce){
+  .je-schedule-card{transition:none}
+}
