@@ -254,8 +254,22 @@ function JobExecution() {
                     : [];
 
 
+            // Only show schedules whose linked work order is still actionable.
+            // Closed/completed/cancelled orders must not appear in a technician's
+            // "Scheduled Jobs" queue, even if an old schedule remains in the database.
+            const actionableScheduleList = scheduleList.filter(schedule => {
+                const linkedWorkOrder = workOrderList.find(workOrder =>
+                    Number(workOrder.id) === Number(schedule.workOrderId)
+                );
+                const workOrderStatus = String(linkedWorkOrder?.status || "")
+                    .trim()
+                    .toUpperCase();
+
+                return !["CLOSED", "COMPLETED", "CANCELLED", "CANCELED"].includes(workOrderStatus);
+            });
+
             setSchedules(
-                scheduleList
+                actionableScheduleList
             );
 
 
