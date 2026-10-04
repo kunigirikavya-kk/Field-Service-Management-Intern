@@ -1,8 +1,15 @@
 
-# FieldSync — Field Service Management Platform
+# Field Service Management System (FieldSync)
 
 <p align="center">
-  <strong>A production-deployed, role-based platform for managing field service operations from customer request to job close-out.</strong>
+  <strong>A full-stack field operations product for managing service requests, technicians, work orders, inventory, job evidence and approvals in one connected workflow.</strong>
+</p>
+
+<p align="center">
+  <img alt="React" src="https://img.shields.io/badge/Frontend-React%20%2B%20Vite-61DAFB?logo=react&logoColor=black">
+  <img alt="Java" src="https://img.shields.io/badge/Backend-Java%2021%20%2B%20Spring%20Boot-6DB33F?logo=springboot&logoColor=white">
+  <img alt="PostgreSQL" src="https://img.shields.io/badge/Database-PostgreSQL-4169E1?logo=postgresql&logoColor=white">
+  <img alt="Deployment" src="https://img.shields.io/badge/Deployment-Vercel%20%2B%20Render-black">
 </p>
 
 <p align="center">
@@ -13,9 +20,9 @@
 
 ---
 
-## 🚀 What is FieldSync?
+## 🚀 Product Overview
 
-**FieldSync** is a full-stack Field Service Management product designed to help service organizations coordinate the complete lifecycle of field work in one place.
+**Field Service Management System (FieldSync)** is a full-stack field service management product designed to help service organizations coordinate the complete lifecycle of field work in one place.
 
 Instead of managing customers, service requests, technicians, schedules, work orders, inventory, labour, photos and billing across disconnected tools, FieldSync brings these operations into a single role-aware platform.
 
@@ -38,6 +45,19 @@ FieldSync is suitable for teams such as:
 - Organizations that need visibility into technician jobs, parts and service costs
 
 The platform is especially useful when a business needs to move from spreadsheet/manual coordination toward a centralized digital workflow.
+
+---
+
+## 💼 Product Offering
+
+Field Service Management System is positioned as a configurable software solution for service businesses that want to centralize daily field operations. The current repository demonstrates the core product workflow; commercial onboarding, pricing, support terms and customer-specific integrations would be agreed separately.
+
+**Potential adoption options**
+- **Use as a product foundation:** adapt workflows, branding and configuration to an organization's operating model.
+- **Business workflow customization:** tailor service categories, roles, approval rules and reporting requirements.
+- **Integration planning:** assess connections to existing customer, billing or enterprise systems before implementation.
+
+To discuss adapting this project, start a conversation through the [GitHub repository](https://github.com/kunigirikavya-kk/Field-Service-Management-Intern/issues). This repository does not currently publish pricing, a purchase checkout or a commercial support agreement.
 
 ---
 
@@ -216,21 +236,83 @@ The backend exposes OpenAPI documentation and Swagger UI for API exploration.
 
 FieldSync follows a layered full-stack architecture.
 
+### System Architecture
+
 ~~~mermaid
 flowchart TB
-    U[Customer / Dispatcher / Technician / Manager]
+    subgraph PEOPLE["1. USERS & ROLE-BASED EXPERIENCE"]
+        CU["Customer"]
+        DI["Dispatcher"]
+        TE["Technician"]
+        MA["Manager"]
+    end
 
-    U --> V[Vercel<br/>React + Vite Frontend]
-    V -->|REST / JSON| B[Render<br/>Spring Boot API]
+    subgraph FRONTEND["2. PRESENTATION LAYER — VERCEL"]
+        WEB["React 19 + Vite"]
+        ROUTE["React Router • Role-aware pages"]
+        UI["Dashboards • Requests • Work Orders<br/>Scheduling • Execution • Inventory • Billing"]
+        WEB --> ROUTE --> UI
+    end
 
-    B --> S[Spring Security + JWT]
-    B --> BL[Business Logic / Services]
-    BL --> J[JPA / Hibernate]
-    J --> P[(PostgreSQL)]
+    subgraph BACKEND["3. APPLICATION LAYER — RENDER"]
+        API["Spring Boot REST API"]
+        AUTH["Spring Security + JWT<br/>Authentication & Authorization"]
+        CTRL["Controllers + DTO Validation"]
+        SERVICE["Business Services<br/>Lifecycle • Assignment • SLA • Costs"]
+        DATA["Spring Data JPA / Hibernate"]
+        API --> AUTH --> CTRL --> SERVICE --> DATA
+    end
 
-    B --> F[Flyway Migrations]
-    B --> C[Cloudinary<br/>Execution Photos]
+    subgraph DATA_LAYER["4. DATA & FILE STORAGE"]
+        DB[("PostgreSQL<br/>Operational Records")]
+        MIG["Flyway<br/>Versioned Migrations"]
+        CLOUD["Cloudinary<br/>Customer & Completion Photos"]
+        DATA --> DB
+        MIG -. schema versioning .-> DB
+        SERVICE --> CLOUD
+    end
+
+    CU --> WEB
+    DI --> WEB
+    TE --> WEB
+    MA --> WEB
+    UI <-->|HTTPS REST / JSON| API
+
+    classDef people fill:#eef2ff,stroke:#6366f1,color:#172554
+    classDef frontend fill:#e0f2fe,stroke:#0284c7,color:#0c4a6e
+    classDef backend fill:#dcfce7,stroke:#16a34a,color:#14532d
+    classDef storage fill:#fef3c7,stroke:#d97706,color:#78350f
+    class CU,DI,TE,MA people
+    class WEB,ROUTE,UI frontend
+    class API,AUTH,CTRL,SERVICE,DATA backend
+    class DB,MIG,CLOUD storage
+~~~ 
+
+### Operational Workflow
+
+~~~mermaid
+flowchart LR
+    A["Customer submits<br/>service request + issue photo"]
+    B["Dispatcher reviews<br/>and creates work order"]
+    C["Technician is assigned<br/>and scheduled"]
+    D["Technician performs work<br/>logs time and parts"]
+    E["Completion evidence<br/>is uploaded"]
+    F["Manager reviews<br/>and closes work order"]
+
+    A --> B --> C --> D --> E --> F
 ~~~
+
+### Architecture at a Glance
+
+| Layer | Responsibility | Technology |
+|---|---|---|
+| User experience | Role-based screens and operational dashboards | React, Vite, React Router |
+| API & security | REST endpoints, authentication, authorization and validation | Spring Boot, Spring Security, JWT |
+| Business logic | Work-order lifecycle, assignment, SLA, inventory and cost rules | Java service layer |
+| Persistence | Relational records and transactions | Spring Data JPA, Hibernate, PostgreSQL |
+| Schema management | Version-controlled database changes | Flyway |
+| Image storage | Customer issue and technician completion evidence | Cloudinary |
+| Hosting | Frontend and backend deployment | Vercel, Render |
 
 ### Request Flow
 
@@ -877,7 +959,7 @@ http://localhost:8080/v3/api-docs
 
 # 📝 Project Information
 
-**Project Name:** FieldSync  
+**Project Name:** Field Service Management System (FieldSync)  
 **Domain:** Field Service Management  
 **Architecture:** Full-stack client-server application  
 **Frontend:** React + Vite  
