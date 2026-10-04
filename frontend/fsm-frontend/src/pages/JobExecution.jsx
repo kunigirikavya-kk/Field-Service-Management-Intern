@@ -2328,6 +2328,10 @@ function JobExecution() {
 
                                             <div className="je-execution-title">
 
+                                                <span className="je-record-number" aria-label={`Execution record ${index + 1}`}>
+                                                    {String(index + 1).padStart(2, "0")}
+                                                </span>
+
                                                 <div
                                                     className={`je-execution-icon ${statusClass}`}
                                                 >
