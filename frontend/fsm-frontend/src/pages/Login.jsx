@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { loginUser } from "../services/api";
+import { loginUser, warmUpBackend } from "../services/api";
 import "./Login.css";
 
 function Login() {
@@ -10,6 +10,10 @@ function Login() {
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+
+    useEffect(() => {
+        warmUpBackend();
+    }, []);
 
     const handleLogin = async (e) => {
         e.preventDefault();
